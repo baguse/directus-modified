@@ -1,6 +1,6 @@
 {
 	"name": "directus-monorepo",
-	"private": true,
+	"private": false,
 	"workspaces": [
 		"./app",
 		"./api",
