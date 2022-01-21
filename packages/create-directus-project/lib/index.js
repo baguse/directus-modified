@@ -17,7 +17,7 @@ const program = new commander.Command(pkg.name);
 program
 	.version(pkg.version)
 	.arguments('<directory>')
-	.description('Create a new Directus project')
+	.description('Create a new MV Data Core project')
 	.action(create)
 	.parse(process.argv);
 
@@ -55,7 +55,7 @@ async function create(directory) {
 		await fse.mkdir(path.join(rootPath, 'extensions', folderName));
 	}
 
-	const spinner = ora('Installing Directus').start();
+	const spinner = ora('Installing MV Data Core').start();
 
 	try {
 		await execa('npm', ['init', '-y'], {
@@ -70,7 +70,7 @@ async function create(directory) {
 	}
 
 	try {
-		await execa('npm', ['install', 'directus', '--production', '--no-optional'], {
+		await execa('npm', ['install', 'mv-data-core', '--production', '--no-optional'], {
 			cwd: rootPath,
 			stdin: 'ignore',
 		});
@@ -84,7 +84,7 @@ async function create(directory) {
 	spinner.stop();
 
 	try {
-		await execa('npx', ['directus', 'init'], {
+		await execa('npx', ['mv-data-core', 'init'], {
 			cwd: rootPath,
 			stdio: 'inherit',
 		});

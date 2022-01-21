@@ -2,7 +2,22 @@
 	<v-list-item-icon>
 		<v-icon :name="icon ?? 'label'" :color="color" />
 	</v-list-item-icon>
-	<v-list-item-content><v-text-overflow :text="name" :highlight="search" /></v-list-item-content>
+	<v-list-item-content>
+		<v-text-overflow :text="name" :highlight="search"></v-text-overflow>
+		<v-chip-group active-class="primary--text" column>
+			<v-chip
+				v-for="(tag, i) in tags"
+				:key="i"
+				color="red"
+				text-color="blue"
+				style="color: white; font-size: 9pt; background-color: green"
+				dense
+				small
+			>
+				{{ tag }}
+			</v-chip>
+		</v-chip-group>
+	</v-list-item-content>
 </template>
 
 <script lang="ts">
@@ -25,6 +40,10 @@ export default defineComponent({
 		search: {
 			type: String,
 			default: null,
+		},
+		tags: {
+			type: Array,
+			default: () => [],
 		},
 	},
 });

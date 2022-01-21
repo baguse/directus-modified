@@ -14,9 +14,9 @@
 				:name="collection.name"
 				:icon="collection.meta?.icon"
 				:color="collection.meta?.color"
+				:tags="collection.meta?.tags"
 			/>
 		</template>
-
 		<navigation-item
 			v-for="childCollection in childCollections"
 			:key="childCollection.collection"
@@ -39,6 +39,7 @@
 			:name="collection.name"
 			:icon="collection.meta?.icon"
 			:color="collection.meta?.color"
+			:tags="collection.meta?.tags"
 		/>
 	</v-list-item>
 
