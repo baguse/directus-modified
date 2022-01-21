@@ -18,6 +18,19 @@
 					:name="collection.meta?.hidden ? 'visibility_off' : collection.icon"
 				/>
 				<span>{{ collection.name }}</span>
+				<v-chip-group active-class="primary--text" column style="margin-left: 3px">
+					<v-chip
+						v-for="(tag, i) in collectionTags"
+						:key="i"
+						color="red"
+						text-color="blue"
+						style="color: white; font-size: 9pt; background-color: green"
+						dense
+						small
+					>
+						{{ tag }}
+					</v-chip>
+				</v-chip-group>
 			</div>
 			<template v-if="collection.type === 'alias' || nestedCollections.length">
 				<v-progress-circular v-if="collapseLoading" small indeterminate />
@@ -119,6 +132,8 @@ export default defineComponent({
 
 		const collapseLoading = ref(false);
 
+		const collectionTags = (props.collection.meta as any)?.tags || [];
+
 		return {
 			collapseIcon,
 			onGroupSortChange,
@@ -127,6 +142,7 @@ export default defineComponent({
 			toggleCollapse,
 			collapseTooltip,
 			collapseLoading,
+			collectionTags,
 		};
 
 		async function toggleCollapse() {
