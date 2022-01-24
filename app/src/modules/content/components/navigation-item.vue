@@ -6,7 +6,7 @@
 		scope="content-navigation"
 		:value="collection.collection"
 		query
-		:arrow-placement="collection.meta?.collapse === 'locked' ? false : 'after'"
+		:arrow-placement="false"
 	>
 		<template #activator>
 			<navigation-item-content
@@ -23,7 +23,7 @@
 			:collection="childCollection"
 			:search="search"
 		/>
-		<navigation-bookmark v-for="bookmark in childBookmarks" :key="bookmark.id" :bookmark="bookmark" />
+		<!-- <navigation-bookmark v-for="bookmark in childBookmarks" :key="bookmark.id" :bookmark="bookmark" /> -->
 	</v-list-group>
 
 	<v-list-item
@@ -63,13 +63,13 @@ import { Collection } from '@/types';
 import { Preset } from '@directus/shared/types';
 import { useUserStore, useCollectionsStore, usePresetsStore } from '@/stores';
 import NavigationItemContent from './navigation-item-content.vue';
-import NavigationBookmark from './navigation-bookmark.vue';
+// import NavigationBookmark from './navigation-bookmark.vue';
 import { useI18n } from 'vue-i18n';
 import { orderBy } from 'lodash';
 
 export default defineComponent({
 	name: 'NavigationItem',
-	components: { NavigationItemContent, NavigationBookmark },
+	components: { NavigationItemContent },
 	props: {
 		collection: {
 			type: Object as PropType<Collection>,

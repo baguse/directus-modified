@@ -6,6 +6,7 @@ import bootstrap from './commands/bootstrap';
 import count from './commands/count';
 import dbInstall from './commands/database/install';
 import dbMigrate from './commands/database/migrate';
+import dbSeed from './commands/database/seed';
 import init from './commands/init';
 import rolesCreate from './commands/roles/create';
 import usersCreate from './commands/users/create';
@@ -44,7 +45,23 @@ export async function createCli(): Promise<Command> {
 		.command('migrate:down')
 		.description('Downgrade the database')
 		.action(() => dbMigrate('down'));
-
+	dbCommand
+		.command('generate:seed')
+		.description('Generate seeder file')
+		.option('-n, --name <value>', 'The seeder name')
+		.action(dbSeed.generate);
+	dbCommand.command('seed:all').description('Seed all the database').action(dbSeed.seedAll);
+	dbCommand
+		.command('seed')
+		.description('Seed one seeder')
+		.option('-n, --name <value>', 'The seeder to run')
+		.action(dbSeed.seed);
+	dbCommand.command('revert:all').description('Revert all Seeder(s)').action(dbSeed.revertAll);
+	dbCommand
+		.command('revert')
+		.description('Revert some seeder')
+		.argument('<count>', 'The number of seeder to revert')
+		.action(dbSeed.revert);
 	const usersCommand = program.command('users');
 
 	usersCommand

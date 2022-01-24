@@ -49,7 +49,7 @@ async function create(directory) {
 	await fse.mkdir(path.join(rootPath, 'uploads'));
 	await fse.mkdir(path.join(rootPath, 'extensions'));
 
-	const extensionFolders = ['interfaces', 'displays', 'layouts', 'modules'];
+	const extensionFolders = ['interfaces', 'displays', 'layouts', 'modules', 'seeders'];
 
 	for (const folderName of extensionFolders) {
 		await fse.mkdir(path.join(rootPath, 'extensions', folderName));

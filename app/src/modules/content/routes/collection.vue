@@ -31,7 +31,8 @@
 				<v-breadcrumb v-else :items="[{ name: t('content'), to: '/content' }]" />
 			</template>
 
-			<template #title-outer:append>
+			<!-- Bookmark -->
+			<!-- <template #title-outer:append>
 				<div class="bookmark-controls">
 					<bookmark-add
 						v-if="!bookmark"
@@ -84,7 +85,7 @@
 						@click="clearLocalSave"
 					/>
 				</div>
-			</template>
+			</template> -->
 
 			<template #actions:prepend>
 				<component :is="`layout-actions-${layout || 'tabular'}`" v-bind="layoutState" />
