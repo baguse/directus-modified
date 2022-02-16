@@ -273,6 +273,7 @@ note: Бележка
 enter_a_value: Въвеждане на стойност...
 enter_a_placeholder: Въвеждане на подсказката...
 length: Дължина
+soft_length: Гъвкав лимит
 precision_scale: Прецизност и мащаб
 readonly: Само за четене
 unique: Без повторения
@@ -326,9 +327,17 @@ related_collection: Релативна колекция
 related_collections: Релационни колекции
 translations_collection: Колекция с преводи
 languages_collection: Колекция с езици
+import_data_input_placeholder: CSV или JSON...
+import_data_button: Започване на импортирането
+import_data_indeterminate: Импортиране на данните...
+import_data_success: Данните от {filename}, бяха успешно импортирани
+import_data_error: Структурата на данните от файла, не отговаря на колекцията.
 label_import: Импортиране
+label_export: Експортиране
+import_export: Импорт / Експорт
 format: Формат
 use_current_filters_settings: Прилагане на текущите филтри
+export_data_button: Започване на експортирането
 last_page: Последна страница
 last_access: Последно посещение
 fill_template: Попълване със стойност от шаблон
@@ -344,6 +353,7 @@ interface_label: Интерфейс
 today: Днес
 yesterday: Вчера
 delete_comment: Изтриване на коментар
+delete_share: Изтриване на споделянето
 date-fns_date: PPP
 date-fns_time: 'HH:mm:ss'
 date-fns_time_no_seconds: 'HH:mm'
@@ -524,6 +534,9 @@ errors:
   INTERNAL_SERVER_ERROR: Неочаквана грешка
   NOT_NULL_VIOLATION: Стойността не трябва да е null
   ILLEGAL_ASSET_TRANSFORMATION: Изображението е твърде голямо за да бъде показано
+  VALUE_TOO_LONG: Стойността е твърде дълга
+  VALUE_OUT_OF_RANGE: Стойността е извън границите
+  INVALID_FOREIGN_KEY: Невалиден външен ключ
   UNKNOWN: Неочаквана грешка
 security: Сигурност
 value_hashed: Хеширана стойност
@@ -554,12 +567,15 @@ update_collection_success: Обновена колекция
 delete_collection_success: Изтрита колекция
 make_collection_visible: Показване на колекцията
 make_collection_hidden: Скриване на колекцията
+make_folder_visible: Папката е видима
+make_folder_hidden: Папката е скрита
 start_end_of_count_items: '{start}-{end} от {count} записа'
 start_end_of_count_filtered_items: '{start}-{end} от {count} филтрирани записи'
 one_item: '1 запис'
 one_filtered_item: '1 филтриран запис'
 delete_collection_are_you_sure: >-
   Сигурни ли сте, че искате да изтриете колекцията? Всички записи и самата колекция ще бъдат изтрити. Действието е завинаги.
+delete_folder_are_you_sure: Сигурни ли сте, че искате да изтриете папката? Подпапките и колекциите ще бъдат преместени към кореновата папка.
 collections_shown: Показани колекции
 visible_collections: Видими колекции
 hidden_collections: Скрити колекции
@@ -1240,6 +1256,7 @@ translation: Превод
 translation_placeholder: Въвеждане на превода...
 value: Стойност
 view_project: Преглед на проекта
+weeks: { }
 report_error: Докладване на грешка
 start: Начало
 interfaces:

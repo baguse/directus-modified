@@ -353,6 +353,7 @@ interface_label: Interfaccia
 today: Oggi
 yesterday: Ieri
 delete_comment: Elimina Commento
+delete_share: Elimina condivisione
 date-fns_date: PPP
 date-fns_time: 'h:mm:ss a'
 date-fns_time_no_seconds: 'h:mm a'
@@ -533,6 +534,9 @@ errors:
   INTERNAL_SERVER_ERROR: Errore Imprevisto
   NOT_NULL_VIOLATION: Il valore non può essere nullo
   ILLEGAL_ASSET_TRANSFORMATION: Immagine troppo grande per l'anteprima
+  VALUE_TOO_LONG: Il valore è troppo lungo
+  VALUE_OUT_OF_RANGE: Il valore è fuori dall'intervallo
+  INVALID_FOREIGN_KEY: Chiave esterna non valida
   UNKNOWN: Errore Imprevisto
 security: Sicurezza
 value_hashed: Valore cifrato in sicurezza
@@ -563,12 +567,15 @@ update_collection_success: Raccolta Aggiornata
 delete_collection_success: Raccolta Eliminata
 make_collection_visible: Rendi visibile la raccolta
 make_collection_hidden: Rendi nascosta la raccolta
+make_folder_visible: Rendi visibile la cartella
+make_folder_hidden: Rendi nascosta la cartella
 start_end_of_count_items: '{start}-{end} di {count} elementi'
 start_end_of_count_filtered_items: '{start}-{end} di {count} elementi filtrati'
 one_item: '1 elemento'
 one_filtered_item: '1 elemento filtrato'
 delete_collection_are_you_sure: >-
   Sei sicuro di voler eliminare questa raccolta? Questo eliminerà la raccolta e tutti gli elementi in essa. Questa azione è permanente.
+delete_folder_are_you_sure: Sei sicuro di voler eliminare questa cartella? Le cartelle e le collezioni annidate verranno spostate al livello più alto.
 collections_shown: Raccolte Mostrate
 visible_collections: Raccolte Visibili
 hidden_collections: Raccolte Nascoste
