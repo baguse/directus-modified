@@ -1,5 +1,6 @@
-import express, { Router } from 'express';
+import express, { NextFunction, Router, Response as ExpressResponse, Request as ExpressRequest } from 'express';
 import path from 'path';
+import 'reflect-metadata';
 import {
 	ActionHandler,
 	AppExtensionType,
@@ -39,14 +40,15 @@ import * as services from './services';
 import { schedule, ScheduledTask, validate } from 'node-cron';
 import { rollup } from 'rollup';
 // @TODO Remove this once a new version of @rollup/plugin-virtual has been released
-// @ts-expect-error
 import virtual from '@rollup/plugin-virtual';
 import alias from '@rollup/plugin-alias';
 import { Url } from './utils/url';
 import getModuleDefault from './utils/get-module-default';
-import { clone, escapeRegExp } from 'lodash';
+import { clone, escapeRegExp, method } from 'lodash';
 import chokidar, { FSWatcher } from 'chokidar';
 import { pluralize } from '@directus/shared/utils';
+import { ServerResponse } from 'http';
+import { BaseException } from '@directus/shared/exceptions';
 
 let extensionManager: ExtensionManager | undefined;
 
@@ -96,6 +98,8 @@ class ExtensionManager {
 
 	private watcher: FSWatcher | null = null;
 
+	private apiDocs: { paths: any; schemas: any[] } = { paths: {}, schemas: [] };
+
 	constructor() {
 		this.options = defaultOptions;
 
@@ -129,6 +133,7 @@ class ExtensionManager {
 
 			const prevExtensions = clone(this.extensions);
 
+			this.apiDocs = { paths: {}, schemas: [] };
 			await this.unload();
 			await this.load();
 
@@ -336,6 +341,8 @@ class ExtensionManager {
 				logger.warn(error);
 			}
 		}
+		const filePath = path.join(process.cwd(), '.openapi.json');
+		fse.writeFile(filePath, JSON.stringify(this.apiDocs, null, 2));
 	}
 
 	private registerHook(hook: Extension) {
@@ -405,7 +412,7 @@ class ExtensionManager {
 			env,
 			database: getDatabase(),
 			emitter: this.apiEmitter,
-			logger,
+			logger: logger as any,
 			getSchema,
 		});
 
@@ -416,27 +423,262 @@ class ExtensionManager {
 		const endpointPath = path.resolve(endpoint.path, endpoint.entrypoint || '');
 		const endpointInstance: EndpointConfig | { default: EndpointConfig } = require(endpointPath);
 
-		const mod = getModuleDefault(endpointInstance);
+		const prefix = Reflect.getMetadata('prefix', endpointInstance);
+		const isClass = Reflect.getMetadata('isClass', endpointInstance) || false;
+		const routes: Array<any> = Reflect.getMetadata('routes', endpointInstance);
 
-		const register = typeof mod === 'function' ? mod : mod.handler;
+		const mod = getModuleDefault(endpointInstance);
 		const routeName = typeof mod === 'function' ? endpoint.name : mod.id;
 
+		const register = typeof mod === 'function' ? mod : mod.handler;
+
 		const scopedRouter = express.Router();
-		router.use(`/${routeName}`, scopedRouter);
+		if (isClass) {
+			logger.info(`Registering class decorator endpoint "${routeName}"`);
+			const instance = new (mod as any)();
+			const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => {
+				Promise.resolve(fn(req, res, next)).catch(next);
+			};
+			/**
+			 * TODO: Clearing slash
+			 */
 
-		register(scopedRouter, {
-			services,
-			exceptions: { ...exceptions, ...sharedExceptions },
-			env,
-			database: getDatabase(),
-			emitter: this.apiEmitter,
-			logger,
-			getSchema,
-		});
+			const routePath = prefix || routeName;
+			router.use(`/${routePath}`, scopedRouter);
+			type IRequestMethod = 'get' | 'put' | 'post' | 'put' | 'patch' | 'delete';
+			for (const route of routes) {
+				const {
+					requestMethod,
+					path,
+					methodName,
+					apiDoc,
+				}: { requestMethod: IRequestMethod; path: string; methodName: string; apiDoc: any } = route;
+				const params = Reflect.getMetadata('param', instance, methodName) || [];
+				const queries = Reflect.getMetadata('query', instance, methodName) || [];
+				const bodies = Reflect.getMetadata('body', instance, methodName) || [];
+				const requests = Reflect.getMetadata('request', instance, methodName) || [];
+				const contexts = Reflect.getMetadata('context', instance, methodName) || [];
+				const originalMethod = instance[methodName];
+				// this.apiDocs.paths[`/${routePath}${swaggerPath}`] = apiDoc.paths[swaggerPath];
+				scopedRouter[requestMethod](
+					path,
+					asyncHandler(async (req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
+						try {
+							instance[route.methodName] = (...args: any) => {
+								// method decorator
+								for (const param of params) {
+									const { key, parameterIndex, dataType } = param;
 
-		this.apiExtensions.endpoints.push({
-			path: endpointPath,
-		});
+									if (!key) {
+										args[parameterIndex] = req.params;
+									} else {
+										const originalData = req.params[key];
+										let tamperedData: any = originalData;
+										if (originalData) {
+											if (dataType == 'number' && typeof originalData != 'undefined') {
+												try {
+													tamperedData = parseFloat(originalData);
+													if (isNaN(tamperedData)) tamperedData = 0;
+												} catch (_e) {
+													tamperedData = 0;
+												}
+											} else if (dataType == 'boolean' && typeof originalData != 'undefined') {
+												if (originalData == 'true' || originalData == '1') tamperedData = true;
+												else tamperedData = false;
+											}
+										}
+										args[parameterIndex] = tamperedData;
+									}
+								}
+
+								for (const query of queries) {
+									const { key, parameterIndex, dataType } = query;
+
+									if (!key) {
+										args[parameterIndex] = req.query;
+									} else {
+										const originalData = req.query[key];
+										let tamperedData: any = originalData;
+										if (originalData) {
+											if (dataType == 'number') {
+												try {
+													tamperedData = parseFloat(originalData.toString());
+													if (isNaN(tamperedData)) tamperedData = 0;
+												} catch (_e) {
+													tamperedData = 0;
+												}
+											} else if (dataType == 'boolean') {
+												if (originalData.toString().toLowerCase() == 'true' || originalData == '1') tamperedData = true;
+												else tamperedData = false;
+											}
+										}
+										args[parameterIndex] = tamperedData;
+									}
+								}
+
+								for (const body of bodies) {
+									const { key, parameterIndex } = body;
+
+									if (!key) {
+										args[parameterIndex] = req.body;
+									} else {
+										args[parameterIndex] = req.body[key];
+									}
+								}
+
+								for (const request of requests) {
+									const { parameterIndex } = request;
+									args[parameterIndex] = req;
+								}
+								for (const context of contexts) {
+									const { parameterIndex } = context;
+									args[parameterIndex] = {
+										services,
+										exceptions: { ...exceptions, ...sharedExceptions },
+										env,
+										database: getDatabase(),
+										emitter: this.apiEmitter,
+										logger,
+										getSchema,
+									};
+								}
+
+								return originalMethod.apply(this, args);
+							};
+							const result = await instance[methodName](req, res, next);
+							if (result instanceof ServerResponse) {
+								return result;
+							} else {
+								return res.json(result).status(200).end();
+							}
+						} catch (error: any) {
+							logger.error(error);
+							if (error instanceof BaseException) {
+								return res.status(error.status).send({
+									status: false,
+									message: error.toString(),
+									code: error.code,
+								});
+							}
+							return res.status(500).send({
+								status: false,
+								message: error.toString(),
+							});
+						}
+					})
+				);
+				const paths = apiDoc.paths;
+				const routePaths = Object.keys(paths);
+
+				for (const path of routePaths) {
+					let currentPath = '';
+					if (route.isIndependentRoute) {
+						currentPath = path;
+					} else {
+						currentPath = `/${routePath}${path}`;
+					}
+					if (typeof this.apiDocs.paths[currentPath] == 'undefined') {
+						this.apiDocs.paths[currentPath] = {};
+					}
+					const httpMethodKeys = Object.keys(paths[path]);
+					for (const httpMethod of httpMethodKeys) {
+						if (typeof this.apiDocs.paths[currentPath][httpMethod] != 'undefined') {
+							logger.error(
+								`There are duplicate route with base route '${currentPath}' on Method [${httpMethod.toUpperCase()}] ${routePath} with tag "${
+									this.apiDocs.paths[currentPath][httpMethod].tags[0]
+								}"`
+							);
+						} else {
+							const payload = paths[path][httpMethod];
+							for (const query of queries) {
+								const { key, dataType } = query;
+								if (dataType == 'string' || dataType == 'number') {
+									if (!payload.parameters) {
+										payload.parameters = [
+											{
+												in: 'query',
+												name: key,
+												schema: {
+													type: dataType,
+												},
+												required: true,
+											},
+										];
+									} else {
+										const existingQuery = payload.parameters.find(
+											(x: any) => x.in == 'query' && x.name == key && x.schema.type == dataType
+										);
+										if (!existingQuery) {
+											payload.parameters.push({
+												in: 'query',
+												name: key,
+												schema: {
+													type: dataType,
+												},
+												required: true,
+											});
+										}
+									}
+								}
+							}
+							for (const param of params) {
+								const { key, dataType } = param;
+								if (!payload.parameters) {
+									payload.parameters = [
+										{
+											in: 'path',
+											name: key,
+											schema: {
+												type: dataType,
+											},
+											required: true,
+										},
+									];
+								} else {
+									const existingParam = payload.parameters.find(
+										(x: any) => x.in == 'path' && x.name == key && x.schema.type == dataType
+									);
+									if (!existingParam) {
+										payload.parameters.push({
+											in: 'path',
+											name: key,
+											schema: {
+												type: dataType,
+											},
+											required: true,
+										});
+									}
+								}
+							}
+							this.apiDocs.paths[currentPath][httpMethod] = payload;
+						}
+					}
+					// apiDoc.paths[currentPath] = {
+					//   ...apiDoc.paths[currentPath],
+					//   ...paths[path]
+					// };
+				}
+			}
+			this.apiExtensions.endpoints.push({
+				path: endpointPath,
+			});
+		} else {
+			router.use(`/${routeName}`, scopedRouter);
+
+			register(scopedRouter, {
+				services,
+				exceptions: { ...exceptions, ...sharedExceptions },
+				env,
+				database: getDatabase(),
+				emitter: this.apiEmitter,
+				logger: logger as any,
+				getSchema,
+			});
+
+			this.apiExtensions.endpoints.push({
+				path: endpointPath,
+			});
+		}
 	}
 
 	private unregisterHooks(): void {

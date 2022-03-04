@@ -31,5 +31,21 @@ async function run() {
 		},
 	]);
 
-	await create(type, name, { language });
+	if (type == 'endpoint') {
+		const { isUseDecorator } = await inquirer.prompt([
+			{
+				type: 'confirm',
+				name: 'isUseDecorator',
+				message: 'Are you want to use decorator?',
+				default: false,
+			},
+		]);
+		if (isUseDecorator) {
+			await create(type, name, { language, isUsedDecorator: true });
+		} else {
+			await create(type, name, { language, isUsedDecorator: false });
+		}
+	} else {
+		await create(type, name, { language });
+	}
 }

@@ -66,6 +66,12 @@ export function sanitizeQuery(rawQuery: Record<string, any>, accountability?: Ac
 		query.alias = sanitizeAlias(rawQuery.alias);
 	}
 
+	if (rawQuery.show_soft_delete) {
+		query.showSoftDelete = rawQuery.show_soft_delete.toLowerCase() == 'true' ? true : false;
+	} else {
+		query.showSoftDelete = false;
+	}
+
 	return query;
 }
 

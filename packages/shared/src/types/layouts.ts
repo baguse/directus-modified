@@ -28,6 +28,7 @@ export interface LayoutProps<Options = any, Query = any> {
 	selectMode: boolean;
 	showSelect: ShowSelect;
 	readonly: boolean;
+	showSoftDelete: boolean;
 	resetPreset?: () => Promise<void>;
 	clearFilters?: () => void;
 }

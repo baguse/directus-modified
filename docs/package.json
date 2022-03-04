@@ -1,5 +1,5 @@
 {
-	"name": "@directus/docs",
+	"name": "@mv-data-core/docs",
 	"private": false,
 	"version": "9.5.2",
 	"description": "",
@@ -12,7 +12,8 @@
 		"build": "node build.js",
 		"dev": "npm-watch build",
 		"dev:site": "vuepress dev",
-		"build:site": "vuepress build"
+		"build:site": "vuepress build",
+		"build:docs": "vuepress build ."
 	},
 	"watch": {
 		"build": {
@@ -26,7 +27,13 @@
 		}
 	},
 	"files": [
-		"dist"
+		"dist",
+    "app",
+    "configuration",
+    "contributing",
+    "extensions",
+    "getting-started",
+    "reference"
 	],
 	"keywords": [],
 	"author": "Rijk van Zanten <rijkvanzanten@me.com>",

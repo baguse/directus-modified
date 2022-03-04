@@ -79,9 +79,13 @@ export function createLocalAuthRouter(provider: string): Router {
 				req.body?.otp
 			);
 
-			const payload = {
+			const payload: {
+				success: boolean;
+				data: Record<string, any>;
+			} = {
+				success: true,
 				data: { access_token: accessToken, expires },
-			} as Record<string, Record<string, any>>;
+			};
 
 			if (mode === 'json') {
 				payload.data.refresh_token = refreshToken;

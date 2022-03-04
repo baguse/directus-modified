@@ -12,4 +12,5 @@ export type Preset = {
 	layout_query: { [layout: string]: any } | null;
 	layout_options: { [layout: string]: any } | null;
 	refresh_interval: number | null;
+	show_soft_delete: boolean | null;
 };

@@ -144,6 +144,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				// to read from it
 				payload[primaryKeyField] = primaryKey;
 			}
+			if (typeof primaryKey == 'object' && primaryKey.id) primaryKey = primaryKey.id;
 
 			const { revisions: revisionsO2M } = await payloadService.processO2M(payload, primaryKey);
 
@@ -251,7 +252,65 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	 * Get items by query
 	 */
 	async readByQuery(query: Query, opts?: QueryOptions): Promise<Item[]> {
-		let ast = await getASTFromQuery(this.collection, query, this.schema, {
+		const { isSoftDelete, fields } = this.schema.collections[this.collection];
+
+		let queryData = { ...query };
+		if (isSoftDelete) {
+			let deletedAtField = 'deleted_at';
+			for (const fieldName in fields) {
+				const { special } = fields[fieldName];
+				if (special.includes('date-deleted')) {
+					deletedAtField = fieldName;
+					break;
+				}
+			}
+			const filter = queryData.filter as any;
+			if (!query.showSoftDelete) {
+				if (filter) {
+					if (filter._and) {
+						queryData.filter = {
+							_and: [
+								...filter._and,
+								{
+									[deletedAtField]: {
+										_null: true,
+									},
+								},
+							],
+						};
+					} else if (filter._or) {
+						queryData.filter = {
+							_or: filter._or,
+							_and: [
+								{
+									[deletedAtField]: {
+										_null: true,
+									},
+								},
+							],
+						};
+					} else {
+						queryData.filter = {
+							...queryData.filter,
+							[deletedAtField]: {
+								_null: true,
+							},
+						};
+					}
+				} else {
+					queryData = {
+						...queryData,
+						filter: {
+							[deletedAtField]: {
+								_null: true,
+							},
+						},
+					};
+				}
+			}
+		}
+
+		let ast = await getASTFromQuery(this.collection, queryData, this.schema, {
 			accountability: this.accountability,
 			// By setting the permissions action, you can read items using the permissions for another
 			// operation's permissions. This is used to dynamically check if you have update/delete
@@ -591,7 +650,15 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	 * Delete multiple items by primary key
 	 */
 	async deleteMany(keys: PrimaryKey[], opts?: MutationOptions): Promise<PrimaryKey[]> {
-		const primaryKeyField = this.schema.collections[this.collection].primary;
+		const { isSoftDelete, primary: primaryKeyField, fields } = this.schema.collections[this.collection];
+		let deletedAtField = 'deleted_at';
+		for (const fieldName in fields) {
+			const { special } = fields[fieldName];
+			if (special.includes('date-deleted')) {
+				deletedAtField = fieldName;
+				break;
+			}
+		}
 
 		if (this.accountability && this.accountability.admin !== true) {
 			const authorizationService = new AuthorizationService({
@@ -618,7 +685,13 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		}
 
 		await this.knex.transaction(async (trx) => {
-			await trx(this.collection).whereIn(primaryKeyField, keys).delete();
+			if (isSoftDelete) {
+				await trx(this.collection)
+					.whereIn(primaryKeyField, keys)
+					.update({ [deletedAtField]: new Date() });
+			} else {
+				await trx(this.collection).whereIn(primaryKeyField, keys).delete();
+			}
 
 			if (this.accountability && this.schema.collections[this.collection].accountability !== null) {
 				const activityService = new ActivityService({

@@ -11,4 +11,5 @@ export type LayoutQuery = {
 	sort: string[];
 	page: number;
 	limit: number;
+	search?: string;
 };

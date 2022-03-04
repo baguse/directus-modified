@@ -38,6 +38,11 @@
 						<div class="type-label">{{ t('singleton') }}</div>
 						<v-checkbox v-model="singleton" block :label="t('singleton_label')" />
 					</div>
+
+					<div class="field full">
+						<div class="type-label">Soft Delete</div>
+						<v-checkbox v-model="isSoftDelete" block label="Soft Delete Mode" />
+					</div>
 					<v-divider class="full" />
 					<div class="field half">
 						<div class="type-label">{{ t('primary_key_field') }}</div>
@@ -113,6 +118,7 @@
 				:loading="saving"
 				icon
 				rounded
+				:disabled="!softDeleteValid"
 				@click="save"
 			>
 				<v-icon name="check" />
@@ -124,7 +130,7 @@
 <script lang="ts">
 import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
-import { defineComponent, ref, reactive, watch } from 'vue';
+import { defineComponent, ref, reactive, watch, computed } from 'vue';
 import api from '@/api';
 import { Field, Relation } from '@directus/shared/types';
 import { useFieldsStore, useCollectionsStore, useRelationsStore } from '@/stores/';
@@ -152,30 +158,44 @@ const defaultSystemFields = {
 	dateCreated: {
 		enabled: false,
 		inputDisabled: false,
-		name: 'date_created',
-		label: 'created_on',
+		name: 'created_at',
+		label: 'Created At',
 		icon: 'access_time',
 	},
 	userCreated: {
 		enabled: false,
 		inputDisabled: false,
-		name: 'user_created',
-		label: 'created_by',
+		name: 'created_by',
+		label: 'Created By',
 		icon: 'account_circle',
 	},
 	dateUpdated: {
 		enabled: false,
 		inputDisabled: false,
-		name: 'date_updated',
-		label: 'updated_on',
+		name: 'updated_at',
+		label: 'Updated At',
 		icon: 'access_time',
 	},
 	userUpdated: {
 		enabled: false,
 		inputDisabled: false,
-		name: 'user_updated',
-		label: 'updated_by',
+		name: 'updated_by',
+		label: 'updated By',
 		icon: 'account_circle',
+	},
+	deletedAt: {
+		enabled: false,
+		inputDisabled: false,
+		name: 'deleted_at',
+		label: 'Deleted At',
+		icon: 'access_time',
+	},
+	schema: {
+		enabled: false,
+		inputDisabled: false,
+		name: 'public',
+		label: 'Schema',
+		icon: 'flag',
 	},
 };
 
@@ -192,9 +212,9 @@ export default defineComponent({
 		const isOpen = useDialogRoute();
 
 		const currentTab = ref(['collection_setup']);
-
 		const collectionName = ref(null);
 		const singleton = ref(false);
+		const isSoftDelete = ref(false);
 		const primaryKeyFieldName = ref('id');
 		const primaryKeyFieldType = ref<'auto_int' | 'uuid' | 'manual'>('auto_int');
 
@@ -210,6 +230,20 @@ export default defineComponent({
 
 		watch(() => singleton.value, setOptionsForSingleton);
 
+		watch(isSoftDelete, (value) => {
+			if (value == true) systemFields.deletedAt.enabled = true;
+			else systemFields.deletedAt.enabled = false;
+		});
+
+		const softDeleteValid = computed(() => {
+			if (isSoftDelete.value) {
+				if (!systemFields.deletedAt.enabled || !systemFields.deletedAt.name) {
+					return false;
+				}
+			}
+			return true;
+		});
+
 		return {
 			t,
 			router,
@@ -222,6 +256,8 @@ export default defineComponent({
 			collectionName,
 			saving,
 			singleton,
+			isSoftDelete,
+			softDeleteValid,
 		};
 
 		function setOptionsForSingleton() {
@@ -242,7 +278,8 @@ export default defineComponent({
 						archive_field: archiveField.value,
 						archive_value: archiveValue.value,
 						unarchive_value: unarchiveValue.value,
-						singleton: singleton.value,
+						is_soft_delete: isSoftDelete.value,
+						schema: systemFields.schema.name,
 					},
 				});
 
@@ -458,6 +495,25 @@ export default defineComponent({
 						special: ['date-updated'],
 						interface: 'datetime',
 						readonly: true,
+						hidden: true,
+						width: 'half',
+						display: 'datetime',
+						display_options: {
+							relative: true,
+						},
+					},
+					schema: {},
+				});
+			}
+
+			if (systemFields.deletedAt.enabled === true) {
+				fields.push({
+					field: systemFields.deletedAt.name,
+					type: 'timestamp',
+					meta: {
+						special: ['date-deleted'],
+						interface: 'datetime',
+						readonly: false,
 						hidden: true,
 						width: 'half',
 						display: 'datetime',

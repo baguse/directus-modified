@@ -3,7 +3,7 @@ import { Filter, LayoutConfig, ShowSelect } from '../types';
 import { useExtensions } from './use-system';
 
 const NAME_SUFFIX = 'wrapper';
-const WRITABLE_PROPS = ['selection', 'layoutOptions', 'layoutQuery'] as const;
+const WRITABLE_PROPS = ['selection', 'layoutOptions', 'layoutQuery', 'showSoftDelete'] as const;
 
 type WritableProp = typeof WRITABLE_PROPS[number];
 
@@ -50,6 +50,11 @@ function createLayoutWrapper<Options, Query>(layout: LayoutConfig): Component {
 			showSelect: {
 				type: String as PropType<ShowSelect>,
 				default: 'multiple',
+			},
+			showSoftDelete: {
+				type: Boolean,
+				default: false,
+				required: false,
 			},
 			selectMode: {
 				type: Boolean,

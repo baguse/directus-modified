@@ -10,6 +10,7 @@ type UsablePreset = {
 	layoutQuery: Ref<Record<string, any>>;
 	filter: Ref<Filter | null>;
 	search: Ref<string | null>;
+	showSoftDelete: Ref<boolean | null>;
 	refreshInterval: Ref<number | null>;
 	savePreset: (preset?: Partial<Preset> | undefined) => Promise<any>;
 	saveCurrentAsBookmark: (overrides: Partial<Preset>) => Promise<any>;
@@ -130,6 +131,11 @@ export function usePreset(
 		set: (search) => updatePreset({ search }),
 	});
 
+	const showSoftDelete = computed<boolean | null>({
+		get: () => localPreset.value.show_soft_delete || null,
+		set: (show_soft_delete) => updatePreset({ show_soft_delete }),
+	});
+
 	const bookmarkTitle = computed<string | null>({
 		get: () => localPreset.value?.bookmark || null,
 		set: (bookmark) => updatePreset({ bookmark }, true),
@@ -152,6 +158,7 @@ export function usePreset(
 		busy,
 		clearLocalSave,
 		localPreset,
+		showSoftDelete,
 	};
 
 	/**

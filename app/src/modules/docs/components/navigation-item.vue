@@ -27,13 +27,13 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { Link, Group } from '@directus/docs';
+// import { Link, Group } from '@directus/docs';
 
 export default defineComponent({
 	name: 'NavigationListItem',
 	props: {
 		section: {
-			type: Object as PropType<Link | Group>,
+			// type: Object as PropType<Link | Group>,
 			default: null,
 		},
 		dense: {

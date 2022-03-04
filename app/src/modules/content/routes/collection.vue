@@ -11,6 +11,7 @@
 		:filter="mergeFilters(filter, archiveFilter)"
 		:search="search"
 		:collection="collection"
+		:show-soft-delete="showSoftDelete"
 		:reset-preset="resetPreset"
 		:clear-filters="clearFilters"
 	>
@@ -92,6 +93,11 @@
 			</template>
 
 			<template #actions>
+				<v-switch
+					v-if="currentCollection?.meta?.is_soft_delete"
+					v-model="showSoftDelete"
+					label="Show Softdelete"
+				></v-switch>
 				<search-input v-model="search" v-model:filter="filter" :collection="collection" />
 
 				<v-dialog v-if="selection.length > 0" v-model="confirmDelete" @esc="confirmDelete = false">
@@ -268,6 +274,7 @@
 </template>
 
 <script lang="ts">
+/* eslint-disable vue/attribute-hyphenation */
 import { useI18n } from 'vue-i18n';
 import { defineComponent, computed, ref, watch, toRefs } from 'vue';
 import ContentNavigation from '../components/navigation.vue';
@@ -322,7 +329,8 @@ export default defineComponent({
 			default: null,
 		},
 	},
-	setup(props) {
+	emits: ['update:showSoftDelete'],
+	setup(props, { emit }) {
 		const { t } = useI18n();
 
 		const router = useRouter();
@@ -356,7 +364,12 @@ export default defineComponent({
 			refreshInterval,
 			busy: bookmarkSaving,
 			clearLocalSave,
+			showSoftDelete,
 		} = usePreset(collection, bookmarkID);
+
+		watch(showSoftDelete, (value) => {
+			emit('update:showSoftDelete', value);
+		});
 
 		const { layoutWrapper } = useLayout(layout);
 
@@ -470,6 +483,7 @@ export default defineComponent({
 			hasArchive,
 			archiveFilter,
 			mergeFilters,
+			showSoftDelete,
 		};
 
 		async function refresh() {

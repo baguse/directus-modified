@@ -13,6 +13,7 @@ export type Query = {
 	aggregate?: Aggregate | null;
 	deep?: Record<string, Query> | null;
 	alias?: Record<string, string> | null;
+	showSoftDelete?: boolean;
 
 	/**
 	 * This isn't a publicly available query, but rather an internal flag used to union query nested

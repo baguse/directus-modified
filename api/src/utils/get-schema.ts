@@ -63,7 +63,7 @@ async function getDatabaseSchema(
 
 	const collections = [
 		...(await database
-			.select('collection', 'singleton', 'note', 'sort_field', 'accountability')
+			.select('collection', 'singleton', 'note', 'sort_field', 'accountability', 'is_soft_delete')
 			.from('directus_collections')),
 		...systemCollectionRows,
 	];
@@ -85,7 +85,6 @@ async function getDatabaseSchema(
 		}
 
 		const collectionMeta = collections.find((collectionMeta) => collectionMeta.collection === collection);
-
 		result.collections[collection] = {
 			collection,
 			primary: info.primary,
@@ -94,6 +93,7 @@ async function getDatabaseSchema(
 			note: collectionMeta?.note || null,
 			sortField: collectionMeta?.sort_field || null,
 			accountability: collectionMeta ? collectionMeta.accountability : 'all',
+			isSoftDelete: collectionMeta.is_soft_delete || false,
 			fields: mapValues(schemaOverview[collection].columns, (column) => {
 				return {
 					field: column.column_name,

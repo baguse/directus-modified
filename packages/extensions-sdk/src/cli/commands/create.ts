@@ -16,7 +16,7 @@ const pkg = require('../../../../package.json');
 
 const TEMPLATE_PATH = path.resolve(__dirname, '../../../../templates');
 
-type CreateOptions = { language: string };
+type CreateOptions = { language: string; isUsedDecorator?: boolean };
 
 export default async function create(type: string, name: string, options: CreateOptions): Promise<void> {
 	const targetPath = path.resolve(name);
@@ -62,11 +62,19 @@ export default async function create(type: string, name: string, options: Create
 	await fse.ensureDir(targetPath);
 
 	await fse.copy(path.join(TEMPLATE_PATH, 'common', options.language), targetPath);
-	await fse.copy(path.join(TEMPLATE_PATH, type, options.language), targetPath);
+	if (type == 'endpoint' && options.language === 'typescript') {
+		if (options.isUsedDecorator) {
+			await fse.copy(path.join(TEMPLATE_PATH, type, options.language, 'withDecorator'), targetPath);
+		} else {
+			await fse.copy(path.join(TEMPLATE_PATH, type, options.language, 'notWithDecorator'), targetPath);
+		}
+	} else {
+		await fse.copy(path.join(TEMPLATE_PATH, type, options.language), targetPath);
+	}
 	await renameMap(targetPath, (name) => (name.startsWith('_') ? `.${name.substring(1)}` : null));
 
 	const packageManifest = {
-		name: `directus-extension-${name}`,
+		name: `mv-data-core-extension-${name}`,
 		version: '1.0.0',
 		keywords: ['directus', 'directus-extension', `directus-custom-${type}`],
 		[EXTENSION_PKG_KEY]: {
@@ -83,7 +91,7 @@ export default async function create(type: string, name: string, options: Create
 
 	await fse.writeJSON(path.join(targetPath, 'package.json'), packageManifest, { spaces: '\t' });
 
-	await execa('npm', ['install'], { cwd: targetPath });
+	await execa('yarn', ['install'], { cwd: targetPath });
 
 	spinner.succeed(chalk.bold('Done'));
 
@@ -92,14 +100,14 @@ Your ${type} extension has been created at ${chalk.green(targetPath)}
 
 Build your extension by running:
   ${chalk.blue('cd')} ${name}
-  ${chalk.blue('npm run')} build
+  ${chalk.blue('yarn run')} build
 	`);
 }
 
 async function getPackageDeps(type: ExtensionType, language: Language) {
 	if (isAppExtension(type)) {
 		return {
-			'@directus/extensions-sdk': pkg.version,
+			'@directus/extensions-sdk': `npm:@mv-data-core/extensions-sdk@${pkg.version}`,
 			...(language === 'typescript'
 				? {
 						typescript: `^${await getPackageVersion('typescript')}`,
@@ -108,8 +116,16 @@ async function getPackageDeps(type: ExtensionType, language: Language) {
 			vue: `^${await getPackageVersion('vue', 'next')}`,
 		};
 	} else {
+		if (type == 'endpoint' && language === 'typescript') {
+			return {
+				'@directus/extensions-sdk': `npm:@mv-data-core/extensions-sdk@${pkg.version}`,
+				'@types/node': `^${await getPackageVersion('@types/node')}`,
+				typescript: `^${await getPackageVersion('typescript')}`,
+				'@mv-data-core/decorator': '0.0.1',
+			};
+		}
 		return {
-			'@directus/extensions-sdk': pkg.version,
+			'@directus/extensions-sdk': `npm:@mv-data-core/extensions-sdk@${pkg.version}`,
 			...(language === 'typescript'
 				? {
 						'@types/node': `^${await getPackageVersion('@types/node')}`,

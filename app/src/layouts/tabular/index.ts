@@ -4,7 +4,7 @@ import TabularOptions from './options.vue';
 import TabularActions from './actions.vue';
 
 import { useI18n } from 'vue-i18n';
-import { ref, computed, watch, toRefs } from 'vue';
+import { ref, computed, watch, toRefs, unref } from 'vue';
 
 import { HeaderRaw, Item } from '@/components/v-table/types';
 import { Field } from '@directus/shared/types';
@@ -38,7 +38,7 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 		const layoutOptions = useSync(props, 'layoutOptions', emit);
 		const layoutQuery = useSync(props, 'layoutQuery', emit);
 
-		const { collection, filter, filterUser, search } = toRefs(props);
+		const { collection, filter, filterUser, search, showSoftDelete } = toRefs(props);
 
 		const { info, primaryKeyField, fields: fieldsInCollection, sortField } = useCollection(collection);
 
@@ -53,6 +53,7 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 				fields: fieldsWithRelational,
 				filter,
 				search,
+				showSoftDelete,
 			}
 		);
 
@@ -85,6 +86,12 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 
 		const availableFields = computed(() => {
 			return fieldsInCollection.value.filter((field: Field) => field.meta?.special?.includes('no-data') !== true);
+		});
+
+		const deletedAtField = computed(() => {
+			const deletedAt = fieldsInCollection.value.find((field: Field) => field.meta?.special?.includes('date-deleted'));
+			if (deletedAt) return deletedAt.field;
+			else return 'deleted_at';
 		});
 
 		return {
@@ -159,7 +166,7 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 				return adjustFieldsForDisplays(fields.value, props.collection);
 			});
 
-			return { sort, limit, page, fields, fieldsWithRelational };
+			return { sort, limit, page, fields, fieldsWithRelational, showSoftDelete };
 		}
 
 		function useTable() {
@@ -201,7 +208,7 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 
 			const tableHeaders = computed<HeaderRaw[]>({
 				get() {
-					return activeFields.value.map((field) => ({
+					const activeFieldMap = activeFields.value.map((field) => ({
 						text: field.name,
 						value: field.field,
 						width: localWidths.value[field.field] || layoutOptions.value?.widths?.[field.field] || null,
@@ -218,6 +225,26 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 								field.type
 							) === false,
 					}));
+					if (showSoftDelete.value) {
+						activeFieldMap.push({
+							text: 'Softdeleted At',
+							value: 'softdeleted_at',
+							width: null,
+							field: {
+								display: 'datetime',
+								type: 'timestamp',
+								field: unref(deletedAtField),
+								interface: 'datetime',
+								displayOptions: {
+									relative: true,
+								},
+								interfaceOptions: null,
+							},
+							sortable: false,
+						});
+					}
+					console.log({ activeFieldMap, deletedAtField });
+					return activeFieldMap;
 				},
 				set(val) {
 					const widths = {} as { [field: string]: number };

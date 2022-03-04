@@ -35,3 +35,7 @@ columns:
     type: json
   layout_options:
     type: json
+  show_soft_delete:
+    type: boolean
+    nullable: true
+    default: false

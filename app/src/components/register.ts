@@ -4,7 +4,7 @@ import RenderTemplate from '@/views/private/components/render-template';
 import SidebarDetail from '@/views/private/components/sidebar-detail/';
 import UserPopover from '@/views/private/components/user-popover';
 import ValueNull from '@/views/private/components/value-null';
-import DocsWrapper from '@/views/private/components/docs-wrapper';
+// import DocsWrapper from '@/views/private/components/docs-wrapper';
 import { App } from 'vue';
 import TransitionBounce from './transition/bounce';
 import TransitionDialog from './transition/dialog';
@@ -121,5 +121,5 @@ export function registerComponents(app: App): void {
 	app.component('SidebarDetail', SidebarDetail);
 	app.component('UserPopover', UserPopover);
 	app.component('ValueNull', ValueNull);
-	app.component('DocsWrapper', DocsWrapper);
+	// app.component('DocsWrapper', DocsWrapper);
 }

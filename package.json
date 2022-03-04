@@ -1,6 +1,6 @@
 {
 	"name": "directus-monorepo",
-	"private": false,
+	"private": true,
 	"workspaces": [
 		"./app",
 		"./api",
@@ -13,6 +13,7 @@
 		"lint:stylelint": "stylelint \"**/*.{css,scss,vue}\" --custom-syntax postcss-html",
 		"format": "prettier --write \"**/*.{js,ts,vue,md,yaml}\"",
 		"dev": "lerna run dev --stream --parallel",
+		"dev-me": "lerna run dev-me --stream --parallel",
 		"build": "lerna run build",
 		"publish": "lerna publish",
 		"build:api": "lerna run build --ignore @directus/app",

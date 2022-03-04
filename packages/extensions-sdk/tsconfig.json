@@ -25,6 +25,8 @@
 		"allowSyntheticDefaultImports": true,
 		"isolatedModules": true,
 		"rootDir": "./src",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
 	},
 	"include": ["./src/**/*.ts"]
 }

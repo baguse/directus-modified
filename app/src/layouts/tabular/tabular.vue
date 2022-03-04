@@ -25,7 +25,19 @@
 		>
 			<template v-for="header in tableHeaders" :key="header.value" #[`item.${header.value}`]="{ item }">
 				<render-display
+					v-if="header.value !== 'softdeleted_at'"
 					:value="item[header.value]"
+					:display="header.field.display"
+					:options="header.field.displayOptions"
+					:interface="header.field.interface"
+					:interface-options="header.field.interfaceOptions"
+					:type="header.field.type"
+					:collection="collection"
+					:field="header.field.field"
+				/>
+				<render-display
+					v-else
+					:value="item[header.field.field]"
 					:display="header.field.display"
 					:options="header.field.displayOptions"
 					:interface="header.field.interface"
@@ -81,7 +93,7 @@
 
 <script lang="ts">
 import { useI18n } from 'vue-i18n';
-import { ComponentPublicInstance, defineComponent, PropType, ref, inject, Ref, watch } from 'vue';
+import { ComponentPublicInstance, defineComponent, PropType, ref, inject, Ref, watch, computed, unref } from 'vue';
 import { useSync } from '@directus/shared/composables';
 import useShortcut from '@/composables/use-shortcut';
 import { Collection } from '@/types';
@@ -162,6 +174,11 @@ export default defineComponent({
 		limit: {
 			type: Number,
 			required: true,
+		},
+		showSoftDelete: {
+			type: Boolean,
+			default: true,
+			required: false,
 		},
 		primaryKeyField: {
 			type: Object as PropType<Field>,

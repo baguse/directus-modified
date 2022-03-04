@@ -4,6 +4,7 @@ get:
   operationId: getFields
   parameters:
     - $ref: '../../openapi.yaml#/components/parameters/Limit'
+    - $ref: '../../openapi.yaml#/components/parameters/Page'
     - $ref: '../../openapi.yaml#/components/parameters/Sort'
   responses:
     '200':

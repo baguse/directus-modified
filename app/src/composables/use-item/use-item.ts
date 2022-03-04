@@ -37,7 +37,11 @@ type UsableItem = {
 	validationErrors: Ref<any[]>;
 };
 
-export function useItem(collection: Ref<string>, primaryKey: Ref<string | number | null>): UsableItem {
+export function useItem(
+	collection: Ref<string>,
+	primaryKey: Ref<string | number | null>,
+	showSoftDelete: Ref<boolean | null>
+): UsableItem {
 	const { info: collectionInfo, primaryKeyField } = useCollection(collection);
 	const item = ref<Record<string, any> | null>(null);
 	const error = ref<any>(null);
@@ -63,6 +67,8 @@ export function useItem(collection: Ref<string>, primaryKey: Ref<string | number
 	});
 
 	const { fields } = usePermissions(collection, item, isNew);
+
+	const showSoftDeleteValue = showSoftDelete ? showSoftDelete.value || false : false;
 
 	const itemEndpoint = computed(() => {
 		if (isSingle.value) {
@@ -100,7 +106,7 @@ export function useItem(collection: Ref<string>, primaryKey: Ref<string | number
 		error.value = null;
 
 		try {
-			const response = await api.get(itemEndpoint.value);
+			const response = await api.get(`${itemEndpoint.value}?show_soft_delete=${showSoftDeleteValue}`);
 			setItemValueToResponse(response);
 		} catch (err: any) {
 			error.value = err;

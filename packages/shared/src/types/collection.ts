@@ -26,6 +26,8 @@ export type CollectionMeta = {
 	sort: number | null;
 	group: string | null;
 	collapse: 'open' | 'closed' | 'locked';
+	is_soft_delete: boolean;
+	schema: string;
 };
 
 export interface Collection {

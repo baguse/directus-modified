@@ -75,11 +75,11 @@ async function createDefaultAdmin(schema: SchemaOverview) {
 	let adminEmail = env.ADMIN_EMAIL;
 
 	if (!adminEmail) {
-		logger.info('No admin email provided. Defaulting to "admin@example.com"');
-		adminEmail = 'admin@example.com';
+		logger.info('No admin email provided. Defaulting to "admin@machinevision.global"');
+		adminEmail = 'admin@machinevision.global';
 	}
 
-	let adminPassword = env.ADMIN_PASSWORD;
+	let adminPassword = env.ADMIN_PASSWORD || 'laniuslab';
 
 	if (!adminPassword) {
 		adminPassword = nanoid(12);

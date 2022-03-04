@@ -177,6 +177,9 @@ export default async function createApp(): Promise<express.Application> {
 		app.use('/admin/*', noCacheIndexHtmlHandler);
 	}
 
+	// serve uploaded files
+	app.use('/uploads', express.static(env.STORAGE_LOCAL_ROOT));
+
 	// use the rate limiter - all routes for now
 	if (env.RATE_LIMITER_ENABLED === true) {
 		app.use(rateLimiter);

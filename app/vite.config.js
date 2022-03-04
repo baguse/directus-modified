@@ -9,6 +9,7 @@ import {
 	getLocalExtensions,
 	generateExtensionsEntry,
 } from '@directus/shared/utils/node';
+
 import { APP_SHARED_DEPS, APP_EXTENSION_TYPES, APP_EXTENSION_PACKAGE_TYPES } from '@directus/shared/constants';
 import hljs from 'highlight.js';
 import hljsGraphQL from './src/utils/hljs-graphql';
@@ -126,7 +127,7 @@ export default defineConfig({
 		port: 8080,
 		proxy: {
 			'^/(?!admin)': {
-				target: process.env.API_URL ? process.env.API_URL : 'http://localhost:8055/',
+				target: process.env.API_URL ? process.env.API_URL : 'http://localhost:8056/',
 				changeOrigin: true,
 			},
 		},

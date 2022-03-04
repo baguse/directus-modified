@@ -57,6 +57,7 @@ module.exports = {
 				'@typescript-eslint/no-non-null-assertion': 'off',
 				// Allow unused arguments and variables when they begin with an underscore
 				'@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+				'vue/attribute-hyphenation': 'off',
 			},
 		},
 	],

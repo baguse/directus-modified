@@ -31,6 +31,8 @@ const AliasCollection: Collection = {
 		sort: null,
 		group: null,
 		collapse: 'open',
+		is_soft_delete: false,
+		schema: 'public',
 	},
 };
 

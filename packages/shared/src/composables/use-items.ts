@@ -1,7 +1,7 @@
 import { useApi } from './use-system';
 import axios, { CancelTokenSource } from 'axios';
 import { useCollection } from './use-collection';
-import { Item } from '../types';
+import { Field, Item } from '../types';
 import { moveInArray } from '../utils';
 import { isEqual, throttle } from 'lodash';
 import { computed, ComputedRef, ref, Ref, watch, WritableComputedRef, unref } from 'vue';
@@ -30,13 +30,22 @@ type ComputedQuery = {
 	search: Ref<Query['search']> | ComputedRef<Query['search']> | WritableComputedRef<Query['search']>;
 	filter: Ref<Query['filter']> | ComputedRef<Query['filter']> | WritableComputedRef<Query['filter']>;
 	page: Ref<Query['page']> | WritableComputedRef<Query['page']>;
+	showSoftDelete: Ref<Query['showSoftDelete']> | WritableComputedRef<Query['showSoftDelete']>;
 };
 
 export function useItems(collection: Ref<string | null>, query: ComputedQuery, fetchOnInit = true): UsableItems {
 	const api = useApi();
-	const { primaryKeyField } = useCollection(collection);
+	const { primaryKeyField, fields: fieldsInCollection, info: collectionInfo } = useCollection(collection);
+	const collectionInfoValue = collectionInfo.value;
+	const is_soft_delete = collectionInfoValue?.meta?.is_soft_delete || false;
 
-	const { fields, limit, sort, search, filter, page } = query;
+	const deletedAtField = computed(() => {
+		const deletedAt = fieldsInCollection.value.find((field: Field) => field.meta?.special?.includes('date-deleted'));
+		if (deletedAt) return deletedAt.field;
+		else return 'deleted_at';
+	});
+
+	const { fields, limit, sort, search, filter, page, showSoftDelete } = query;
 
 	const endpoint = computed(() => {
 		if (!collection.value) return null;
@@ -68,7 +77,7 @@ export function useItems(collection: Ref<string | null>, query: ComputedQuery, f
 	}
 
 	watch(
-		[collection, limit, sort, search, filter, fields, page],
+		[collection, limit, sort, search, filter, fields, page, showSoftDelete],
 		async (after, before) => {
 			if (isEqual(after, before)) return;
 
@@ -117,6 +126,10 @@ export function useItems(collection: Ref<string | null>, query: ComputedQuery, f
 
 		let fieldsToFetch = [...(unref(fields) ?? [])];
 
+		if (is_soft_delete) {
+			fieldsToFetch.push(unref(deletedAtField));
+		}
+
 		// Make sure the primary key is always fetched
 		if (
 			!unref(fields)?.includes('*') &&
@@ -133,7 +146,7 @@ export function useItems(collection: Ref<string | null>, query: ComputedQuery, f
 		try {
 			currentRequest = axios.CancelToken.source();
 
-			const response = await api.get<any>(endpoint.value, {
+			const response = await api.get<any>(`${endpoint.value}`, {
 				params: {
 					limit: unref(limit),
 					fields: fieldsToFetch,
@@ -141,6 +154,7 @@ export function useItems(collection: Ref<string | null>, query: ComputedQuery, f
 					page: unref(page),
 					search: unref(search),
 					filter: unref(filter),
+					show_soft_delete: unref(showSoftDelete),
 					meta: ['filter_count', 'total_count'],
 				},
 				cancelToken: currentRequest.token,

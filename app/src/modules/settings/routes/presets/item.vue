@@ -160,6 +160,7 @@ type FormattedPreset = {
 
 	layout_options: Record<string, any> | null;
 	filter: Filter | null;
+	show_soft_delete: boolean | null;
 };
 
 export default defineComponent({
@@ -250,6 +251,7 @@ export default defineComponent({
 				if (edits.value.layout_query) editsParsed.layout_query = edits.value.layout_query;
 				if (edits.value.layout_options) editsParsed.layout_options = edits.value.layout_options;
 				if (edits.value.filter) editsParsed.filter = edits.value.filter;
+				if (edits.value.show_soft_delete) editsParsed.show_soft_delete = edits.value.show_soft_delete;
 				editsParsed.search = edits.value.search;
 
 				if (edits.value.scope) {
@@ -318,6 +320,7 @@ export default defineComponent({
 					layout_query: null,
 					layout_options: null,
 					filter: null,
+					show_soft_delete: false,
 				};
 				if (isNew.value === true) return defaultValues;
 				if (preset.value === null) return defaultValues;
@@ -340,6 +343,7 @@ export default defineComponent({
 					layout_query: preset.value.layout_query,
 					layout_options: preset.value.layout_options,
 					filter: preset.value.filter,
+					show_soft_delete: preset.value.show_soft_delete,
 				};
 
 				return value;
@@ -416,7 +420,29 @@ export default defineComponent({
 				},
 			});
 
-			return { edits, initialValues, values, layoutQuery, layoutOptions, hasEdits, updateFilters, search };
+			const showSoftDelete = computed<boolean | null>({
+				get() {
+					return values.value.show_soft_delete;
+				},
+				set(newShowSoftDelete) {
+					edits.value = {
+						...edits.value,
+						show_soft_delete: newShowSoftDelete,
+					};
+				},
+			});
+
+			return {
+				edits,
+				initialValues,
+				values,
+				layoutQuery,
+				layoutOptions,
+				hasEdits,
+				updateFilters,
+				search,
+				showSoftDelete,
+			};
 
 			function updateFilters(newFilter: Filter) {
 				edits.value = {

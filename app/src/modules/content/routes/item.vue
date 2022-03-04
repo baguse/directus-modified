@@ -219,6 +219,7 @@ import useEditsGuard from '@/composables/use-edits-guard';
 import { useTitle } from '@/composables/use-title';
 import { renderStringTemplate } from '@/utils/render-string-template';
 import useTemplateData from '@/composables/use-template-data';
+import usePreset from '@/composables/use-preset';
 
 export default defineComponent({
 	name: 'ContentsItem',
@@ -264,6 +265,8 @@ export default defineComponent({
 			accountabilityScope,
 		} = useCollection(collection);
 
+		const { showSoftDelete } = usePreset(collection, ref(null));
+
 		const {
 			isNew,
 			edits,
@@ -281,7 +284,7 @@ export default defineComponent({
 			saveAsCopy,
 			refresh,
 			validationErrors,
-		} = useItem(collection, primaryKey);
+		} = useItem(collection, primaryKey, showSoftDelete);
 
 		const { templateData, loading: templateDataLoading } = useTemplateData(collectionInfo, primaryKey);
 
@@ -413,6 +416,7 @@ export default defineComponent({
 			revisionsAllowed,
 			revert,
 			accountabilityScope,
+			showSoftDelete,
 		};
 
 		function useBreadcrumb() {

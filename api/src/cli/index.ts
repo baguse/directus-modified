@@ -13,6 +13,8 @@ import usersCreate from './commands/users/create';
 import usersPasswd from './commands/users/passwd';
 import { snapshot } from './commands/schema/snapshot';
 import { apply } from './commands/schema/apply';
+import schemaBackup from './commands/schema/backup';
+import OAS from './commands/oas/export';
 
 const pkg = require('../../package.json');
 
@@ -111,6 +113,17 @@ export async function createCli(): Promise<Command> {
 		.option('-y, --yes', `Assume "yes" as answer to all prompts and run non-interactively`)
 		.argument('<path>', 'Path to snapshot file')
 		.action(apply);
+
+	schemaCommands.command('backup').description('Backup the current database').action(schemaBackup);
+
+	const oasCommands = program.command('oas');
+	oasCommands
+		.command('export:file')
+		.description('Save the OpenAPI specification')
+		.argument('<filename>', 'Filename')
+		.action(OAS.saveToFile);
+
+	oasCommands.command('export').description('Print the OpenAPI specification').action(OAS.printJson);
 
 	await emitter.emitInit('cli.after', { program });
 

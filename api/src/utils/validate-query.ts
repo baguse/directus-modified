@@ -12,12 +12,16 @@ const querySchema = Joi.object({
 	limit: Joi.number(),
 	offset: Joi.number(),
 	page: Joi.number(),
-	meta: Joi.array().items(Joi.string().valid('total_count', 'filter_count')),
+	meta: Joi.array().items(
+		Joi.string().valid('total_count', 'filter_count', 'count', 'total_page', 'current_page', 'limit')
+	),
 	search: Joi.string(),
 	export: Joi.string().valid('json', 'csv', 'xml'),
 	aggregate: Joi.object(),
 	deep: Joi.object(),
 	alias: Joi.object(),
+	show_soft_delete: Joi.bool(),
+	showSoftDelete: Joi.bool(),
 }).id('query');
 
 export function validateQuery(query: Query): Query {

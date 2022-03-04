@@ -12,7 +12,9 @@ let queuedModules: ModuleConfig[] = [];
 export async function loadModules(): Promise<void> {
 	const moduleModules = import.meta.globEager('./*/index.ts');
 
-	const modules: ModuleConfig[] = Object.values(moduleModules).map((module) => module.default);
+	const modules: ModuleConfig[] = Object.values(moduleModules)
+		.map((module) => module.default)
+		.filter((module) => module);
 
 	try {
 		const customModules: { default: ModuleConfig[] } = import.meta.env.DEV
