@@ -243,7 +243,6 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 							sortable: false,
 						});
 					}
-					console.log({ activeFieldMap, deletedAtField });
 					return activeFieldMap;
 				},
 				set(val) {
