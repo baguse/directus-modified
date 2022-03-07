@@ -32,6 +32,12 @@ type RunASTOptions = {
 	 * Whether or not to strip out non-requested required fields automatically (eg IDs / FKs)
 	 */
 	stripNonRequested?: boolean;
+
+	/** Disable transformers */
+	transformers?: {
+		conceal?: boolean;
+		hash?: boolean;
+	};
 };
 
 /**
@@ -76,7 +82,9 @@ export default async function runAST(
 
 		// Run the items through the special transforms
 		const payloadService = new PayloadService(collection, { knex, schema });
-		let items: null | Item | Item[] = await payloadService.processValues('read', rawItems);
+		let items: null | Item | Item[] = await payloadService.processValues('read', rawItems, {
+			transformers: options?.transformers || {},
+		});
 
 		if (!items || items.length === 0) return items;
 
@@ -95,7 +103,9 @@ export default async function runAST(
 					const node = merge({}, nestedNode, {
 						query: { limit: env.RELATIONAL_BATCH_SIZE, offset: batchCount * env.RELATIONAL_BATCH_SIZE },
 					});
-					nestedItems = (await runAST(node, schema, { knex, nested: true })) as Item[] | null;
+					nestedItems = (await runAST(node, schema, { knex, nested: true, transformers: options?.transformers })) as
+						| Item[]
+						| null;
 
 					if (nestedItems) {
 						items = mergeWithParentItems(schema, nestedItems, items, nestedNode);
@@ -108,7 +118,11 @@ export default async function runAST(
 					batchCount++;
 				}
 			} else {
-				nestedItems = (await runAST(nestedNode, schema, { knex, nested: true })) as Item[] | null;
+				nestedItems = (await runAST(nestedNode, schema, {
+					knex,
+					nested: true,
+					transformers: options?.transformers,
+				})) as Item[] | null;
 
 				if (nestedItems) {
 					// Merge all fetched nested records with the parent items

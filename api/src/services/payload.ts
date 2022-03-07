@@ -134,13 +134,41 @@ export class PayloadService {
 		},
 	};
 
-	processValues(action: Action, payloads: Partial<Item>[]): Promise<Partial<Item>[]>;
-	processValues(action: Action, payload: Partial<Item>): Promise<Partial<Item>>;
+	processValues(
+		action: Action,
+		payloads: Partial<Item>[],
+		options?: {
+			transformers: {
+				conceal?: boolean;
+				hash?: boolean;
+			};
+		}
+	): Promise<Partial<Item>[]>;
+	processValues(
+		action: Action,
+		payload: Partial<Item>,
+		options?: {
+			transformers: {
+				conceal?: boolean;
+				hash?: boolean;
+			};
+		}
+	): Promise<Partial<Item>>;
 	async processValues(
 		action: Action,
-		payload: Partial<Item> | Partial<Item>[]
+		payload: Partial<Item> | Partial<Item>[],
+		options?: {
+			transformers?: {
+				conceal?: boolean;
+				hash?: boolean;
+			};
+		}
 	): Promise<Partial<Item> | Partial<Item>[]> {
 		const processedPayload = toArray(payload);
+		const transformers = {
+			conceal: typeof options?.transformers?.conceal === 'boolean' ? options?.transformers?.conceal : true,
+			hash: typeof options?.transformers?.hash === 'boolean' ? options?.transformers?.hash : true,
+		};
 
 		if (processedPayload.length === 0) return [];
 
@@ -160,7 +188,7 @@ export class PayloadService {
 			processedPayload.map(async (record: any) => {
 				await Promise.all(
 					specialFieldsInCollection.map(async ([name, field]) => {
-						const newValue = await this.processField(field, record, action, this.accountability);
+						const newValue = await this.processField(field, record, action, this.accountability, transformers);
 						if (newValue !== undefined) record[name] = newValue;
 					})
 				);
@@ -207,7 +235,10 @@ export class PayloadService {
 		field: SchemaOverview['collections'][string]['fields'][string],
 		payload: Partial<Item>,
 		action: Action,
-		accountability: Accountability | null
+		accountability: Accountability | null,
+		options: {
+			[type: string]: boolean;
+		}
 	): Promise<any> {
 		if (!field.special) return payload[field.field];
 		const fieldSpecials = field.special ? toArray(field.special) : [];
@@ -215,7 +246,7 @@ export class PayloadService {
 		let value = clone(payload[field.field]);
 
 		for (const special of fieldSpecials) {
-			if (special in this.transformers) {
+			if (special in this.transformers && options[special]) {
 				value = await this.transformers[special]({
 					action,
 					value,

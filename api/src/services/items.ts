@@ -25,6 +25,10 @@ import { ActivityService, RevisionsService } from './index';
 export type QueryOptions = {
 	stripNonRequested?: boolean;
 	permissionsAction?: PermissionsAction;
+	transformers?: {
+		conceal?: boolean;
+		hash?: boolean;
+	};
 };
 
 export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractService {
@@ -333,6 +337,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			knex: this.knex,
 			// GraphQL requires relational keys to be returned regardless
 			stripNonRequested: opts?.stripNonRequested !== undefined ? opts.stripNonRequested : true,
+			transformers: opts?.transformers,
 		});
 		if (records === null) {
 			throw new ForbiddenException();
