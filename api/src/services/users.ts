@@ -17,6 +17,8 @@ import { SettingsService } from './settings';
 import { stall } from '../utils/stall';
 import { performance } from 'perf_hooks';
 import { getSimpleHash } from '@directus/shared/utils';
+import { generateHash } from '../utils/generate-hash';
+import argon2 from 'argon2';
 
 export class UsersService extends ItemsService {
 	knex: Knex;
@@ -366,5 +368,13 @@ export class UsersService extends ItemsService {
 		});
 
 		await service.updateOne(user.id, { password, status: 'active' });
+	}
+
+	async generateHash(stringHash: string): Promise<string> {
+		return generateHash(stringHash);
+	}
+
+	async verifyHash(stringHash: string, hash: string): Promise<boolean> {
+		return argon2.verify(hash, stringHash);
 	}
 }
