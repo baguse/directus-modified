@@ -561,15 +561,18 @@ export class FieldsService {
 			}
 		}
 
+		/**
+		 * TODO: Fix unique by Backend
+		 */
 		if (field.schema?.is_primary_key) {
 			column.primary().notNullable();
 		} else if (field.schema?.is_unique === true) {
 			if (!alter || alter.is_unique === false) {
-				column.unique();
+				// column.unique();
 			}
 		} else if (field.schema?.is_unique === false) {
 			if (alter && alter.is_unique === true) {
-				table.dropUnique([field.field]);
+				// table.dropUnique([field.field]);
 			}
 		}
 

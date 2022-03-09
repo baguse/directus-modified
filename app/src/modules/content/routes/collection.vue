@@ -96,7 +96,7 @@
 				<v-switch
 					v-if="currentCollection?.meta?.is_soft_delete"
 					v-model="showSoftDelete"
-					label="Show Softdelete"
+					v-tooltip.bottom="'Show Softdelete'"
 				></v-switch>
 				<search-input v-model="search" v-model:filter="filter" :collection="collection" />
 

@@ -1,6 +1,6 @@
 {
 	"name": "@mv-data-core/app",
-	"version": "9.5.0",
+	"version": "9.5.1",
 	"private": false,
 	"description": "Directus is an Open-Source Headless CMS & API for Managing Custom Databases",
 	"author": "Rijk van Zanten <rijkvanzanten@me.com>",
@@ -68,8 +68,7 @@
 		"@types/ms": "0.7.31",
 		"@types/qrcode": "1.4.1",
 		"@types/wellknown": "0.5.1",
-		"@vitejs/plugin-vue": "1.10.0",
-		"@vue/compiler-sfc": "3.2.22",
+		"@vitejs/plugin-vue": "2.2.4",
 		"apexcharts": "3.30.0",
 		"axios": "0.24.0",
 		"base-64": "1.0.0",

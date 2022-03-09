@@ -86,6 +86,76 @@
 				</v-card>
 			</v-dialog>
 
+			<!-- For Soft delete -->
+			<!-- <v-dialog
+				v-if="!isNew && collectionInfo?.meta?.is_soft_delete"
+				v-model="confirmSoftDelete"
+				:disabled="deleteAllowed === false"
+				@esc="confirmSoftDelete = false"
+			>
+				<template #activator="{ on }">
+					<v-button
+						v-if="collectionInfo.meta && collectionInfo.meta.singleton === false"
+						v-tooltip.bottom="deleteAllowed ? t('soft_delete_label') : t('not_allowed')"
+						rounded
+						icon
+						class="action-softdelete"
+						:disabled="item === null || deleteAllowed !== true"
+						@click="on"
+					>
+						<v-icon name="delete" outline />
+					</v-button>
+				</template>
+
+				<v-card>
+					<v-card-title>{{ t('delete_are_you_sure') }}</v-card-title>
+
+					<v-card-actions>
+						<v-button secondary @click="confirmSoftDelete = false">
+							{{ t('cancel') }}
+						</v-button>
+						<v-button kind="danger" :loading="deleting" @click="deleteAndQuit">
+							{{ t('soft_delete_label') }}
+						</v-button>
+					</v-card-actions>
+				</v-card>
+			</v-dialog> -->
+
+			<!-- For Hard delete -->
+			<!-- <v-dialog
+				v-if="!isNew && collectionInfo?.meta?.is_soft_delete"
+				v-model="confirmHardDelete"
+				:disabled="deleteAllowed === false"
+				@esc="confirmHardDelete = false"
+			>
+				<template #activator="{ on }">
+					<v-button
+						v-if="collectionInfo.meta && collectionInfo.meta.singleton === false"
+						v-tooltip.bottom="deleteAllowed ? t('hard_delete_label') : t('not_allowed')"
+						rounded
+						icon
+						class="action-delete"
+						:disabled="item === null || deleteAllowed !== true"
+						@click="on"
+					>
+						<v-icon name="delete" outline />
+					</v-button>
+				</template>
+
+				<v-card>
+					<v-card-title>{{ t('delete_are_you_sure') }}</v-card-title>
+
+					<v-card-actions>
+						<v-button secondary @click="confirmHardDelete = false">
+							{{ t('cancel') }}
+						</v-button>
+						<v-button kind="danger" :loading="deleting" @click="deleteAndQuit">
+							{{ t('hard_delete_label') }}
+						</v-button>
+					</v-card-actions>
+				</v-card>
+			</v-dialog> -->
+
 			<v-dialog
 				v-if="collectionInfo.meta && collectionInfo.meta.archive_field && !isNew"
 				v-model="confirmArchive"
@@ -308,6 +378,8 @@ export default defineComponent({
 
 		const { confirmLeave, leaveTo } = useEditsGuard(hasEdits);
 		const confirmDelete = ref(false);
+		const confirmSoftDelete = ref(false);
+		const confirmHardDelete = ref(false);
 		const confirmArchive = ref(false);
 
 		const title = computed(() => {
@@ -383,6 +455,8 @@ export default defineComponent({
 			saveAndQuit,
 			deleteAndQuit,
 			confirmDelete,
+			confirmSoftDelete,
+			confirmHardDelete,
 			confirmArchive,
 			deleting,
 			archiving,
@@ -535,6 +609,12 @@ export default defineComponent({
 	--v-button-color: var(--danger);
 	--v-button-background-color-hover: var(--danger-25);
 	--v-button-color-hover: var(--danger);
+}
+.action-softdelete {
+	--v-button-background-color: var(--warning-10);
+	--v-button-color: var(--warning);
+	--v-button-background-color-hover: var(--warning-25);
+	--v-button-color-hover: var(--warning);
 }
 
 .action-archive {

@@ -1215,7 +1215,9 @@ continue_as: >-
 editing_role: '{role} Role'
 creating_webhook: Creating Webhook
 default_label: Default
-delete_label: Delete
+delete_label: Deleted
+soft_delete_label: Soft Delete
+hard_delete_label: Hard Delete
 delete_are_you_sure: >-
   This action is permanent and can not be undone. Are you sure you would like to proceed?
 delete_field_are_you_sure: >-
@@ -1277,6 +1279,7 @@ view_project: View Project
 weeks: {}
 report_error: Report Error
 start: Start
+relational_data_not_found: Failed to get data, maybe softdeleted!
 interfaces:
   filter:
     name: Filter

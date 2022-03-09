@@ -6,6 +6,7 @@
 		{{ t('display_template_not_setup') }}
 	</v-notice>
 	<div v-else class="many-to-one">
+		<v-notice v-if="!isRelationDataFound" type="warning">{{ t('relational_data_not_found') }}</v-notice>
 		<v-menu v-model="menuActive" attached :disabled="disabled">
 			<template #activator="{ active }">
 				<v-skeleton-loader v-if="loadingCurrent" type="input" />
@@ -179,6 +180,8 @@ export default defineComponent({
 
 		const editModalActive = ref(false);
 
+		const isRelationDataFound = ref(true);
+
 		return {
 			t,
 			collectionInfo,
@@ -203,6 +206,7 @@ export default defineComponent({
 			editModalActive,
 			relatedPrimaryKeyField,
 			customFilter,
+			isRelationDataFound,
 		};
 
 		function useCurrent() {
@@ -294,7 +298,8 @@ export default defineComponent({
 
 					currentItem.value = response.data.data;
 				} catch (err: any) {
-					unexpectedError(err);
+					isRelationDataFound.value = false;
+					// unexpectedError(err);
 				} finally {
 					loading.value = false;
 				}

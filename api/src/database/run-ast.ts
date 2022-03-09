@@ -37,6 +37,16 @@ type RunASTOptions = {
 	transformers?: {
 		conceal?: boolean;
 		hash?: boolean;
+		json?: boolean;
+		boolean?: boolean;
+		uuid?: boolean;
+		'user-created'?: boolean;
+		'user-updated'?: boolean;
+		'role-created'?: boolean;
+		'role-updated'?: boolean;
+		'date-created'?: boolean;
+		'date-updated'?: boolean;
+		csv?: boolean;
 	};
 };
 
@@ -73,8 +83,66 @@ export default async function runAST(
 			query
 		);
 
+		// apply soft delete
+		const { isSoftDelete, fields } = schema.collections[collection];
+		let queryData = { ...query };
+		if (isSoftDelete) {
+			let deletedAtField = 'deleted_at';
+			for (const fieldName in fields) {
+				const { special } = fields[fieldName];
+				if (special.includes('date-deleted')) {
+					deletedAtField = fieldName;
+					break;
+				}
+			}
+			const filter = queryData.filter as any;
+			if (!query.showSoftDelete) {
+				if (filter) {
+					if (filter._and) {
+						queryData.filter = {
+							_and: [
+								...filter._and,
+								{
+									[deletedAtField]: {
+										_null: true,
+									},
+								},
+							],
+						};
+					} else if (filter._or) {
+						queryData.filter = {
+							_or: filter._or,
+							_and: [
+								{
+									[deletedAtField]: {
+										_null: true,
+									},
+								},
+							],
+						};
+					} else {
+						queryData.filter = {
+							...queryData.filter,
+							[deletedAtField]: {
+								_null: true,
+							},
+						};
+					}
+				} else {
+					queryData = {
+						...queryData,
+						filter: {
+							[deletedAtField]: {
+								_null: true,
+							},
+						},
+					};
+				}
+			}
+		}
+
 		// The actual knex query builder instance. This is a promise that resolves with the raw items from the db
-		const dbQuery = getDBQuery(schema, knex, collection, fieldNodes, query);
+		const dbQuery = getDBQuery(schema, knex, collection, fieldNodes, queryData);
 
 		const rawItems: Item | Item[] = await dbQuery;
 
@@ -355,7 +423,9 @@ function mergeWithParentItems(
 			});
 
 			parentItem[nestedNode.fieldKey].push(...itemChildren);
-			parentItem[nestedNode.fieldKey] = parentItem[nestedNode.fieldKey].slice(0, nestedNode.query.limit ?? 100);
+			if (nestedNode.query.limit != -1) {
+				parentItem[nestedNode.fieldKey] = parentItem[nestedNode.fieldKey].slice(0, nestedNode.query.limit ?? 100);
+			}
 			parentItem[nestedNode.fieldKey] = parentItem[nestedNode.fieldKey].sort((a: Item, b: Item) => {
 				// This is pre-filled in get-ast-from-query
 				const sortField = nestedNode.query.sort![0]!;

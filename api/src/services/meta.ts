@@ -60,7 +60,7 @@ export class MetaService {
 
 		if (isSoftDelete) {
 			if (!query.showSoftDelete) {
-				dbQuery.where(this.deletedAtField, null);
+				dbQuery.where(`${collection}.${this.deletedAtField}`, null);
 			}
 		}
 
@@ -87,7 +87,7 @@ export class MetaService {
 
 		if (isSoftDelete) {
 			if (!query.showSoftDelete) {
-				dbQuery.where(this.deletedAtField, null);
+				dbQuery.where(`${collection}.${this.deletedAtField}`, null);
 			}
 		}
 		let filter = query.filter || {};

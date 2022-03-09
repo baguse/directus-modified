@@ -26,6 +26,23 @@ type Transformers = {
 	}) => Promise<any>;
 };
 
+interface ITransformerOptions {
+	transformers: {
+		conceal?: boolean;
+		hash?: boolean;
+		json?: boolean;
+		boolean?: boolean;
+		uuid?: boolean;
+		'user-created'?: boolean;
+		'user-updated'?: boolean;
+		'role-created'?: boolean;
+		'role-updated'?: boolean;
+		'date-created'?: boolean;
+		'date-updated'?: boolean;
+		csv?: boolean;
+	};
+}
+
 /**
  * Process a given payload for a collection to ensure the special fields (hash, uuid, date etc) are
  * handled correctly.
@@ -134,40 +151,46 @@ export class PayloadService {
 		},
 	};
 
-	processValues(
-		action: Action,
-		payloads: Partial<Item>[],
-		options?: {
-			transformers: {
-				conceal?: boolean;
-				hash?: boolean;
-			};
-		}
-	): Promise<Partial<Item>[]>;
-	processValues(
-		action: Action,
-		payload: Partial<Item>,
-		options?: {
-			transformers: {
-				conceal?: boolean;
-				hash?: boolean;
-			};
-		}
-	): Promise<Partial<Item>>;
+	processValues(action: Action, payloads: Partial<Item>[], options?: ITransformerOptions): Promise<Partial<Item>[]>;
+	processValues(action: Action, payload: Partial<Item>, options?: ITransformerOptions): Promise<Partial<Item>>;
 	async processValues(
 		action: Action,
 		payload: Partial<Item> | Partial<Item>[],
-		options?: {
-			transformers?: {
-				conceal?: boolean;
-				hash?: boolean;
-			};
-		}
+		options?: ITransformerOptions
 	): Promise<Partial<Item> | Partial<Item>[]> {
 		const processedPayload = toArray(payload);
+
 		const transformers = {
 			conceal: typeof options?.transformers?.conceal === 'boolean' ? options?.transformers?.conceal : true,
 			hash: typeof options?.transformers?.hash === 'boolean' ? options?.transformers?.hash : true,
+			json: typeof options?.transformers?.json === 'boolean' ? options?.transformers?.json : true,
+			boolean: typeof options?.transformers?.boolean === 'boolean' ? options?.transformers?.boolean : true,
+			uuid: typeof options?.transformers?.uuid === 'boolean' ? options?.transformers?.uuid : true,
+			csv: typeof options?.transformers?.csv === 'boolean' ? options?.transformers?.csv : true,
+			'user-created':
+				typeof (options?.transformers || {})['user-created'] === 'boolean'
+					? (options?.transformers['user-created'] as boolean)
+					: true,
+			'user-updated':
+				typeof (options?.transformers || {})['user-updated'] === 'boolean'
+					? (options?.transformers['user-updated'] as boolean)
+					: true,
+			'role-created':
+				typeof (options?.transformers || {})['role-created'] === 'boolean'
+					? (options?.transformers['role-created'] as boolean)
+					: true,
+			'role-updated':
+				typeof (options?.transformers || {})['role-updated'] === 'boolean'
+					? (options?.transformers['role-updated'] as boolean)
+					: true,
+			'date-created':
+				typeof (options?.transformers || {})['date-created'] === 'boolean'
+					? (options?.transformers['date-created'] as boolean)
+					: true,
+			'date-updated':
+				typeof (options?.transformers || {})['date-updated'] === 'boolean'
+					? (options?.transformers['date-updated'] as boolean)
+					: true,
 		};
 
 		if (processedPayload.length === 0) return [];
