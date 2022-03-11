@@ -15,6 +15,11 @@
 			<v-checkbox v-model="hidden" :label="t('hidden_on_detail')" block />
 		</div>
 
+		<div class="field half-right">
+			<div class="label type-label">{{ t('unique') }}</div>
+			<v-checkbox v-model="unique" :label="t('value_unique')" block />
+		</div>
+
 		<div v-if="type !== 'group'" class="field full">
 			<div class="label type-label">{{ t('note') }}</div>
 			<v-input v-model="note" :placeholder="t('add_note')" />
@@ -78,6 +83,7 @@ export default defineComponent({
 		const readonly = syncFieldDetailStoreProperty('field.meta.readonly', false);
 		const hidden = syncFieldDetailStoreProperty('field.meta.hidden', false);
 		const required = syncFieldDetailStoreProperty('field.meta.required', false);
+		const unique = syncFieldDetailStoreProperty('field.meta.unique', false);
 		const note = syncFieldDetailStoreProperty('field.meta.note');
 		const translations = syncFieldDetailStoreProperty('field.meta.translations');
 
@@ -86,7 +92,7 @@ export default defineComponent({
 		const type = computed(() => field.value.type);
 		const isGenerated = computed(() => field.value.schema?.is_generated);
 
-		return { t, readonly, hidden, required, note, translations, type, isGenerated };
+		return { t, readonly, hidden, required, note, translations, type, isGenerated, unique };
 	},
 });
 </script>

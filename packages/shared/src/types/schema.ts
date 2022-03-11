@@ -33,4 +33,7 @@ export type CollectionsOverview = {
 export type SchemaOverview = {
 	collections: CollectionsOverview;
 	relations: Relation[];
+	relationMap: {
+		[collectionName: string]: Relation[];
+	};
 };

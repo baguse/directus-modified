@@ -56,3 +56,7 @@ columns:
     type: json
   note:
     type: text
+  unique:
+    type: boolean
+    default: false
+    nullable: true

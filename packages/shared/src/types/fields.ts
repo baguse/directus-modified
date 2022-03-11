@@ -37,6 +37,7 @@ export type FieldMeta = {
 	note: string | null;
 	conditions: Condition[] | null;
 	system?: true;
+	unique?: boolean;
 };
 
 export interface FieldRaw {

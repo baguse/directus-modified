@@ -6,7 +6,7 @@ import getDatabase from '../database';
 import runAST from '../database/run-ast';
 import emitter from '../emitter';
 import env from '../env';
-import { ForbiddenException } from '../exceptions';
+import { ForbiddenException, InvalidPayloadException } from '../exceptions';
 import { translateDatabaseError } from '../exceptions/database/translate';
 import { Accountability, Query, PermissionsAction, SchemaOverview } from '@directus/shared/types';
 import {
@@ -21,6 +21,7 @@ import getASTFromQuery from '../utils/get-ast-from-query';
 import { AuthorizationService } from './authorization';
 import { PayloadService } from './payload';
 import { ActivityService, RevisionsService } from './index';
+import { RecordNotUniqueException } from '../exceptions/database/record-not-unique';
 
 export type QueryOptions = {
 	stripNonRequested?: boolean;
@@ -76,6 +77,44 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		const aliases = Object.values(this.schema.collections[this.collection].fields)
 			.filter((field) => field.alias === true)
 			.map((field) => field.field);
+
+		const fieldNames = Object.values(this.schema.collections[this.collection].fields)
+			.filter((field) => {
+				if (field.field == primaryKeyField) return false;
+				// else if (field.special.includes('o2m')) return false;
+				// else if (field.special.includes('m2o')) return false;
+				// else if (field.special.includes('m2m')) return false;
+				else if (field.special.includes('date-deleted')) return false;
+				else if (field.special.includes('date-updated')) return false;
+				else if (field.special.includes('date-created')) return false;
+				else if (field.special.includes('user-created')) return false;
+				else if (field.special.includes('user-updated')) return false;
+				else return true;
+			})
+			.map((field) => field.field);
+
+		const fieldMaybeUniques: { field: string; unique: boolean }[] = await this.knex
+			.select('field', 'unique')
+			.from('directus_fields')
+			.whereIn('field', fieldNames)
+			.andWhere('collection', this.collection);
+
+		for (const field of fieldMaybeUniques) {
+			const { unique, field: fieldName } = field;
+			if (unique) {
+				const [{ count }] = await this.knex
+					.count(fieldName, { as: 'count' })
+					.from(this.collection)
+					.where(fieldName, data[fieldName] || null);
+				const counter = count ? Number(count) : 0;
+				if (counter)
+					throw new RecordNotUniqueException(fieldName, {
+						collection: this.collection,
+						field: fieldName,
+						invalid: data[fieldName],
+					});
+			}
+		}
 
 		const payload: AnyItem = cloneDeep(data);
 
@@ -257,6 +296,18 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	 */
 	async readByQuery(query: Query, opts?: QueryOptions): Promise<Item[]> {
 		const { isSoftDelete, fields } = this.schema.collections[this.collection];
+		const relations = this.schema.relationMap[this.collection];
+
+		if (relations) {
+			for (const relation of relations) {
+				const { related_collection } = relation;
+				if (related_collection == this.collection) {
+					/**
+					 * TODO: Recursive delete
+					 */
+				}
+			}
+		}
 
 		let queryData = { ...query };
 		if (isSoftDelete) {
@@ -429,6 +480,50 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		const aliases = Object.values(this.schema.collections[this.collection].fields)
 			.filter((field) => field.alias === true)
 			.map((field) => field.field);
+
+		const fieldNames = Object.values(this.schema.collections[this.collection].fields)
+			.filter((field) => {
+				if (field.field == primaryKeyField) return false;
+				// else if (field.special.includes('o2m')) return false;
+				// else if (field.special.includes('m2o')) return false;
+				// else if (field.special.includes('m2m')) return false;
+				else if (field.special.includes('date-deleted')) return false;
+				else if (field.special.includes('date-updated')) return false;
+				else if (field.special.includes('date-created')) return false;
+				else if (field.special.includes('user-created')) return false;
+				else if (field.special.includes('user-updated')) return false;
+				else return true;
+			})
+			.map((field) => field.field);
+
+		const fieldMaybeUniques: { field: string; unique: boolean }[] = await this.knex
+			.select('field', 'unique')
+			.from('directus_fields')
+			.whereIn('field', fieldNames)
+			.andWhere('collection', this.collection);
+
+		for (const field of fieldMaybeUniques) {
+			const { unique, field: fieldName } = field;
+			if (unique) {
+				const [{ count }] = await this.knex
+					.count(fieldName, { as: 'count' })
+					.from(this.collection)
+					.where(fieldName, data[fieldName] || null);
+				const counter = count ? Number(count) : 0;
+				if (counter)
+					throw new RecordNotUniqueException(fieldName, {
+						collection: this.collection,
+						field: fieldName,
+						invalid: data[fieldName],
+					});
+				if (keys.length > 1 && typeof data[fieldName] != 'undefined')
+					throw new RecordNotUniqueException(fieldName, {
+						collection: this.collection,
+						field: fieldName,
+						invalid: data[fieldName],
+					});
+			}
+		}
 
 		const payload: Partial<AnyItem> = cloneDeep(data);
 

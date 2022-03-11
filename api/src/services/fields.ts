@@ -340,6 +340,42 @@ export class FieldsService {
 		}
 
 		if (hookAdjustedField.meta) {
+			const { isSoftDelete, fields } = this.schema.collections[collection];
+			// check unique data
+			if (hookAdjustedField.meta.unique) {
+				let counts: { count: string | number; [uniqueColumn: string]: any }[];
+				if (isSoftDelete) {
+					let deletedAtField = 'deleted_at';
+					for (const fieldName in fields) {
+						const { special } = fields[fieldName];
+						if (special.includes('date-deleted')) {
+							deletedAtField = fieldName;
+							break;
+						}
+					}
+					counts = await this.knex
+						.select(field.field)
+						.count(field.field, { as: 'count' })
+						.from(collection)
+						.groupBy(field.field)
+						.where(deletedAtField, null);
+				} else {
+					counts = await this.knex
+						.select(field.field)
+						.count(field.field, { as: 'count' })
+						.from(collection)
+						.groupBy(field.field);
+				}
+				for (const { count, [field.field]: uniqueColumn } of counts) {
+					const counter = count ? Number(count) : 0;
+
+					if (counter > 1) {
+						throw new InvalidPayloadException(
+							`Field "${field.field}" [${uniqueColumn}] has ${counter} duplicate values`
+						);
+					}
+				}
+			}
 			if (record) {
 				await this.itemsService.updateOne(
 					record.id,
@@ -561,18 +597,15 @@ export class FieldsService {
 			}
 		}
 
-		/**
-		 * TODO: Fix unique by Backend
-		 */
 		if (field.schema?.is_primary_key) {
 			column.primary().notNullable();
 		} else if (field.schema?.is_unique === true) {
 			if (!alter || alter.is_unique === false) {
-				// column.unique();
+				column.unique();
 			}
 		} else if (field.schema?.is_unique === false) {
 			if (alter && alter.is_unique === true) {
-				// table.dropUnique([field.field]);
+				table.dropUnique([field.field]);
 			}
 		}
 

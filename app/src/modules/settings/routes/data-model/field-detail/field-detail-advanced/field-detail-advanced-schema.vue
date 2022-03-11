@@ -125,7 +125,7 @@
 			</div>
 
 			<div v-if="!isAlias" class="field half-right">
-				<div class="label type-label">{{ t('unique') }}</div>
+				<div class="label type-label">{{ t('unique') }} (Database Level)</div>
 				<v-checkbox v-model="unique" :disabled="isGenerated" :label="t('value_unique')" block />
 			</div>
 		</div>

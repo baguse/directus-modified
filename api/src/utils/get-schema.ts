@@ -57,6 +57,7 @@ async function getDatabaseSchema(
 	const result: SchemaOverview = {
 		collections: {},
 		relations: [],
+		relationMap: {},
 	};
 
 	const schemaOverview = await schemaInspector.overview();
@@ -150,6 +151,14 @@ async function getDatabaseSchema(
 
 	const relationsService = new RelationsService({ knex: database, schema: result });
 	result.relations = await relationsService.readAll();
+	for (const relation of result.relations) {
+		if (!result.relationMap[relation.collection]) result.relationMap[relation.collection] = [];
+		result.relationMap[relation.collection].push(relation);
+		if (relation.related_collection) {
+			if (!result.relationMap[relation.related_collection]) result.relationMap[relation.related_collection] = [];
+			result.relationMap[relation.related_collection].push(relation);
+		}
+	}
 
 	return result;
 }
