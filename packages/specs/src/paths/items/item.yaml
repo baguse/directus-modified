@@ -1,8 +1,6 @@
 get:
   summary: Retrieve an Item
   description: Retrieve a single item by unique identifier.
-  tags:
-    - Items
   operationId: getItem
   parameters:
     - $ref: '../../openapi.yaml#/components/parameters/Fields'
@@ -25,8 +23,6 @@ get:
 patch:
   summary: Update an Item
   description: Update an existing item.
-  tags:
-    - Items
   operationId: updateItem
   parameters:
     - $ref: '../../openapi.yaml#/components/parameters/Fields'
@@ -54,8 +50,6 @@ patch:
 delete:
   summary: Delete an Item
   description: Delete an existing item.
-  tags:
-    - Items
   operationId: deleteItem
   responses:
     '200':

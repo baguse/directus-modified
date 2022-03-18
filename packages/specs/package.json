@@ -1,6 +1,6 @@
 {
 	"name": "@mv-data-core/specs",
-	"version": "9.4.3",
+	"version": "9.4.4",
 	"description": "OpenAPI Specification of the Directus API",
 	"main": "index.js",
 	"exports": {

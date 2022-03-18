@@ -17,6 +17,7 @@ export function reduceSchema(
 	const reduced: SchemaOverview = {
 		collections: {},
 		relations: [],
+		relationMap: {},
 	};
 
 	const allowedFieldsInCollection =
@@ -101,5 +102,13 @@ export function reduceSchema(
 		return collectionsAllowed && fieldsAllowed;
 	});
 
+	for (const relation of reduced.relations) {
+		if (!reduced.relationMap[relation.collection]) reduced.relationMap[relation.collection] = [];
+		reduced.relationMap[relation.collection].push(relation);
+		if (relation.related_collection) {
+			if (!reduced.relationMap[relation.related_collection]) reduced.relationMap[relation.related_collection] = [];
+			reduced.relationMap[relation.related_collection].push(relation);
+		}
+	}
 	return reduced;
 }
