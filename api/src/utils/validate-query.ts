@@ -22,6 +22,7 @@ const querySchema = Joi.object({
 	alias: Joi.object(),
 	show_soft_delete: Joi.bool(),
 	showSoftDelete: Joi.bool(),
+	deleteds: Joi.array().items(Joi.string()),
 }).id('query');
 
 export function validateQuery(query: Query): Query {

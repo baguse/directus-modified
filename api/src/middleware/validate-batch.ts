@@ -34,12 +34,19 @@ export const validateBatch = (scope: 'read' | 'update' | 'delete'): RequestHandl
 			});
 		}
 
+		let error: Joi.ValidationError | undefined;
+
 		// In deletes, we want to keep supporting an array of just primary keys
 		if (scope === 'delete' && Array.isArray(req.body)) {
 			return next();
+		} else if (scope === 'update' && Array.isArray(req.body)) {
+			const batchArraySchema = Joi.array().items(batchSchema);
+			const validation = batchArraySchema.validate(req.body);
+			error = validation.error;
+		} else {
+			const validation = batchSchema.validate(req.body);
+			error = validation.error;
 		}
-
-		const { error } = batchSchema.validate(req.body);
 
 		if (error) {
 			throw new FailedValidationException(error.details[0]);

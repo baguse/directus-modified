@@ -6,7 +6,7 @@ import getDatabase from '../database';
 import runAST from '../database/run-ast';
 import emitter from '../emitter';
 import env from '../env';
-import { ForbiddenException, InvalidPayloadException } from '../exceptions';
+import { ForbiddenException } from '../exceptions';
 import { translateDatabaseError } from '../exceptions/database/translate';
 import { Accountability, Query, PermissionsAction, SchemaOverview } from '@directus/shared/types';
 import {
@@ -296,20 +296,8 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	 */
 	async readByQuery(query: Query, opts?: QueryOptions): Promise<Item[]> {
 		const { isSoftDelete, fields } = this.schema.collections[this.collection];
-		const relations = this.schema.relationMap[this.collection];
 
-		if (relations) {
-			for (const relation of relations) {
-				const { related_collection } = relation;
-				if (related_collection == this.collection) {
-					/**
-					 * TODO: Recursive delete
-					 */
-				}
-			}
-		}
-
-		let queryData = { ...query };
+		let queryData: Partial<Query> = { ...query };
 		if (isSoftDelete) {
 			let deletedAtField = 'deleted_at';
 			for (const fieldName in fields) {
@@ -751,6 +739,37 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	 */
 	async deleteMany(keys: PrimaryKey[], opts?: MutationOptions): Promise<PrimaryKey[]> {
 		const { isSoftDelete, primary: primaryKeyField, fields } = this.schema.collections[this.collection];
+
+		const relations = this.schema.relationMap[this.collection];
+
+		if (relations) {
+			for (const relation of relations) {
+				const { related_collection, meta } = relation;
+				if (related_collection == this.collection && meta) {
+					const { one_field, many_collection, many_field } = meta;
+					if (
+						opts?.deleteds &&
+						(opts?.deleteds?.includes(one_field as string) || opts?.deleteds?.includes(many_collection))
+					) {
+						const relatedService = new ItemsService(many_collection, {
+							schema: this.schema,
+							knex: this.knex,
+							accountability: this.accountability,
+						});
+						const relatedKeys = await relatedService.getKeysByQuery({
+							filter: {
+								[many_field]: {
+									_in: keys,
+								},
+							},
+						});
+
+						if (relatedKeys.length) await relatedService.deleteMany(relatedKeys, opts);
+					}
+				}
+			}
+		}
+
 		let deletedAtField = 'deleted_at';
 		for (const fieldName in fields) {
 			const { special } = fields[fieldName];

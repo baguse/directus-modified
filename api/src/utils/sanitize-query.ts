@@ -72,6 +72,10 @@ export function sanitizeQuery(rawQuery: Record<string, any>, accountability?: Ac
 		query.showSoftDelete = false;
 	}
 
+	if (rawQuery.deleteds) {
+		query.deleteds = sanitizeDeleteds(rawQuery.deleteds);
+	}
+
 	return query;
 }
 
@@ -213,4 +217,15 @@ function sanitizeAlias(rawAlias: any) {
 	}
 
 	return alias;
+}
+
+function sanitizeDeleteds(rawDeleteds: any) {
+	if (!rawDeleteds) return;
+
+	let deleteds: string[] = [];
+
+	if (typeof rawDeleteds === 'string') deleteds = rawDeleteds.split(',');
+	else if (Array.isArray(rawDeleteds)) deleteds = rawDeleteds as string[];
+
+	return deleteds;
 }

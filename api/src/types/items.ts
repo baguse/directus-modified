@@ -32,4 +32,9 @@ export type MutationOptions = {
 	 * Allow disabling the emitting of hooks. Useful if a custom hook is fired (like files.upload)
 	 */
 	emitEvents?: boolean;
+
+	/**
+	 * List collection for recursive deletion
+	 */
+	deleteds?: string[] | null | undefined;
 };

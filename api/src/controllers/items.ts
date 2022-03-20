@@ -135,10 +135,22 @@ router.patch(
 
 		let keys: PrimaryKey[] = [];
 
-		if (req.body.keys) {
-			keys = await service.updateMany(req.body.keys, req.body.data);
+		if (Array.isArray(req.body)) {
+			for (const body of req.body) {
+				if (body.keys) {
+					const currentKeys = await service.updateMany(body.keys, body.data);
+					keys = [...keys, ...currentKeys];
+				} else {
+					const currentKeys = await service.updateByQuery(body.query, body.data);
+					keys = [...keys, ...currentKeys];
+				}
+			}
 		} else {
-			keys = await service.updateByQuery(req.body.query, req.body.data);
+			if (req.body.keys) {
+				keys = await service.updateMany(req.body.keys, req.body.data);
+			} else {
+				keys = await service.updateByQuery(req.body.query, req.body.data);
+			}
 		}
 
 		try {
@@ -203,11 +215,17 @@ router.delete(
 		});
 
 		if (Array.isArray(req.body)) {
-			await service.deleteMany(req.body);
+			await service.deleteMany(req.body, {
+				deleteds: req.sanitizedQuery.deleteds,
+			});
 		} else if (req.body.keys) {
-			await service.deleteMany(req.body.keys);
+			await service.deleteMany(req.body.keys, {
+				deleteds: req.sanitizedQuery.deleteds,
+			});
 		} else {
-			await service.deleteByQuery(req.body.query);
+			await service.deleteByQuery(req.body.query, {
+				deleteds: req.sanitizedQuery.deleteds,
+			});
 		}
 
 		return next();
