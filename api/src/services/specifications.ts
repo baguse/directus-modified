@@ -1,5 +1,5 @@
 import formatTitle from '@directus/format-title';
-import openapi from '@directus/specs';
+import openapi, { userSpec } from '@directus/specs';
 import { Knex } from 'knex';
 import { cloneDeep, mergeWith } from 'lodash';
 import {
@@ -62,6 +62,11 @@ class OASSpecsService implements SpecificationSubService {
 	accountability: Accountability | null;
 	knex: Knex;
 	schema: SchemaOverview;
+	options?:
+		| {
+				isSystem?: boolean;
+		  }
+		| undefined;
 
 	fieldsService: FieldsService;
 	collectionsService: CollectionsService;
@@ -82,6 +87,7 @@ class OASSpecsService implements SpecificationSubService {
 		this.accountability = options.accountability || null;
 		this.knex = options.knex || getDatabase();
 		this.schema = options.schema;
+		this.options = options.options;
 
 		this.fieldsService = fieldsService;
 		this.collectionsService = collectionsService;
@@ -121,7 +127,8 @@ class OASSpecsService implements SpecificationSubService {
 	}
 
 	private async generateTags(collections: Collection[]): Promise<OpenAPIObject['tags']> {
-		const systemTags = cloneDeep(openapi.tags)!;
+		const selectedOpenApi = this.options?.isSystem == false ? userSpec : openapi;
+		const systemTags = cloneDeep(selectedOpenApi.tags)!;
 
 		const tags: OpenAPIObject['tags'] = [];
 
@@ -137,7 +144,7 @@ class OASSpecsService implements SpecificationSubService {
 
 			// If the collection is one of the system collections, pull the tag from the static spec
 			if (isSystem) {
-				for (const tag of openapi.tags!) {
+				for (const tag of selectedOpenApi.tags!) {
 					if (tag['x-collection'] === collection.collection) {
 						tags.push(tag);
 						break;

@@ -1,6 +1,6 @@
 {
 	"name": "@mv-data-core/specs",
-	"version": "9.4.4",
+	"version": "9.4.5",
 	"description": "OpenAPI Specification of the Directus API",
 	"main": "index.js",
 	"exports": {
@@ -10,7 +10,7 @@
 	"scripts": {
 		"ui:watch": "swagger-ui-watcher src/openapi.yaml",
 		"validate": "swagger-cli validate src/openapi.yaml",
-		"build": "swagger-cli bundle src/openapi.yaml -o dist/openapi.json",
+		"build": "swagger-cli bundle src/openapi.yaml -o dist/openapi.json && swagger-cli bundle src/openapi-user.yaml -o dist/openapi-user.json",
 		"build:deref": "swagger-cli bundle src/openapi.yaml -o dist/openapi-deref.json --dereference",
 		"dev": "npm-watch build"
 	},
