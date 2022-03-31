@@ -1205,10 +1205,10 @@
     vue-i18n "9"
     vue-router "4"
 
-"@directus/shared@npm:@mv-data-core/shared@9.5.1":
-  version "9.5.1"
-  resolved "https://registry.yarnpkg.com/@mv-data-core/shared/-/shared-9.5.1.tgz#b4b04cdc0b502d7532cd41e695703dcca32e5024"
-  integrity sha512-afnlkKjwVYgJLbnot/qDVoD6gXkjMx0GJGuehhUh2eaQdYgNJWwGrJKCjRPOdz7NTaphUotR/swvg7GyTDM15A==
+"@directus/shared@npm:@mv-data-core/shared@9.5.2":
+  version "9.5.2"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/shared/-/shared-9.5.2.tgz#9d040a5622be35924fa388ed954b2621ea4a326c"
+  integrity sha512-BnFg/InvB2r8eeUrAwLNpR+E+wa8q8Y86m0RxIHBKleOAbQiKsKa4rQu93WJJRVOfenHnPXj6BB083L9KEtNdA==
   dependencies:
     date-fns "2.24.0"
     fs-extra "10.0.0"
@@ -4903,6 +4903,11 @@ is-absolute-url@^2.0.0:
   resolved "https://registry.yarnpkg.com/is-absolute-url/-/is-absolute-url-2.1.0.tgz#50530dfb84fcc9aa7dbe7852e83a37b93b9f2aa6"
   integrity sha1-UFMN+4T8yap9vnhS6Do3uTufKqY=
 
+is-any-array@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/is-any-array/-/is-any-array-2.0.0.tgz#e71bc13741537c06afac03c07885967ef56d8742"
+  integrity sha512-WdPV58rT3aOWXvvyuBydnCq4S2BM1Yz8shKxlEpk/6x+GX202XRvXOycEFtNgnHVLoc46hpexPFx8Pz1/sMS0w==
+
 is-arrayish@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/is-arrayish/-/is-arrayish-0.2.1.tgz#77c99840527aa8ecb1a8ba697b80645a7a926a9d"
@@ -6315,6 +6320,35 @@ mkdirp@^1.0.3, mkdirp@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
+
+ml-array-mean@^1.1.6:
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/ml-array-mean/-/ml-array-mean-1.1.6.tgz#d951a700dc8e3a17b3e0a583c2c64abd0c619c56"
+  integrity sha512-MIdf7Zc8HznwIisyiJGRH9tRigg3Yf4FldW8DxKxpCCv/g5CafTw0RRu51nojVEOXuCQC7DRVVu5c7XXO/5joQ==
+  dependencies:
+    ml-array-sum "^1.1.6"
+
+ml-array-standard-deviation@^1.1.8:
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/ml-array-standard-deviation/-/ml-array-standard-deviation-1.1.8.tgz#1bb2d571acca03555ae61274ecb688ed25d4bab5"
+  integrity sha512-KshBSaMp0/JpHa709bMVry1aneI6uQhw2dh1oec2KXLxfzb0jBI6RR0wNPRAH1IYyArFm3bfVf/wKUbadGiyAg==
+  dependencies:
+    ml-array-variance "^1.1.8"
+
+ml-array-sum@^1.1.6:
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/ml-array-sum/-/ml-array-sum-1.1.6.tgz#d1d89c20793cd29c37b09d40e85681aa4515a955"
+  integrity sha512-29mAh2GwH7ZmiRnup4UyibQZB9+ZLyMShvt4cH4eTK+cL2oEMIZFnSyB3SS8MlsTh6q/w/yh48KmqLxmovN4Dw==
+  dependencies:
+    is-any-array "^2.0.0"
+
+ml-array-variance@^1.1.8:
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/ml-array-variance/-/ml-array-variance-1.1.8.tgz#71ffbca9a912c79c85f7354b366b5f38d0fc0cce"
+  integrity sha512-Pr9VNlJQb5FhiVw1VeL8rcKZsCgq7kDX3gvfx8ef0ihHqGfKtFU6K085VqYp3ho0gS7slY9b2zZzbkqfdIRekQ==
+  dependencies:
+    is-any-array "^2.0.0"
+    ml-array-mean "^1.1.6"
 
 moment-timezone@^0.5.31:
   version "0.5.34"
