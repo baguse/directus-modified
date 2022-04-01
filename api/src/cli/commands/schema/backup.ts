@@ -9,6 +9,7 @@ import { flushCaches } from '../../../cache';
 import { getSchema } from '../../../utils/get-schema';
 import { CollectionsService, FieldsService, RelationsService, ItemsService } from '../../..';
 import { CollectionsOverview, Relation } from '@directus/shared/types';
+import { MailService } from '../../../services';
 
 export async function snapshot(
 	snapshotPath: string,
@@ -69,13 +70,25 @@ export default async function () {
 	const database = getDatabase();
 	const schema = await getSchema({ database });
 	const { collections, relations, relationMap } = schema;
+	const mail = new MailService({
+		schema,
+		knex: database,
+	});
+
+	console.log({ mail });
+	const send = await mail.send({
+		html: '<h1>Hello world</h1>',
+		to: 'andreanto.bagus@gmail.com',
+	});
+
+	console.log({ send });
 
 	for (const collectionName in relationMap) {
 		for (const relation of relations) {
-			const { collection, field, related_collection } = relation;
-			if (collections[collectionName]) {
+			const { collection, field, related_collection, schema } = relation;
+			if (collections[collectionName] && related_collection && schema) {
 				if (!collections[collectionName].depends_on) collections[collectionName].depends_on = [];
-				if (collection == collectionName) collections[collectionName].depends_on.push(related_collection);
+				if (collection == collectionName) (collections[collectionName].depends_on as string[]).push(related_collection);
 			}
 		}
 	}
@@ -84,7 +97,7 @@ export default async function () {
 	while (Object.keys(collections).length > 0) {
 		console.log(`${loop} ============================================= ${Object.keys(collections).length}`);
 		for (const collectionName in collections) {
-			console.log({ collectionName });
+			// console.log({ collectionName });
 			const collection = collections[collectionName];
 			if (collection.depends_on) {
 				if (!collection.depends_on.length) {
@@ -98,7 +111,7 @@ export default async function () {
 							for (const dependentCollectionName of currCollection.depends_on) {
 								if (dependentCollectionName != collectionName) dependsOn.push(dependentCollectionName);
 							}
-							console.log({ currCollectionName, oldDepends: currCollection.depends_on, newDepends: dependsOn });
+							// console.log({ currCollectionName, oldDepends: currCollection.depends_on, newDepends: dependsOn });
 							collections[currCollectionName].depends_on = dependsOn;
 						}
 					}
@@ -114,7 +127,7 @@ export default async function () {
 						for (const dependentCollectionName of currCollection.depends_on) {
 							if (dependentCollectionName != collectionName) dependsOn.push(dependentCollectionName);
 						}
-						console.log({ currCollectionName, oldDepends: currCollection.depends_on, newDepends: dependsOn });
+						// console.log({ currCollectionName, oldDepends: currCollection.depends_on, newDepends: dependsOn });
 						collections[currCollectionName].depends_on = dependsOn;
 					}
 				}
