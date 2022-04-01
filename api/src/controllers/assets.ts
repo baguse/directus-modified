@@ -162,9 +162,12 @@ router.get(
 			res.status(200);
 			res.setHeader('Accept-Ranges', 'bytes');
 			res.setHeader('Content-Length', stat.size);
+			res.setHeader('Access-Control-Allow-Origin', '*');
 
 			return res.end();
 		}
+
+		res.setHeader('Access-Control-Allow-Origin', '*');
 
 		stream.pipe(res);
 	})

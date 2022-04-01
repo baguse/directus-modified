@@ -339,6 +339,8 @@ export class FieldsService {
 			}
 		}
 
+		const clientDB = this.knex.client.config.client;
+
 		if (hookAdjustedField.meta) {
 			const { isSoftDelete, fields } = this.schema.collections[collection];
 			// check unique data
@@ -353,18 +355,22 @@ export class FieldsService {
 							break;
 						}
 					}
-					counts = await this.knex
-						.select(field.field)
-						.count(field.field, { as: 'count' })
-						.from(collection)
-						.groupBy(field.field)
-						.where(deletedAtField, null);
+
+					const query = this.knex.count(field.field, { as: 'count' }).from(collection).where(deletedAtField, null);
+
+					if (clientDB === 'mssql') {
+						query.select(this.knex.raw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS as ${field.field}`));
+						query.groupByRaw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS`);
+					}
+					counts = await query;
 				} else {
-					counts = await this.knex
-						.select(field.field)
-						.count(field.field, { as: 'count' })
-						.from(collection)
-						.groupBy(field.field);
+					const query = this.knex.count(field.field, { as: 'count' }).from(collection);
+
+					if (clientDB === 'mssql') {
+						query.select(this.knex.raw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS as ${field.field}`));
+						query.groupByRaw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS`);
+					}
+					counts = await query;
 				}
 				for (const { count, [field.field]: uniqueColumn } of counts) {
 					const counter = count ? Number(count) : 0;
