@@ -62,10 +62,16 @@ const defaults: Record<string, any> = {
 	EXTENSIONS_PATH: './extensions',
 	EXTENSIONS_AUTO_RELOAD: false,
 
-	EMAIL_FROM: 'no-reply@directus.io',
-	EMAIL_TRANSPORT: 'sendmail',
-	EMAIL_SENDMAIL_NEW_LINE: 'unix',
-	EMAIL_SENDMAIL_PATH: '/usr/sbin/sendmail',
+	// EMAIL_FROM: 'no-reply@directus.io',
+	// EMAIL_TRANSPORT: 'sendmail',
+	// EMAIL_SENDMAIL_NEW_LINE: 'unix',
+	// EMAIL_SENDMAIL_PATH: '/usr/sbin/sendmail',
+
+	EMAIL_TRANSPORT: 'smtp',
+	EMAIL_SMTP_HOST: 'smtp.office365.com',
+	EMAIL_SMTP_PORT: '587',
+	EMAIL_SMTP_USER: 'tech@machinevision.global',
+	EMAIL_SMTP_PASSWORD: 'L4n1usL4b',
 
 	TELEMETRY: true,
 
