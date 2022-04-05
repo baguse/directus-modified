@@ -1215,10 +1215,10 @@
     joi "17.4.2"
     lodash "4.17.21"
 
-"@directus/specs@npm:@mv-data-core/specs@9.4.4":
-  version "9.4.4"
-  resolved "https://registry.yarnpkg.com/@mv-data-core/specs/-/specs-9.4.4.tgz#3bdf46b6a944117013a23f37c1f7c06b748bb106"
-  integrity sha512-zMtugE7LFHkAB5wATEqIUciY07nB4dignIANxm7+DKC+CltJRwRlLFaBCM+JqSq1ePkR3tJGF5gwSiuUxiCDYg==
+"@directus/specs@npm:@mv-data-core/specs@9.4.5":
+  version "9.4.5"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/specs/-/specs-9.4.5.tgz#9fd50547df2a6259cd3a45f8da7eb0436e627405"
+  integrity sha512-6tbW5Blh3z0wFjnmqh45rRhavqtCWHG2Tl9EnA3l8X+VsG4gdAO3v0tNhS7mVIW344A0vHXLE4rPKRGU7Sc62Q==
   dependencies:
     openapi3-ts "^2.0.1"
 
