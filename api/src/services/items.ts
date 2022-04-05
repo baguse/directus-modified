@@ -464,10 +464,13 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	 */
 	async updateMany(keys: PrimaryKey[], data: Partial<Item>, opts?: MutationOptions): Promise<PrimaryKey[]> {
 		const primaryKeyField = this.schema.collections[this.collection].primary;
+		const isSoftDelete = this.schema.collections[this.collection].isSoftDelete;
 		const fields = Object.keys(this.schema.collections[this.collection].fields);
 		const aliases = Object.values(this.schema.collections[this.collection].fields)
 			.filter((field) => field.alias === true)
 			.map((field) => field.field);
+
+		let deletedAtField = 'deleted_at';
 
 		const fieldNames = Object.values(this.schema.collections[this.collection].fields)
 			.filter((field) => {
@@ -475,8 +478,10 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				// else if (field.special.includes('o2m')) return false;
 				// else if (field.special.includes('m2o')) return false;
 				// else if (field.special.includes('m2m')) return false;
-				else if (field.special.includes('date-deleted')) return false;
-				else if (field.special.includes('date-updated')) return false;
+				else if (field.special.includes('date-deleted')) {
+					if (isSoftDelete) deletedAtField = field.field;
+					return false;
+				} else if (field.special.includes('date-updated')) return false;
 				else if (field.special.includes('date-created')) return false;
 				else if (field.special.includes('user-created')) return false;
 				else if (field.special.includes('user-updated')) return false;
@@ -493,10 +498,23 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		for (const field of fieldMaybeUniques) {
 			const { unique, field: fieldName } = field;
 			if (unique) {
-				const [{ count }] = await this.knex
-					.count(fieldName, { as: 'count' })
-					.from(this.collection)
-					.where(fieldName, data[fieldName] || null);
+				let count: string | number;
+				if (!isSoftDelete) {
+					const [{ count: countData }] = await this.knex
+						.count(fieldName, { as: 'count' })
+						.from(this.collection)
+						.where(fieldName, data[fieldName] || null)
+						.whereNotIn(primaryKeyField, keys);
+					count = countData;
+				} else {
+					const [{ count: countData }] = await this.knex
+						.count(fieldName, { as: 'count' })
+						.from(this.collection)
+						.where(fieldName, data[fieldName] || null)
+						.whereNotIn(primaryKeyField, keys)
+						.andWhere(deletedAtField, null);
+					count = countData;
+				}
 				const counter = count ? Number(count) : 0;
 				if (counter)
 					throw new RecordNotUniqueException(fieldName, {

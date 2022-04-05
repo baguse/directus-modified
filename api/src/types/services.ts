@@ -6,6 +6,9 @@ export type AbstractServiceOptions = {
 	knex?: Knex;
 	accountability?: Accountability | null;
 	schema: SchemaOverview;
+	options?: {
+		isSystem?: boolean;
+	};
 };
 
 export interface AbstractService {

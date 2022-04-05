@@ -110,6 +110,7 @@ async function getDatabaseSchema(
 					alias: false,
 				};
 			}),
+			depends_on: [],
 		};
 	}
 

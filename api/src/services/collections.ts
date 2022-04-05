@@ -27,12 +27,18 @@ export class CollectionsService {
 	schema: SchemaOverview;
 	cache: Keyv<any> | null;
 	systemCache: Keyv<any>;
+	options:
+		| {
+				isSystem?: boolean;
+		  }
+		| undefined;
 
 	constructor(options: AbstractServiceOptions) {
 		this.knex = options.knex || getDatabase();
 		this.accountability = options.accountability || null;
 		this.schemaInspector = options.knex ? SchemaInspector(options.knex) : getSchemaInspector();
 		this.schema = options.schema;
+		this.options = options.options;
 
 		const { cache, systemCache } = getCache();
 		this.cache = cache;
@@ -228,20 +234,29 @@ export class CollectionsService {
 
 		const collections: Collection[] = [];
 
+		const allCollection: string[] = [];
+
 		for (const collectionMeta of meta) {
+			allCollection.push(collectionMeta.collection);
+			const { system } = collectionMeta;
 			const collection: Collection = {
 				collection: collectionMeta.collection,
 				meta: collectionMeta,
 				schema: tablesInDatabase.find((table) => table.name === collectionMeta.collection) ?? null,
 			};
 
-			collections.push(collection);
+			if (typeof this.options?.isSystem == 'undefined') {
+				collections.push(collection);
+			} else if (this.options?.isSystem === true) {
+				if (system) collections.push(collection);
+			} else {
+				if (!system) collections.push(collection);
+			}
 		}
 
 		for (const table of tablesInDatabase) {
 			const exists = !!collections.find(({ collection }) => collection === table.name);
-
-			if (!exists) {
+			if (!exists && !allCollection.includes(table.name)) {
 				collections.push({
 					collection: table.name,
 					schema: table,
