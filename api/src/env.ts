@@ -86,6 +86,9 @@ const defaults: Record<string, any> = {
 	SERVE_APP: true,
 
 	RELATIONAL_BATCH_SIZE: 25000,
+
+	REDIS_HOST: 'localhost',
+	REDIS_PORT: 6379,
 };
 
 // Allows us to force certain environment variable into a type, instead of relying
