@@ -24,8 +24,6 @@ export class RedisService {
 
 		client.on('error', (err: any) => logger.log('Redis Client Error', err));
 
-		await client.connect();
-
 		return client;
 	}
 }
