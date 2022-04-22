@@ -36,6 +36,11 @@
 			</v-info>
 
 			<v-list v-else class="draggable-list">
+				<v-input
+					v-model="searchedCollection"
+					placeholder="Search Collection"
+					@keypress.enter="searchCollection"
+				></v-input>
 				<draggable
 					:force-fallback="true"
 					:model-value="rootCollections"
@@ -128,6 +133,9 @@ export default defineComponent({
 		const { t } = useI18n();
 
 		const collectionDialogActive = ref(false);
+		const searchedCollection = ref('');
+		const appliedKeyword = ref('');
+
 		const editCollection = ref<Collection | null>();
 
 		const collectionsStore = useCollectionsStore();
@@ -144,33 +152,75 @@ export default defineComponent({
 		});
 
 		const rootCollections = computed(() => {
-			return collections.value.filter((collection) => !collection.meta?.group);
+			if (appliedKeyword.value && appliedKeyword.value.length >= 1) {
+				return collections.value.filter((collection) => {
+					const isMatch = collection.collection.toLowerCase().indexOf(appliedKeyword.value.toLowerCase()) > -1;
+					return !collection.meta?.group && isMatch;
+				});
+			} else {
+				return collections.value.filter((collection) => !collection.meta?.group);
+			}
 		});
 
 		const tableCollections = computed(() => {
-			return translate(
-				sortBy(
-					collectionsStore.collections.filter(
-						(collection) =>
-							collection.collection.startsWith('directus_') === false &&
-							!!collection.meta === false &&
-							collection.schema
-					),
-					['meta.sort', 'collection']
-				)
-			);
+			if (appliedKeyword.value && appliedKeyword.value.length >= 1) {
+				return translate(
+					sortBy(
+						collectionsStore.collections.filter((collection) => {
+							const isMatch = collection.collection.toLowerCase().indexOf(appliedKeyword.value.toLowerCase()) > -1;
+							return (
+								collection.collection.startsWith('directus_') === false &&
+								!!collection.meta === false &&
+								collection.schema &&
+								isMatch
+							);
+						}),
+						['meta.sort', 'collection']
+					)
+				);
+			} else {
+				return translate(
+					sortBy(
+						collectionsStore.collections.filter(
+							(collection) =>
+								collection.collection.startsWith('directus_') === false &&
+								!!collection.meta === false &&
+								collection.schema
+						),
+						['meta.sort', 'collection']
+					)
+				);
+			}
 		});
 
 		const systemCollections = computed(() => {
-			return translate(
-				sortBy(
-					collectionsStore.collections
-						.filter((collection) => collection.collection.startsWith('directus_') === true)
-						.map((collection) => ({ ...collection, icon: 'settings' })),
-					'collection'
-				)
-			);
+			if (appliedKeyword.value && appliedKeyword.value.length >= 1) {
+				return translate(
+					sortBy(
+						collectionsStore.collections
+							.filter((collection) => {
+								const isMatch = collection.collection.toLowerCase().indexOf(appliedKeyword.value.toLowerCase()) > -1;
+								return collection.collection.startsWith('directus_') === true && isMatch;
+							})
+							.map((collection) => ({ ...collection, icon: 'settings' })),
+						'collection'
+					)
+				);
+			} else {
+				return translate(
+					sortBy(
+						collectionsStore.collections
+							.filter((collection) => collection.collection.startsWith('directus_') === true)
+							.map((collection) => ({ ...collection, icon: 'settings' })),
+						'collection'
+					)
+				);
+			}
 		});
+
+		function searchCollection() {
+			appliedKeyword.value = searchedCollection.value;
+		}
 
 		return {
 			collectionDialogActive,
@@ -181,6 +231,8 @@ export default defineComponent({
 			onSort,
 			rootCollections,
 			editCollection,
+			searchedCollection,
+			searchCollection,
 		};
 
 		async function onSort(updates: Collection[], removeGroup = false) {

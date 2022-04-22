@@ -1103,10 +1103,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@directus/app@npm:@mv-data-core/app@9.5.3":
-  version "9.5.3"
-  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.5.3.tgz#e6a8a5ec0fab390653af69fd5478725a53784078"
-  integrity sha512-RotFxZEYYg3IYMFuUe1PPBdOsWIbmE18akS12Yw+TpeB1yaf3bJRSuuXnKXgO9QxfIa2/nEps9mgZGDuOpQz2w==
+"@directus/app@npm:@mv-data-core/app@9.5.4":
+  version "9.5.4"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.5.4.tgz#7550529da0c53aa1aa0a208bc9190698c8764178"
+  integrity sha512-RNi3Q2Apf04fY3ju6SZSByGwa0PpKwAtfXBF0lDCduYo1T7TsmtViB+kA/SL63TjeWOQhfK+sUZY4I25TEMhMw==
   dependencies:
     diff "^5.0.0"
     highlight.js "^11.4.0"
