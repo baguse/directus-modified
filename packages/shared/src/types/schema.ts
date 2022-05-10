@@ -27,6 +27,7 @@ export type CollectionsOverview = {
 		fields: {
 			[name: string]: FieldOverview;
 		};
+		depends_on: string[] | undefined;
 	};
 };
 
