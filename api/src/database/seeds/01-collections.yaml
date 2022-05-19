@@ -30,6 +30,8 @@ columns:
     type: string
     nullable: true
     length: 255
+  tags:
+    type: json
   translations:
     type: json
   archive_field:

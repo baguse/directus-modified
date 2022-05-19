@@ -185,7 +185,8 @@ export class CollectionsService {
 	/**
 	 * Read all collections. Currently doesn't support any query.
 	 */
-	async readByQuery(): Promise<Collection[]> {
+	async readByQuery(opts?: { includePhysicalTable?: boolean }): Promise<Collection[]> {
+		const includePhysicalTable = typeof opts?.includePhysicalTable == 'undefined' ? true : opts.includePhysicalTable;
 		const collectionItemsService = new ItemsService('directus_collections', {
 			knex: this.knex,
 			schema: this.schema,
@@ -256,7 +257,7 @@ export class CollectionsService {
 
 		for (const table of tablesInDatabase) {
 			const exists = !!collections.find(({ collection }) => collection === table.name);
-			if (!exists && !allCollection.includes(table.name)) {
+			if (!exists && !allCollection.includes(table.name) && includePhysicalTable) {
 				collections.push({
 					collection: table.name,
 					schema: table,

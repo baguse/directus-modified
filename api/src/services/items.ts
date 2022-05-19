@@ -29,6 +29,7 @@ export type QueryOptions = {
 	transformers?: {
 		conceal?: boolean;
 		hash?: boolean;
+		json?: boolean;
 	};
 };
 
@@ -98,37 +99,41 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			})
 			.map((field) => field.field);
 
-		const fieldMaybeUniques: { field: string; unique: boolean }[] = await this.knex
-			.select('field', 'unique')
-			.from('directus_fields')
-			.whereIn('field', fieldNames)
-			.andWhere('collection', this.collection);
+		const fieldMaybeUniques: { field: string; unique: boolean }[] = [];
+		const excludedColections = ['directus_fields'];
+		if (!excludedColections.includes(this.collection)) {
+			await this.knex
+				.select('field', 'unique')
+				.from('directus_fields')
+				.whereIn('field', fieldNames)
+				.andWhere('collection', this.collection);
 
-		for (const field of fieldMaybeUniques) {
-			const { unique, field: fieldName } = field;
-			if (unique) {
-				let count: string | number;
-				if (!isSoftDelete) {
-					const [{ count: countData }] = await this.knex
-						.count(fieldName, { as: 'count' })
-						.from(this.collection)
-						.where(fieldName, data[fieldName] || null);
-					count = countData;
-				} else {
-					const [{ count: countData }] = await this.knex
-						.count(fieldName, { as: 'count' })
-						.from(this.collection)
-						.where(fieldName, data[fieldName] || null)
-						.andWhere(deletedAtField, null);
-					count = countData;
+			for (const field of fieldMaybeUniques) {
+				const { unique, field: fieldName } = field;
+				if (unique) {
+					let count: string | number;
+					if (!isSoftDelete) {
+						const [{ count: countData }] = await this.knex
+							.count(fieldName, { as: 'count' })
+							.from(this.collection)
+							.where(fieldName, data[fieldName] || null);
+						count = countData;
+					} else {
+						const [{ count: countData }] = await this.knex
+							.count(fieldName, { as: 'count' })
+							.from(this.collection)
+							.where(fieldName, data[fieldName] || null)
+							.andWhere(deletedAtField, null);
+						count = countData;
+					}
+					const counter = count ? Number(count) : 0;
+					if (counter)
+						throw new RecordNotUniqueException(fieldName, {
+							collection: this.collection,
+							field: fieldName,
+							invalid: data[fieldName],
+						});
 				}
-				const counter = count ? Number(count) : 0;
-				if (counter)
-					throw new RecordNotUniqueException(fieldName, {
-						collection: this.collection,
-						field: fieldName,
-						invalid: data[fieldName],
-					});
 			}
 		}
 
@@ -186,6 +191,9 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			let primaryKey = payloadWithTypeCasting[primaryKeyField];
 
 			try {
+				// TODO: Fix trick for unique on directus_fields
+				const excludedColections = ['directus_fields'];
+				if (excludedColections.includes(this.collection)) delete payloadWithoutAliases.unique;
 				const result = await trx.insert(payloadWithoutAliases).into(this.collection).returning(primaryKeyField);
 				primaryKey = primaryKey ?? result[0];
 			} catch (err: any) {
@@ -771,6 +779,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	/**
 	 * Delete multiple items by primary key
 	 */
+
 	async deleteMany(keys: PrimaryKey[], opts?: MutationOptions): Promise<PrimaryKey[]> {
 		const { isSoftDelete, primary: primaryKeyField, fields } = this.schema.collections[this.collection];
 

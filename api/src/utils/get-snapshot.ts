@@ -16,7 +16,7 @@ export async function getSnapshot(options?: { database?: Knex; schema?: SchemaOv
 	const relationsService = new RelationsService({ knex: database, schema });
 
 	const [collections, fields, relations] = await Promise.all([
-		collectionsService.readByQuery(),
+		collectionsService.readByQuery({ includePhysicalTable: false }),
 		fieldsService.readAll(),
 		relationsService.readAll(),
 	]);

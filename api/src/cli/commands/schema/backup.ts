@@ -1,37 +1,39 @@
 import getDatabase from '../../../database';
 import logger from '../../../logger';
-import { getSnapshot } from '../../../utils/get-snapshot';
 import { constants as fsConstants, promises as fs } from 'fs';
 import path from 'path';
 import inquirer from 'inquirer';
 import { dump as toYaml } from 'js-yaml';
 import { flushCaches } from '../../../cache';
 import { getSchema } from '../../../utils/get-schema';
-import { CollectionsService, FieldsService, RelationsService, ItemsService } from '../../..';
-import { CollectionsOverview, Relation } from '@directus/shared/types';
-import { MailService } from '../../../services';
+import { ItemsService } from '../../../services';
 
-export async function snapshot(
-	snapshotPath: string,
-	options?: { yes: boolean; format: 'json' | 'yaml' }
-): Promise<void> {
-	const filename = path.resolve(process.cwd(), snapshotPath);
+const excludedCollection = ['directus_collections', 'directus_fields', 'directus_migrations', 'directus_relations'];
 
-	let snapshotExists: boolean;
+export default async function (backupPath: string, options?: { yes: boolean; format: 'json' | 'yaml' }) {
+	logger.info('Backing up data...');
+
+	await flushCaches();
+	const database = getDatabase();
+	const schema = await getSchema({ database });
+	const { collections } = schema;
+	const filename = path.resolve(process.cwd(), backupPath);
+
+	let backupExists: boolean;
 
 	try {
 		await fs.access(filename, fsConstants.F_OK);
-		snapshotExists = true;
+		backupExists = true;
 	} catch {
-		snapshotExists = false;
+		backupExists = false;
 	}
 
-	if (snapshotExists && options?.yes === false) {
+	if (backupExists && options?.yes === false) {
 		const { overwrite } = await inquirer.prompt([
 			{
 				type: 'confirm',
 				name: 'overwrite',
-				message: 'Snapshot already exists. Do you want to overwrite the file?',
+				message: 'Backup file already exists. Do you want to overwrite the file?',
 			},
 		]);
 
@@ -40,20 +42,101 @@ export async function snapshot(
 		}
 	}
 
-	await flushCaches();
+	const result: {
+		tableName: string;
+		maxPrimaryKey: number;
+		datas: any[];
+		primaryKey: string;
+	}[] = [];
 
-	const database = getDatabase();
-
-	const snapshot = await getSnapshot({ database });
+	for (const collectionName in collections) {
+		if (!excludedCollection.includes(collectionName)) {
+			// if (collectionName !== 'positions') continue;
+			const { fields, primary } = collections[collectionName];
+			const filteredFields: string[] = [];
+			for (const fieldName in fields) {
+				const field = fields[fieldName];
+				if (!field.special.includes('o2m') && !field.special.includes('m2m') && !field.special.includes('files'))
+					filteredFields.push(fieldName);
+			}
+			const primaryKeyData = fields[primary];
+			let primaryKey = '';
+			if (primaryKeyData) {
+				if (!primaryKeyData.special.includes('uuid') && primaryKeyData.defaultValue == 'AUTO_INCREMENT') {
+					primaryKey = primaryKeyData.field;
+				}
+			}
+			// const datas = await database.select('*').from(collectionName);
+			const itemService = new ItemsService(collectionName, {
+				schema,
+				accountability: {
+					user: '-',
+					role: '-',
+					admin: true,
+					app: true,
+					ip: '::1',
+					userAgent: 'System/1.0.0',
+					share: undefined,
+					share_scope: undefined,
+					permissions: [],
+				},
+				knex: database,
+			});
+			let datas: any[] = [];
+			let appendDatas = [];
+			const MAX_DATA = 2000;
+			let page = 1;
+			let maxPrimaryKey = 0;
+			do {
+				appendDatas = await itemService.readByQuery(
+					{
+						fields: filteredFields,
+						limit: MAX_DATA,
+						page: page,
+						showSoftDelete: true,
+					},
+					{
+						transformers: {
+							conceal: false,
+							hash: false,
+							json: false,
+						},
+					}
+				);
+				if (appendDatas.length) datas = [...datas, ...appendDatas];
+				if (primaryKey) {
+					for (const currData of appendDatas) {
+						const primaryKeyValue = currData[primaryKey];
+						if (primaryKeyValue > maxPrimaryKey) {
+							maxPrimaryKey = primaryKeyValue;
+						}
+					}
+				}
+				page++;
+			} while (appendDatas.length);
+			if (datas.length) {
+				result.push({
+					tableName: collectionName,
+					datas,
+					maxPrimaryKey,
+					primaryKey,
+				});
+				logger.info(`Backed up ${collectionName}: ${datas.length} rows`);
+			} else {
+				logger.warn(`No data found for ${collectionName}. Skipping...`);
+			}
+		}
+	}
 
 	try {
 		if (options?.format === 'yaml') {
-			await fs.writeFile(filename, toYaml(snapshot));
+			await fs.writeFile(filename, toYaml(result));
 		} else {
-			await fs.writeFile(filename, JSON.stringify(snapshot));
+			await fs.writeFile(filename, JSON.stringify(result));
 		}
 
-		logger.info(`Snapshot saved to ${filename}`);
+		const sizeFile = (await fs.stat(filename)).size / 1024;
+		logger.info(`Backup saved to ${filename} (${sizeFile.toFixed(3)} KB)`);
 
 		database.destroy();
 		process.exit(0);
@@ -62,81 +145,4 @@ export async function snapshot(
 		database.destroy();
 		process.exit(1);
 	}
-}
-
-export default async function () {
-	logger.info('Getting snapshot...');
-	await flushCaches();
-	const database = getDatabase();
-	const schema = await getSchema({ database });
-	const { collections, relations, relationMap } = schema;
-	const mail = new MailService({
-		schema,
-		knex: database,
-	});
-
-	console.log({ mail });
-	const send = await mail.send({
-		html: '<h1>Hello world</h1>',
-		to: 'andreanto.bagus@gmail.com',
-	});
-
-	console.log({ send });
-
-	for (const collectionName in relationMap) {
-		for (const relation of relations) {
-			const { collection, field, related_collection, schema } = relation;
-			if (collections[collectionName] && related_collection && schema) {
-				if (!collections[collectionName].depends_on) collections[collectionName].depends_on = [];
-				if (collection == collectionName) (collections[collectionName].depends_on as string[]).push(related_collection);
-			}
-		}
-	}
-
-	let loop = 0;
-	while (Object.keys(collections).length > 0) {
-		console.log(`${loop} ============================================= ${Object.keys(collections).length}`);
-		for (const collectionName in collections) {
-			// console.log({ collectionName });
-			const collection = collections[collectionName];
-			if (collection.depends_on) {
-				if (!collection.depends_on.length) {
-					console.log(`${collectionName} has been no dependencies ${Object.keys(collections).length}`);
-					delete collections[collectionName];
-
-					for (const currCollectionName in collections) {
-						const currCollection = collections[currCollectionName];
-						if (currCollection.depends_on) {
-							const dependsOn = [];
-							for (const dependentCollectionName of currCollection.depends_on) {
-								if (dependentCollectionName != collectionName) dependsOn.push(dependentCollectionName);
-							}
-							// console.log({ currCollectionName, oldDepends: currCollection.depends_on, newDepends: dependsOn });
-							collections[currCollectionName].depends_on = dependsOn;
-						}
-					}
-				}
-			} else {
-				console.log(`${collectionName} has no dependencies ${Object.keys(collections).length}`);
-				delete collections[collectionName];
-
-				for (const currCollectionName in collections) {
-					const currCollection = collections[currCollectionName];
-					if (currCollection.depends_on) {
-						const dependsOn = [];
-						for (const dependentCollectionName of currCollection.depends_on) {
-							if (dependentCollectionName != collectionName) dependsOn.push(dependentCollectionName);
-						}
-						// console.log({ currCollectionName, oldDepends: currCollection.depends_on, newDepends: dependsOn });
-						collections[currCollectionName].depends_on = dependsOn;
-					}
-				}
-			}
-		}
-		loop++;
-		if (loop == 4) break;
-	}
-
-	database.destroy();
-	process.exit(0);
 }

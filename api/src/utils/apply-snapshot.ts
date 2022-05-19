@@ -21,6 +21,7 @@ export async function applySnapshot(
 	const snapshotDiff = options?.diff ?? getSnapshotDiff(current, snapshot);
 
 	await database.transaction(async (trx) => {
+		logger.info(`Applying ${snapshotDiff.collections.length} Collections snapshot...`);
 		const collectionsService = new CollectionsService({ knex: trx, schema });
 
 		for (const { collection, diff } of snapshotDiff.collections) {
@@ -71,6 +72,7 @@ export async function applySnapshot(
 			}
 		}
 
+		logger.info(`Applying ${snapshotDiff.fields.length} Fields snapshot...`);
 		const fieldsService = new FieldsService({ knex: trx, schema: await getSchema({ database: trx }) });
 
 		for (const { collection, field, diff } of snapshotDiff.fields) {
@@ -116,6 +118,7 @@ export async function applySnapshot(
 			}
 		}
 
+		logger.info(`Applying ${snapshotDiff.relations.length} Relations snapshot...`);
 		const relationsService = new RelationsService({ knex: trx, schema: await getSchema({ database: trx }) });
 
 		for (const { collection, field, diff } of snapshotDiff.relations) {
