@@ -206,3 +206,29 @@ fields:
 
   - field: collapse
     hidden: true
+
+  - field: is_soft_delete
+    interface: boolean
+    special: boolean
+    options:
+      label: Is Soft Delete
+    width: half
+
+  - field: schema
+    interface: select-dropdown
+    options:
+      choices:
+        - text: Datacore
+          value: datacore
+        - text: Public
+          value: public
+        - text: Configuration
+          value: configuration
+    readonly: false
+    width: half
+
+  - field: tags
+    interface: tags
+    special: 
+      - json
+    width: half

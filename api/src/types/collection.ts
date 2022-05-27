@@ -12,6 +12,9 @@ export type CollectionMeta = {
 	accountability: 'all' | 'accountability' | null;
 	group: string | null;
 	system?: boolean;
+	tags?: string[] | null | string;
+	is_soft_delete?: boolean | null;
+	schema?: string | null;
 };
 
 export type Collection = {

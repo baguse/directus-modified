@@ -35,3 +35,8 @@ fields:
     width: half
 
   - field: refresh_interval
+
+  - collection: directus_fields
+    field: show_soft_delete
+    special: boolean
+    width: half
