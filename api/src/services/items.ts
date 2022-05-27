@@ -347,14 +347,6 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 						};
 					} else if (filter._or) {
 						queryData.filter = {
-							// _or: filter._or,
-							// _and: [
-							// 	{
-							// 		[deletedAtField]: {
-							// 			_null: true,
-							// 		},
-							// 	},
-							// ],
 							_and: [
 								{
 									_or: filter._or,

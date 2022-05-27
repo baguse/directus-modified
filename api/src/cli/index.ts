@@ -14,7 +14,7 @@ import usersPasswd from './commands/users/passwd';
 import { snapshot } from './commands/schema/snapshot';
 import { apply } from './commands/schema/apply';
 import schemaBackup from './commands/schema/backup';
-import schemaRestore from './commands/schema/restore';
+// import schemaRestore from './commands/schema/restore';
 import OAS from './commands/oas/export';
 
 const pkg = require('../../package.json');
@@ -123,12 +123,13 @@ export async function createCli(): Promise<Command> {
 		.argument('<path>', 'Path to Backup file')
 		.action(schemaBackup);
 
-	schemaCommands
-		.command('restore')
-		.description('Restore backup file to the current database')
-		.option('-y, --yes', `Assume "yes" as answer to all prompts and run non-interactively`)
-		.argument('<path>', 'Path to Backup file')
-		.action(schemaRestore);
+	// * TODO: Command due schema on progress
+	// schemaCommands
+	// 	.command('restore')
+	// 	.description('Restore backup file to the current database')
+	// 	.option('-y, --yes', `Assume "yes" as answer to all prompts and run non-interactively`)
+	// 	.argument('<path>', 'Path to Backup file')
+	// 	.action(schemaRestore);
 
 	const oasCommands = program.command('oas');
 	oasCommands

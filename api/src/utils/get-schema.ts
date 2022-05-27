@@ -110,7 +110,8 @@ async function getDatabaseSchema(
 					alias: false,
 				};
 			}),
-			depends_on: [],
+			// * TODO : Command due schema on progress
+			// depends_on: [],
 		};
 	}
 
