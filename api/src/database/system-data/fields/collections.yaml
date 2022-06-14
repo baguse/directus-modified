@@ -232,3 +232,17 @@ fields:
     special: 
       - json
     width: half
+
+  - field: is_external_source
+    interface: boolean
+    special: boolean
+    width: half
+
+  - field: credential
+    width: half
+
+  - field: physical_table_name
+    width: half
+
+  - field: database_name
+    width: half

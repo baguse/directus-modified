@@ -152,6 +152,7 @@ import FieldSelectMenu from './field-select-menu.vue';
 import hideDragImage from '@/utils/hide-drag-image';
 import Draggable from 'vuedraggable';
 import formatTitle from '@directus/format-title';
+import { urlReplacer } from '@/utils/text-replacer';
 
 export default defineComponent({
 	name: 'FieldSelect',
@@ -306,7 +307,7 @@ export default defineComponent({
 				await fieldsStore.updateField(props.field.collection, props.field.field, { meta: {} });
 			}
 
-			router.push(`/settings/data-model/${props.field.collection}/${props.field.field}`);
+			router.push(`/settings/data-model/${urlReplacer(props.field.collection)}/${props.field.field}`);
 		}
 
 		async function onGroupSortChange(fields: Field[]) {

@@ -30,6 +30,7 @@ export type QueryOptions = {
 		conceal?: boolean;
 		hash?: boolean;
 		json?: boolean;
+		'json-stringify'?: boolean;
 	};
 };
 
@@ -854,9 +855,14 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 
 		await this.knex.transaction(async (trx) => {
 			if (isSoftDelete) {
-				await trx(this.collection)
-					.whereIn(primaryKeyField, keys)
-					.update({ [deletedAtField]: new Date() });
+				if (opts?.forceDelete) {
+					await trx(this.collection).whereIn(primaryKeyField, keys).delete();
+				} else {
+					await trx(this.collection)
+						.whereIn(primaryKeyField, keys)
+						.andWhere(deletedAtField, null)
+						.update({ [deletedAtField]: new Date() });
+				}
 			} else {
 				await trx(this.collection).whereIn(primaryKeyField, keys).delete();
 			}

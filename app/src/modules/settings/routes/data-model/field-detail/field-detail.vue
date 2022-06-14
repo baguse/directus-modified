@@ -33,6 +33,7 @@ import { useI18n } from 'vue-i18n';
 import formatTitle from '@directus/format-title';
 import { useDialogRoute } from '@/composables/use-dialog-route';
 import { storeToRefs } from 'pinia';
+import { nameReplacer, urlReplacer, urlRevertReplacer } from '@/utils/text-replacer';
 
 export default defineComponent({
 	name: 'FieldDetail',
@@ -60,9 +61,11 @@ export default defineComponent({
 
 		const { editing } = storeToRefs(fieldDetail);
 
+		const originalCollectionName = urlRevertReplacer(collection.value);
+
 		watch(
 			() => props.field,
-			() => fieldDetail.startEditing(props.collection, props.field, props.type),
+			() => fieldDetail.startEditing(originalCollectionName, props.field, props.type),
 			{ immediate: true }
 		);
 
@@ -72,19 +75,22 @@ export default defineComponent({
 		const { t } = useI18n();
 
 		const collectionInfo = computed(() => {
-			return collectionsStore.getCollection(collection.value);
+			return collectionsStore.getCollection(originalCollectionName);
 		});
 
 		const simple = ref(props.type === null);
 
 		const title = computed(() => {
-			const existingField = fieldsStore.getField(props.collection, props.field);
+			const existingField = fieldsStore.getField(originalCollectionName, props.field);
 			const fieldName = existingField?.name || formatTitle(fieldDetail.field.name || '');
 
+			let originalTitle = collectionInfo?.value?.name || '';
+			originalTitle = nameReplacer(originalTitle);
+
 			if (props.field === '+' && fieldName === '') {
-				return t('creating_new_field', { collection: collectionInfo.value?.name });
+				return t('creating_new_field', { collection: originalTitle });
 			} else {
-				return t('field_in_collection', { field: fieldName, collection: collectionInfo.value?.name });
+				return t('field_in_collection', { field: fieldName, collection: originalTitle });
 			}
 		});
 
@@ -97,13 +103,13 @@ export default defineComponent({
 		return { simple, cancel, collectionInfo, t, title, save, isOpen, currentTab, showAdvanced };
 
 		async function cancel() {
-			await router.push(`/settings/data-model/${props.collection}`);
+			await router.push(`/settings/data-model/${urlReplacer(props.collection)}`);
 			fieldDetail.$reset();
 		}
 
 		async function save() {
 			await fieldDetail.save();
-			router.push(`/settings/data-model/${props.collection}`);
+			router.push(`/settings/data-model/${urlReplacer(props.collection)}`);
 			fieldDetail.$reset();
 		}
 	},

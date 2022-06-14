@@ -96,7 +96,7 @@ public_label: Public
 public_description: Controls what API data is available without authenticating.
 admin_description: Initial administrative role with unrestricted App/API access.
 not_allowed: Not Allowed
-directus_version: Directus Version
+directus_version: MV Datacore API Version
 node_version: Node Version
 node_uptime: Node Uptime
 os_type: OS Type
@@ -1220,6 +1220,10 @@ soft_delete_label: Soft Delete
 hard_delete_label: Hard Delete
 delete_are_you_sure: >-
   This action is permanent and can not be undone. Are you sure you would like to proceed?
+delete_are_you_sure_hard_delete: >-
+  If you choose Hard Delete then the action is permanent and can not be undone. Are you sure you would like to proceed?
+delete_are_you_sure_soft_delete: >-
+  This action is to soft delete your data and can be restore later. Are you sure you would like to proceed?
 delete_field_are_you_sure: >-
   Are you sure you want to delete the field "{field}"? This action can not be undone.
 description: Description

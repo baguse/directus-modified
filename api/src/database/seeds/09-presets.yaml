@@ -18,7 +18,7 @@ columns:
       column: id
   collection:
     type: string
-    length: 64
+    length: 255
     references:
       table: directus_collections
       column: collection

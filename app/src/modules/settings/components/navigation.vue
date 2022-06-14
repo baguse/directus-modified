@@ -16,10 +16,10 @@
 			</v-list-item-content>
 		</v-list-item>
 
-		<v-list-item href="https://github.com/directus/directus/releases" class="version">
-			<v-list-item-icon><v-icon name="directus" /></v-list-item-icon>
+		<v-list-item class="version">
+			<!-- <v-list-item-icon><v-icon name="signal_wifi_1_bar" /></v-list-item-icon> -->
 			<v-list-item-content>
-				<v-text-overflow class="version" :text="`Directus ${version}`" />
+				<v-text-overflow class="version" :text="`MV Datacore ${version}`" />
 			</v-list-item-content>
 		</v-list-item>
 	</v-list>
@@ -75,18 +75,18 @@ export default defineComponent({
 			});
 
 			return [
-				{
-					icon: 'bug_report',
-					name: t('report_bug'),
-					href: `https://github.com/directus/directus/issues/new?${bugReportParams.toString()}`,
-					outline: true,
-				},
-				{
-					icon: 'new_releases',
-					name: t('request_feature'),
-					href: 'https://github.com/directus/directus/discussions/new',
-					outline: true,
-				},
+				// {
+				// 	icon: 'bug_report',
+				// 	name: t('report_bug'),
+				// 	href: `https://github.com/directus/directus/issues/new?${bugReportParams.toString()}`,
+				// 	outline: true,
+				// },
+				// {
+				// 	icon: 'new_releases',
+				// 	name: t('request_feature'),
+				// 	href: 'https://github.com/directus/directus/discussions/new',
+				// 	outline: true,
+				// },
 			];
 		});
 

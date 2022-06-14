@@ -143,7 +143,7 @@ export default async function createApp(): Promise<express.Application> {
 	app.use(extractToken);
 
 	app.use((_req, res, next) => {
-		res.setHeader('X-Powered-By', 'Directus');
+		res.setHeader('X-Powered-By', 'MV Datacore');
 		next();
 	});
 

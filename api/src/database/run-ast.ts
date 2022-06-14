@@ -47,6 +47,7 @@ type RunASTOptions = {
 		'date-created'?: boolean;
 		'date-updated'?: boolean;
 		csv?: boolean;
+		'json-stringify'?: boolean;
 	};
 };
 

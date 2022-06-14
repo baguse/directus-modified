@@ -10,7 +10,7 @@ import { FieldsService } from '../services/fields';
 import { ItemsService } from '../services/items';
 import Keyv from 'keyv';
 import { AbstractServiceOptions, Collection, CollectionMeta, MutationOptions } from '../types';
-import { Accountability, FieldMeta, RawField, SchemaOverview } from '@directus/shared/types';
+import { Accountability, FieldMeta, Filter, RawField, SchemaOverview } from '@directus/shared/types';
 import { Table } from 'knex-schema-inspector/dist/types/table';
 
 export type RawCollection = {
@@ -185,8 +185,9 @@ export class CollectionsService {
 	/**
 	 * Read all collections. Currently doesn't support any query.
 	 */
-	async readByQuery(opts?: { includePhysicalTable?: boolean }): Promise<Collection[]> {
+	async readByQuery(opts?: { includePhysicalTable?: boolean; includeExternalTable?: boolean }): Promise<Collection[]> {
 		const includePhysicalTable = typeof opts?.includePhysicalTable == 'undefined' ? true : opts.includePhysicalTable;
+		const includeExternalTable = typeof opts?.includeExternalTable == 'undefined' ? false : opts.includeExternalTable;
 		const collectionItemsService = new ItemsService('directus_collections', {
 			knex: this.knex,
 			schema: this.schema,
@@ -195,8 +196,30 @@ export class CollectionsService {
 
 		let tablesInDatabase = await this.schemaInspector.tableInfo();
 
+		const isExternalSourceFilter: Filter = includeExternalTable
+			? {
+					is_external_source: {
+						_eq: true,
+					},
+			  }
+			: {
+					_or: [
+						{
+							is_external_source: {
+								_eq: false,
+							},
+						},
+						{
+							is_external_source: {
+								_null: true,
+							},
+						},
+					],
+			  };
+
 		let meta = (await collectionItemsService.readByQuery({
 			limit: -1,
+			filter: isExternalSourceFilter,
 		})) as CollectionMeta[];
 
 		meta.push(...systemCollectionRows);

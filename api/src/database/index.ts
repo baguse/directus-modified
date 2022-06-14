@@ -10,6 +10,7 @@ import path from 'path';
 import { merge } from 'lodash';
 import { promisify } from 'util';
 import { getHelpers } from './helpers';
+import { DatabaseService } from '../services/database';
 
 let database: Knex | null = null;
 let inspector: ReturnType<typeof SchemaInspector> | null = null;

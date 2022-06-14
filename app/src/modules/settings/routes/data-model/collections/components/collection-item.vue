@@ -5,7 +5,7 @@
 			dense
 			clickable
 			:class="{ hidden: collection.meta?.hidden }"
-			:to="collection.schema ? `/settings/data-model/${collection.collection}` : undefined"
+			:to="collection.schema ? `/settings/data-model/${urlReplacer(collection.collection)}` : undefined"
 			@click.self="!collection.schema ? $emit('editCollection', collection) : null"
 		>
 			<v-list-item-icon>
@@ -17,8 +17,8 @@
 					class="collection-icon"
 					:name="collection.meta?.hidden ? 'visibility_off' : collection.icon"
 				/>
-				<span>{{ collection.name }}</span>
-				<v-chip-group active-class="primary--text" column style="margin-left: 3px">
+				<span>{{ nameReplacer(collection.name) }}</span>
+				<div style="margin-left: 3px">
 					<v-chip
 						v-for="(tag, i) in collectionTags"
 						:key="i"
@@ -30,7 +30,7 @@
 					>
 						{{ tag }}
 					</v-chip>
-				</v-chip-group>
+				</div>
 				<span v-if="collection.meta?.note" class="collection-note">{{ collection.meta.note }}</span>
 			</div>
 			<template v-if="collection.type === 'alias' || nestedCollections.length">
@@ -78,6 +78,7 @@ import { useCollectionsStore } from '@/stores';
 import { DeepPartial } from '@directus/shared/types';
 import { useI18n } from 'vue-i18n';
 import { unexpectedError } from '@/utils/unexpected-error';
+import { nameReplacer, urlReplacer } from '@/utils/text-replacer';
 
 export default defineComponent({
 	name: 'CollectionItem',
@@ -144,6 +145,8 @@ export default defineComponent({
 			collapseTooltip,
 			collapseLoading,
 			collectionTags,
+			urlReplacer,
+			nameReplacer,
 		};
 
 		async function toggleCollapse() {

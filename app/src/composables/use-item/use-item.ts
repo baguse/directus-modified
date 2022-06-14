@@ -26,7 +26,7 @@ type UsableItem = {
 	refresh: () => void;
 	save: () => Promise<any>;
 	isNew: ComputedRef<boolean>;
-	remove: () => Promise<void>;
+	remove: (isForceDelete?: boolean) => Promise<void>;
 	deleting: Ref<boolean>;
 	archive: () => Promise<void>;
 	isArchived: ComputedRef<boolean | null>;
@@ -40,7 +40,7 @@ type UsableItem = {
 export function useItem(
 	collection: Ref<string>,
 	primaryKey: Ref<string | number | null>,
-	showSoftDelete: Ref<boolean | null>
+	showSoftDelete?: Ref<boolean | null>
 ): UsableItem {
 	const { info: collectionInfo, primaryKeyField } = useCollection(collection);
 	const item = ref<Record<string, any> | null>(null);
@@ -267,11 +267,11 @@ export function useItem(
 		}
 	}
 
-	async function remove() {
+	async function remove(isForceDelete = false) {
 		deleting.value = true;
 
 		try {
-			await api.delete(itemEndpoint.value);
+			await api.delete(`${itemEndpoint.value}?force_delete=${isForceDelete}`);
 
 			item.value = null;
 
@@ -311,7 +311,6 @@ export function useItem(
 			item.value = response.data.data;
 		} else {
 			const valuesThatAreEqual = { ...response.data.data[0] };
-
 			response.data.data.forEach((existingItem: any) => {
 				for (const [key, value] of Object.entries(existingItem)) {
 					if (valuesThatAreEqual[key] !== value) {

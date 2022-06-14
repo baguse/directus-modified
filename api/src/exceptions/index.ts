@@ -10,6 +10,7 @@ export * from './invalid-payload';
 export * from './invalid-query';
 export * from './invalid-token';
 export * from './method-not-allowed';
+export * from './not-found';
 export * from './range-not-satisfiable';
 export * from './route-not-found';
 export * from './service-unavailable';

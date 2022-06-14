@@ -72,6 +72,12 @@ export function sanitizeQuery(rawQuery: Record<string, any>, accountability?: Ac
 		query.showSoftDelete = false;
 	}
 
+	if (typeof rawQuery.force_delete != 'undefined') {
+		query.forceDelete = rawQuery.force_delete.toLowerCase() == 'true' ? true : false;
+	} else {
+		query.forceDelete = false;
+	}
+
 	if (rawQuery.deleteds) {
 		query.deleteds = sanitizeDeleteds(rawQuery.deleteds);
 	}

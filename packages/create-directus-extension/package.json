@@ -1,6 +1,6 @@
 {
 	"name": "create-mv-data-core-extension",
-	"version": "9.4.4",
+	"version": "9.4.5",
 	"description": "A small util that will scaffold a Directus extension.",
 	"main": "lib/index.js",
 	"exports": {
@@ -23,7 +23,7 @@
 	"license": "GPL-3.0-only",
 	"gitHead": "24621f3934dc77eb23441331040ed13c676ceffd",
 	"dependencies": {
-		"@directus/extensions-sdk": "npm:@mv-data-core/extensions-sdk@9.4.4",
+		"@directus/extensions-sdk": "npm:@mv-data-core/extensions-sdk@9.4.5",
 		"@directus/shared": "npm:@mv-data-core/shared@9.4.4",
 		"inquirer": "^8.1.2"
 	}

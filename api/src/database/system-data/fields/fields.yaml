@@ -90,3 +90,13 @@ fields:
     hidden: true
     special: boolean
     width: half
+
+  - collection: directus_fields
+    field: is_external_source
+    interface: boolean
+    special: boolean
+    width: half
+
+  - collection: directus_fields
+    field: data_type
+    width: half

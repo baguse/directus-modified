@@ -57,7 +57,7 @@ export default async function create(type: string, name: string, options: Create
 		process.exit(1);
 	}
 
-	const spinner = ora(`Scaffolding Directus extension...`).start();
+	const spinner = ora(`Scaffolding MV Datacore extension...`).start();
 
 	await fse.ensureDir(targetPath);
 
@@ -76,7 +76,7 @@ export default async function create(type: string, name: string, options: Create
 	const packageManifest = {
 		name: `mv-data-core-extension-${name}`,
 		version: '1.0.0',
-		keywords: ['directus', 'directus-extension', `directus-custom-${type}`],
+		keywords: ['mv-datacore', 'mv-datacore-extension', `mv-datacore-custom-${type}`],
 		[EXTENSION_PKG_KEY]: {
 			type,
 			path: 'dist/index.js',
@@ -121,7 +121,8 @@ async function getPackageDeps(type: ExtensionType, language: Language) {
 				'@directus/extensions-sdk': `npm:@mv-data-core/extensions-sdk@${pkg.version}`,
 				'@types/node': `^${await getPackageVersion('@types/node')}`,
 				typescript: `^${await getPackageVersion('typescript')}`,
-				'@mv-data-core/decorator': '0.0.1',
+				'@mv-data-core/decorator': '0.0.2',
+				'@mv-data-core/shared': '9.5.3',
 			};
 		}
 		return {

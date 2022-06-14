@@ -67,7 +67,9 @@ router.get(
 			schema: req.schema,
 		});
 
-		const collection = await collectionsService.readOne(req.params.collection);
+		const collectionRenamed = req.params.collection.replace(/^mv_datacore_/, 'directus_');
+
+		const collection = await collectionsService.readOne(collectionRenamed);
 		res.locals.payload = { data: collection || null };
 
 		return next();

@@ -1,9 +1,10 @@
 import { Body, Context, Endpoint, Get, Param, Patch, Req, Res } from "@mv-data-core/decorator";
+import { ApiExtensionContext } from "@mv-data-core/shared/types";
 
 @Endpoint()
 export default class DefineEndpoint {
   @Get(
-    { path: "/", tag: "Hello" },
+    { path: "/", tag: "Hello", description: "This is description" },
     {
       responses: [
         {
@@ -55,7 +56,7 @@ export default class DefineEndpoint {
   )
   async update(
     @Param("name") name: string,
-    @Context() context: any,
+    @Context() context: ApiExtensionContext,
     @Body() body: any
   ) {
     const {

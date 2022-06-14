@@ -31,3 +31,4 @@ export * from './shares';
 export * from './sages';
 export * from './redis';
 export * from './bull';
+export * from './database';

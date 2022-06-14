@@ -1,5 +1,5 @@
 <template>
-	<private-view :title="collectionInfo && collectionInfo.name">
+	<private-view :title="title">
 		<template #headline>
 			<v-breadcrumb :items="[{ name: t('settings_data_model'), to: '/settings/data-model' }]" />
 		</template>
@@ -100,7 +100,7 @@
 
 <script lang="ts">
 import { useI18n } from 'vue-i18n';
-import { defineComponent, computed, toRefs, ref } from 'vue';
+import { defineComponent, computed, toRefs, ref, unref, Ref } from 'vue';
 import SettingsNavigation from '../../../components/navigation.vue';
 import { useCollection } from '@directus/shared/composables';
 import FieldsManagement from './components/fields-management.vue';
@@ -110,6 +110,7 @@ import { useRouter } from 'vue-router';
 import { useCollectionsStore, useFieldsStore } from '@/stores';
 import useShortcut from '@/composables/use-shortcut';
 import useEditsGuard from '@/composables/use-edits-guard';
+import { nameReplacer, urlRevertReplacer } from '@/utils/text-replacer';
 
 export default defineComponent({
 	components: { SettingsNavigation, FieldsManagement },
@@ -135,13 +136,14 @@ export default defineComponent({
 		const router = useRouter();
 
 		const { collection } = toRefs(props);
-		const { info: collectionInfo, fields } = useCollection(collection);
+		const originalCollectionName = ref(urlRevertReplacer(collection.value));
+		const { info: collectionInfo, fields } = useCollection(originalCollectionName);
 		const collectionsStore = useCollectionsStore();
 		const fieldsStore = useFieldsStore();
 
 		const { isNew, edits, item, saving, loading, error, save, remove, deleting, saveAsCopy, isBatch } = useItem(
 			ref('directus_collections'),
-			collection
+			originalCollectionName
 		);
 
 		const hasEdits = computed<boolean>(() => {
@@ -156,6 +158,11 @@ export default defineComponent({
 		const confirmDelete = ref(false);
 
 		const { confirmLeave, leaveTo } = useEditsGuard(hasEdits);
+
+		const title = computed(() => {
+			const originalTitle = collectionInfo?.value?.name || '';
+			return `${nameReplacer(originalTitle)}`;
+		});
 
 		return {
 			t,
@@ -179,6 +186,8 @@ export default defineComponent({
 			confirmLeave,
 			leaveTo,
 			discardAndLeave,
+			title,
+			originalCollectionName,
 		};
 
 		async function deleteAndQuit() {

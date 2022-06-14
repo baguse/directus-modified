@@ -7,6 +7,7 @@ $green: #00c897;
 $yellow: #ffb300;
 $orange: #ee9746;
 $red: #e35169;
+$mvColor: #2186d8;
 
 // Mixing colors
 $light-theme-tint: #fff;
@@ -22,7 +23,7 @@ $color-mapping: (
 	'yellow': $yellow,
 	'orange': $orange,
 	'red': $red,
-	'primary': $green,
+	'primary': $mvColor,
 	'secondary': $blue,
 	'success': $green,
 	'warning': $yellow,

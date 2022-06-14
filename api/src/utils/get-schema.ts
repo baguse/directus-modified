@@ -65,7 +65,9 @@ async function getDatabaseSchema(
 	const collections = [
 		...(await database
 			.select('collection', 'singleton', 'note', 'sort_field', 'accountability', 'is_soft_delete')
-			.from('directus_collections')),
+			.from('directus_collections')
+			.where('is_external_source', false)
+			.orWhereNull('is_external_source')),
 		...systemCollectionRows,
 	];
 
@@ -110,8 +112,7 @@ async function getDatabaseSchema(
 					alias: false,
 				};
 			}),
-			// * TODO : Command due schema on progress
-			// depends_on: [],
+			depends_on: [],
 		};
 	}
 

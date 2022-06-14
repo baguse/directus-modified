@@ -21,14 +21,14 @@ init();
 
 async function init() {
 	console.log(DIRECTUS_LOGO);
-	console.info(
-		`Hey! Interested in helping build this open-source data management platform?\nIf so, join our growing team of contributors at: https://directus.chat`
-	);
+	// console.info(
+	// 	`Hey! Interested in helping build this open-source data management platform?\nIf so, join our growing team of contributors at: https://directus.chat`
+	// );
 
 	if (import.meta.env.DEV) {
-		console.info(`%c🐰 Starting Directus v${version}...`, 'color:Green');
+		console.info(`%cStarting MV Datacore v${version}...`, 'color:Blue');
 	} else {
-		console.info(`%c🐰 Starting Directus...`, 'color:Green');
+		console.info(`%cStarting MV Datacore...`, 'color:Blue');
 	}
 
 	console.time('🕓 Application Loaded');

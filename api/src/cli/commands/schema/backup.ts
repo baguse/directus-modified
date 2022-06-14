@@ -100,6 +100,7 @@ export default async function (backupPath: string, options?: { yes: boolean; for
 							conceal: false,
 							hash: false,
 							json: false,
+							'json-stringify': true,
 						},
 					}
 				);

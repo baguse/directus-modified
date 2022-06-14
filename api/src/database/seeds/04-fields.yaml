@@ -5,14 +5,14 @@ columns:
     increments: true
   collection:
     type: string
-    length: 64
+    length: 255
     nullable: false
     references:
       table: directus_collections
       column: collection
   field:
     type: string
-    length: 64
+    length: 255
     nullable: false
   special:
     type: string
@@ -59,4 +59,12 @@ columns:
   unique:
     type: boolean
     default: false
+    nullable: true
+  is_external_source:
+    type: boolean
+    default: false
+    nullable: true
+  data_type:
+    type: string
+    length: 100
     nullable: true

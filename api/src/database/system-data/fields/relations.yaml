@@ -31,3 +31,8 @@ fields:
 
   - field: one_deselect_action
     width: half
+
+  - field: is_external_source
+    interface: boolean
+    special: boolean
+    width: half

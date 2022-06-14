@@ -57,7 +57,51 @@
 		</template>
 
 		<template #actions>
-			<v-dialog v-if="!isNew" v-model="confirmDelete" :disabled="deleteAllowed === false" @esc="confirmDelete = false">
+			<!-- If Soft delete activated -->
+			<v-dialog
+				v-if="!isNew && collectionInfo?.meta?.is_soft_delete"
+				v-model="confirmSoftDelete"
+				:disabled="deleteAllowed === false"
+				@esc="confirmSoftDelete = false"
+			>
+				<template #activator="{ on }">
+					<v-button
+						v-if="collectionInfo.meta && collectionInfo.meta.singleton === false"
+						v-tooltip.bottom="deleteAllowed ? t('delete_label') : t('not_allowed')"
+						rounded
+						icon
+						class="action-delete"
+						:disabled="item === null || deleteAllowed !== true"
+						@click="on"
+					>
+						<v-icon name="delete" outline />
+					</v-button>
+				</template>
+
+				<v-card>
+					<v-card-title>{{ t('delete_are_you_sure_hard_delete') }}</v-card-title>
+
+					<v-card-actions>
+						<v-button secondary @click="confirmSoftDelete = false">
+							{{ t('cancel') }}
+						</v-button>
+						<v-button kind="warning" :loading="deleting" @click="deleteAndQuit(false)">
+							{{ t('soft_delete_label') }}
+						</v-button>
+						<v-button kind="danger" :loading="deleting" @click="deleteAndQuit(true)">
+							{{ t('hard_delete_label') }}
+						</v-button>
+					</v-card-actions>
+				</v-card>
+			</v-dialog>
+
+			<!-- If soft delete deactivated -->
+			<v-dialog
+				v-if="!isNew && !collectionInfo?.meta?.is_soft_delete"
+				v-model="confirmDelete"
+				:disabled="deleteAllowed === false"
+				@esc="confirmDelete = false"
+			>
 				<template #activator="{ on }">
 					<v-button
 						v-if="collectionInfo.meta && collectionInfo.meta.singleton === false"
@@ -85,76 +129,6 @@
 					</v-card-actions>
 				</v-card>
 			</v-dialog>
-
-			<!-- For Soft delete -->
-			<!-- <v-dialog
-				v-if="!isNew && collectionInfo?.meta?.is_soft_delete"
-				v-model="confirmSoftDelete"
-				:disabled="deleteAllowed === false"
-				@esc="confirmSoftDelete = false"
-			>
-				<template #activator="{ on }">
-					<v-button
-						v-if="collectionInfo.meta && collectionInfo.meta.singleton === false"
-						v-tooltip.bottom="deleteAllowed ? t('soft_delete_label') : t('not_allowed')"
-						rounded
-						icon
-						class="action-softdelete"
-						:disabled="item === null || deleteAllowed !== true"
-						@click="on"
-					>
-						<v-icon name="delete" outline />
-					</v-button>
-				</template>
-
-				<v-card>
-					<v-card-title>{{ t('delete_are_you_sure') }}</v-card-title>
-
-					<v-card-actions>
-						<v-button secondary @click="confirmSoftDelete = false">
-							{{ t('cancel') }}
-						</v-button>
-						<v-button kind="danger" :loading="deleting" @click="deleteAndQuit">
-							{{ t('soft_delete_label') }}
-						</v-button>
-					</v-card-actions>
-				</v-card>
-			</v-dialog> -->
-
-			<!-- For Hard delete -->
-			<!-- <v-dialog
-				v-if="!isNew && collectionInfo?.meta?.is_soft_delete"
-				v-model="confirmHardDelete"
-				:disabled="deleteAllowed === false"
-				@esc="confirmHardDelete = false"
-			>
-				<template #activator="{ on }">
-					<v-button
-						v-if="collectionInfo.meta && collectionInfo.meta.singleton === false"
-						v-tooltip.bottom="deleteAllowed ? t('hard_delete_label') : t('not_allowed')"
-						rounded
-						icon
-						class="action-delete"
-						:disabled="item === null || deleteAllowed !== true"
-						@click="on"
-					>
-						<v-icon name="delete" outline />
-					</v-button>
-				</template>
-
-				<v-card>
-					<v-card-title>{{ t('delete_are_you_sure') }}</v-card-title>
-
-					<v-card-actions>
-						<v-button secondary @click="confirmHardDelete = false">
-							{{ t('cancel') }}
-						</v-button>
-						<v-button kind="danger" :loading="deleting" @click="deleteAndQuit">
-							{{ t('hard_delete_label') }}
-						</v-button>
-					</v-card-actions>
-				</v-card>
-			</v-dialog> -->
 
 			<v-dialog
 				v-if="collectionInfo.meta && collectionInfo.meta.archive_field && !isNew"
@@ -557,9 +531,9 @@ export default defineComponent({
 			}
 		}
 
-		async function deleteAndQuit() {
+		async function deleteAndQuit(isForceDelete = false) {
 			try {
-				await remove();
+				await remove(isForceDelete);
 				edits.value = {};
 				router.replace(`/content/${props.collection}`);
 			} catch {

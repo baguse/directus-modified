@@ -15,6 +15,7 @@ export type Query = {
 	alias?: Record<string, string> | null;
 	showSoftDelete?: boolean;
 	deleteds?: string[] | null;
+	forceDelete?: boolean | null;
 };
 
 /**

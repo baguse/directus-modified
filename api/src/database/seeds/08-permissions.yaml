@@ -10,7 +10,7 @@ columns:
       column: id
   collection:
     type: string
-    length: 64
+    length: 255
     nullable: false
     references:
       table: directus_collections

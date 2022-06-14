@@ -337,10 +337,10 @@
     vue-i18n "9"
     vue-router "4"
 
-"@directus/shared@npm:@mv-data-core/shared@9.5.1":
-  version "9.5.1"
-  resolved "https://registry.yarnpkg.com/@mv-data-core/shared/-/shared-9.5.1.tgz#b4b04cdc0b502d7532cd41e695703dcca32e5024"
-  integrity sha512-afnlkKjwVYgJLbnot/qDVoD6gXkjMx0GJGuehhUh2eaQdYgNJWwGrJKCjRPOdz7NTaphUotR/swvg7GyTDM15A==
+"@directus/shared@npm:@mv-data-core/shared@9.5.3":
+  version "9.5.3"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/shared/-/shared-9.5.3.tgz#3003d8241e06b1c5ff21c1c393bcc74fe2aa41c9"
+  integrity sha512-8ruCQukJPeBOB6QVvJR2ngrVa7D4OE6czfWkPuUsngCgVvzY7Sjz48iAxi1eg/X9Gl7LAWmUf3PmejdhQWfzfg==
   dependencies:
     date-fns "2.24.0"
     fs-extra "10.0.0"

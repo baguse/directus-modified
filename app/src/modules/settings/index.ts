@@ -17,6 +17,7 @@ import RolesPermissionsDetail from './routes/roles/permissions-detail/permission
 import RolesPublicItem from './routes/roles/public-item.vue';
 import WebhooksCollection from './routes/webhooks/collection.vue';
 import WebhooksItem from './routes/webhooks/item.vue';
+import { urlReplacer } from '@/utils/text-replacer';
 
 export default defineModule({
 	id: 'settings',
@@ -61,7 +62,13 @@ export default defineModule({
 					component: Fields,
 					async beforeEnter(to) {
 						const collectionsStore = useCollectionsStore();
-						const info = collectionsStore.getCollection(to.params.collection as string);
+						const urlReplacer = (collectionName: string) => {
+							return collectionName.replace('mv_datacore_', 'directus_');
+						};
+
+						const originalCollectionName = urlReplacer(to.params.collection as string);
+
+						const info = collectionsStore.getCollection(originalCollectionName);
 
 						if (!info) {
 							return {
@@ -71,17 +78,20 @@ export default defineModule({
 						}
 
 						if (!info?.meta) {
-							await api.patch(`/collections/${to.params.collection}`, { meta: {} });
+							await api.patch(`/collections/${originalCollectionName}`, { meta: {} });
 						}
 
 						const fieldsStore = useFieldsStore();
 						fieldsStore.hydrate();
 					},
-					props: (route) => ({
-						collection: route.params.collection,
-						field: route.params.field,
-						type: route.query.type,
-					}),
+					props: (route) => {
+						const originalCollectionName = urlReplacer(route.params.collection as string);
+						return {
+							collection: originalCollectionName,
+							field: route.params.field,
+							type: route.query.type,
+						};
+					},
 					children: [
 						{
 							path: ':field',

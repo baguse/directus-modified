@@ -217,14 +217,17 @@ router.delete(
 		if (Array.isArray(req.body)) {
 			await service.deleteMany(req.body, {
 				deleteds: req.sanitizedQuery.deleteds,
+				forceDelete: req.sanitizedQuery.forceDelete,
 			});
 		} else if (req.body.keys) {
 			await service.deleteMany(req.body.keys, {
 				deleteds: req.sanitizedQuery.deleteds,
+				forceDelete: req.sanitizedQuery.forceDelete,
 			});
 		} else {
 			await service.deleteByQuery(req.body.query, {
 				deleteds: req.sanitizedQuery.deleteds,
+				forceDelete: req.sanitizedQuery.forceDelete,
 			});
 		}
 
@@ -244,7 +247,9 @@ router.delete(
 			schema: req.schema,
 		});
 
-		await service.deleteOne(req.params.pk);
+		await service.deleteOne(req.params.pk, {
+			forceDelete: req.sanitizedQuery.forceDelete,
+		});
 		return next();
 	}),
 	respond

@@ -5,7 +5,7 @@ columns:
     increments: true
   many_collection:
     type: string
-    length: 64
+    length: 255
     nullable: false
     references:
       table: directus_collections
@@ -20,7 +20,7 @@ columns:
     nullable: false
   one_collection:
     type: string
-    length: 64
+    length: 255
     references:
       table: directus_collections
       column: collection
@@ -38,3 +38,7 @@ columns:
   junction_field:
     type: string
     length: 64
+  is_external_source:
+    type: boolean
+    nullable: true
+    default: false

@@ -37,4 +37,9 @@ export type MutationOptions = {
 	 * List collection for recursive deletion
 	 */
 	deleteds?: string[] | null | undefined;
+
+	/**
+	 * Flag to force delete or soft delete
+	 */
+	forceDelete?: boolean | null | undefined;
 };

@@ -22,7 +22,7 @@
 			</template>
 		</draggable>
 
-		<v-button full-width :to="`/settings/data-model/${collection}/+`">
+		<v-button full-width :to="`/settings/data-model/${urlReplacer(collection)}/+`">
 			{{ t('create_field') }}
 		</v-button>
 
@@ -35,7 +35,7 @@
 			<v-list>
 				<template v-for="(option, index) in addOptions" :key="index">
 					<v-divider v-if="option.divider === true" />
-					<v-list-item v-else :to="`/settings/data-model/${collection}/+?type=${option.type}`">
+					<v-list-item v-else :to="`/settings/data-model/${urlReplacer(collection)}/+?type=${option.type}`">
 						<v-list-item-icon>
 							<v-icon :name="option.icon" />
 						</v-list-item-icon>
@@ -60,6 +60,7 @@ import FieldSelect from './field-select.vue';
 import hideDragImage from '@/utils/hide-drag-image';
 import { orderBy, isNil } from 'lodash';
 import { LocalType } from '@directus/shared/types';
+import { urlReplacer, urlRevertReplacer } from '@/utils/text-replacer';
 
 export default defineComponent({
 	name: 'FieldsManagement',
@@ -74,7 +75,7 @@ export default defineComponent({
 		const { t } = useI18n();
 
 		const { collection } = toRefs(props);
-		const { fields } = useCollection(collection);
+		const { fields } = useCollection(urlRevertReplacer(collection.value));
 		const fieldsStore = useFieldsStore();
 
 		const parsedFields = computed(() => {
@@ -153,7 +154,17 @@ export default defineComponent({
 			},
 		]);
 
-		return { t, usableFields, lockedFields, setSort, hideDragImage, addOptions, setNestedSort, isNil };
+		return {
+			t,
+			usableFields,
+			lockedFields,
+			setSort,
+			hideDragImage,
+			addOptions,
+			setNestedSort,
+			isNil,
+			urlReplacer,
+		};
 
 		async function setSort(fields: Field[]) {
 			const updates = fields.map((field, index) => ({

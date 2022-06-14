@@ -49,8 +49,8 @@ export default defineComponent({
 		onUnmounted(() => stopIdleTracking());
 
 		watch([() => serverStore.info?.project?.project_color, () => serverStore.info?.project?.project_logo], () => {
-			const hasCustomLogo = !!serverStore.info?.project?.project_logo;
-			setFavicon(serverStore.info?.project?.project_color || '#00C897', hasCustomLogo);
+			// const hasCustomLogo = !!serverStore.info?.project?.project_logo;
+			// setFavicon(serverStore.info?.project?.project_color || '#00C897', hasCustomLogo);
 		});
 
 		watch(

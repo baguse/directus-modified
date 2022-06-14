@@ -438,12 +438,19 @@ class ExtensionManager {
 			const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => {
 				Promise.resolve(fn(req, res, next)).catch(next);
 			};
-			/**
-			 * TODO: Clearing slash
-			 */
+			const clearingSlash = (str: string) => {
+				let result = str;
+				if (result.startsWith('/')) {
+					result = result.slice(1);
+				}
+				if (result.endsWith('/')) {
+					result = result.slice(0, -1);
+				}
+				return result;
+			};
 
 			const routePath = prefix || routeName;
-			router.use(`/${routePath}`, scopedRouter);
+			router.use(`/${clearingSlash(routePath)}`, scopedRouter);
 			type IRequestMethod = 'get' | 'put' | 'post' | 'put' | 'patch' | 'delete';
 			for (const route of routes) {
 				const {
@@ -652,10 +659,6 @@ class ExtensionManager {
 							this.apiDocs.paths[currentPath][httpMethod] = payload;
 						}
 					}
-					// apiDoc.paths[currentPath] = {
-					//   ...apiDoc.paths[currentPath],
-					//   ...paths[path]
-					// };
 				}
 			}
 			this.apiExtensions.endpoints.push({

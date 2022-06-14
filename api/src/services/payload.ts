@@ -40,6 +40,7 @@ interface ITransformerOptions {
 		'date-created'?: boolean;
 		'date-updated'?: boolean;
 		csv?: boolean;
+		'json-stringify'?: boolean;
 	};
 }
 
@@ -147,6 +148,14 @@ export class PayloadService {
 				return value.join(',');
 			}
 
+			return value;
+		},
+		async 'json-stringify'({ action, value }) {
+			if (action == 'read') {
+				if (typeof value == 'object') {
+					return JSON.stringify(value);
+				}
+			}
 			return value;
 		},
 	};

@@ -40,7 +40,7 @@
 							@click="$emit('update:modelValue', systemCollection.collection)"
 						>
 							<v-list-item-content>
-								{{ systemCollection.collection }}
+								{{ urlReplacer(systemCollection.collection) }}
 							</v-list-item-content>
 						</v-list-item>
 					</v-list-group>
@@ -59,6 +59,7 @@ import { defineComponent, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useCollectionsStore } from '@/stores';
 import { orderBy } from 'lodash';
+import { urlReplacer } from '@/utils/text-replacer';
 
 export default defineComponent({
 	props: {
@@ -100,7 +101,7 @@ export default defineComponent({
 			);
 		});
 
-		return { t, collectionExists, availableCollections, systemCollections };
+		return { t, collectionExists, availableCollections, systemCollections, urlReplacer };
 	},
 });
 </script>
