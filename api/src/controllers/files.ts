@@ -12,100 +12,110 @@ import { FilesService, MetaService } from '../services';
 import { File, PrimaryKey } from '../types';
 import asyncHandler from '../utils/async-handler';
 import { toArray } from '@directus/shared/utils';
+import fs from 'fs';
 
 const router = express.Router();
 
 router.use(useCollection('directus_files'));
 
 const multipartHandler = asyncHandler(async (req, res, next) => {
-	if (req.is('multipart/form-data') === false) return next();
+	if (req.is('multipart/form-data')) {
+		let headers: BusboyHeaders;
 
-	let headers: BusboyHeaders;
-
-	if (req.headers['content-type']) {
-		headers = req.headers as BusboyHeaders;
-	} else {
-		headers = {
-			...req.headers,
-			'content-type': 'application/octet-stream',
-		};
-	}
-
-	const busboy = new Busboy({ headers });
-	const savedFiles: PrimaryKey[] = [];
-	const service = new FilesService({ accountability: req.accountability, schema: req.schema });
-
-	const existingPrimaryKey = req.params.pk || undefined;
-
-	/**
-	 * The order of the fields in multipart/form-data is important. We require that all fields
-	 * are provided _before_ the files. This allows us to set the storage location, and create
-	 * the row in directus_files async during the upload of the actual file.
-	 */
-
-	let disk: string = toArray(env.STORAGE_LOCATIONS)[0];
-	let payload: any = {};
-	let fileCount = 0;
-
-	busboy.on('field', (fieldname, val) => {
-		let fieldValue: string | null | boolean = val;
-
-		if (typeof fieldValue === 'string' && fieldValue.trim() === 'null') fieldValue = null;
-		if (typeof fieldValue === 'string' && fieldValue.trim() === 'false') fieldValue = false;
-		if (typeof fieldValue === 'string' && fieldValue.trim() === 'true') fieldValue = true;
-
-		if (fieldname === 'storage') {
-			disk = val;
+		if (req.headers['content-type']) {
+			headers = req.headers as BusboyHeaders;
+		} else {
+			headers = {
+				...req.headers,
+				'content-type': 'application/octet-stream',
+			};
 		}
 
-		payload[fieldname] = fieldValue;
-	});
+		const busboy = new Busboy({ headers });
+		const savedFiles: PrimaryKey[] = [];
+		const service = new FilesService({ accountability: req.accountability, schema: req.schema });
 
-	busboy.on('file', async (fieldname, fileStream, filename, encoding, mimetype) => {
-		fileCount++;
+		const existingPrimaryKey = req.params.pk || undefined;
 
-		if (!payload.title) {
-			payload.title = formatTitle(path.parse(filename).name);
-		}
+		/**
+		 * The order of the fields in multipart/form-data is important. We require that all fields
+		 * are provided _before_ the files. This allows us to set the storage location, and create
+		 * the row in directus_files async during the upload of the actual file.
+		 */
 
-		const payloadWithRequiredFields: Partial<File> & {
-			filename_download: string;
-			type: string;
-			storage: string;
-		} = {
-			...payload,
-			filename_download: filename,
-			type: mimetype,
-			storage: payload.storage || disk,
-		};
+		let disk: string = toArray(env.STORAGE_LOCATIONS)[0];
+		let payload: any = {};
+		let fileCount = 0;
 
-		// Clear the payload for the next to-be-uploaded file
-		payload = {};
+		busboy.on('field', (fieldname, val) => {
+			let fieldValue: string | null | boolean = val;
 
-		try {
-			const primaryKey = await service.uploadOne(fileStream, payloadWithRequiredFields, existingPrimaryKey);
-			savedFiles.push(primaryKey);
+			if (typeof fieldValue === 'string' && fieldValue.trim() === 'null') fieldValue = null;
+			if (typeof fieldValue === 'string' && fieldValue.trim() === 'false') fieldValue = false;
+			if (typeof fieldValue === 'string' && fieldValue.trim() === 'true') fieldValue = true;
+
+			if (fieldname === 'storage') {
+				disk = val;
+			}
+
+			payload[fieldname] = fieldValue;
+		});
+
+		busboy.on('file', async (fieldname, fileStream, filename, encoding, mimetype) => {
+			fileCount++;
+
+			if (!payload.title) {
+				payload.title = formatTitle(path.parse(filename).name);
+			}
+
+			const payloadWithRequiredFields: Partial<File> & {
+				filename_download: string;
+				type: string;
+				storage: string;
+			} = {
+				...payload,
+				filename_download: filename,
+				type: mimetype,
+				storage: payload.storage || disk,
+			};
+
+			// Clear the payload for the next to-be-uploaded file
+			payload = {};
+
+			try {
+				const primaryKey = await service.uploadOne(fileStream, payloadWithRequiredFields, existingPrimaryKey);
+				savedFiles.push(primaryKey);
+				tryDone();
+			} catch (error: any) {
+				busboy.emit('error', error);
+			}
+		});
+
+		busboy.on('error', (error: Error) => {
+			next(error);
+		});
+
+		busboy.on('finish', () => {
 			tryDone();
-		} catch (error: any) {
-			busboy.emit('error', error);
+		});
+
+		req.pipe(busboy);
+
+		function tryDone() {
+			if (savedFiles.length === fileCount) {
+				res.locals.savedFiles = savedFiles;
+				return next();
+			}
 		}
-	});
-
-	busboy.on('error', (error: Error) => {
-		next(error);
-	});
-
-	busboy.on('finish', () => {
-		tryDone();
-	});
-
-	req.pipe(busboy);
-
-	function tryDone() {
-		if (savedFiles.length === fileCount) {
-			res.locals.savedFiles = savedFiles;
-			return next();
-		}
+	} else {
+		try {
+			const buffer = Buffer.from(req.body.base64[0], 'base64');
+			await fs.writeFileSync(`a.png`, buffer);
+			console.log(buffer);
+		} catch (_e) {}
+		console.log({
+			body: req.body,
+		});
 	}
 });
 
