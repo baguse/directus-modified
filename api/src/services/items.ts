@@ -41,6 +41,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	eventScope: string;
 	schema: SchemaOverview;
 	cache: Keyv<any> | null;
+	bearerToken: string | null;
 
 	constructor(collection: string, options: AbstractServiceOptions) {
 		this.collection = collection;
@@ -49,6 +50,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		this.eventScope = this.collection.startsWith('directus_') ? this.collection.substring(9) : 'items';
 		this.schema = options.schema;
 		this.cache = getCache().cache;
+		this.bearerToken = options?.options?.bearerToken || null;
 
 		return this;
 	}
@@ -277,6 +279,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 					database: this.knex || getDatabase(),
 					schema: this.schema,
 					accountability: this.accountability,
+					options: {
+						headers: {
+							bearerToken: this.bearerToken,
+						},
+					},
 				}
 			);
 		}
@@ -437,6 +444,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				database: this.knex || getDatabase(),
 				schema: this.schema,
 				accountability: this.accountability,
+				options: {
+					headers: {
+						bearerToken: this.bearerToken,
+					},
+				},
 			}
 		);
 		return filteredRecords as Item[];
@@ -587,6 +599,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 							database: this.knex,
 							schema: this.schema,
 							accountability: this.accountability,
+							options: {
+								headers: {
+									bearerToken: this.bearerToken,
+								},
+							},
 						}
 				  )
 				: payload;
@@ -903,6 +920,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 					database: this.knex || getDatabase(),
 					schema: this.schema,
 					accountability: this.accountability,
+					options: {
+						headers: {
+							bearerToken: this.bearerToken,
+						},
+					},
 				}
 			);
 		}
