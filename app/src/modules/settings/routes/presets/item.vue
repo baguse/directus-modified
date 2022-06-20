@@ -577,12 +577,12 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import '@/styles/mixins/form-grid';
 
-.header-icon {
-	--v-button-background-color: var(--warning-10);
-	--v-button-color: var(--warning);
-	--v-button-background-color-hover: var(--warning-25);
-	--v-button-color-hover: var(--warning);
-}
+// .header-icon {
+// 	--v-button-background-color: var(--warning-10);
+// 	--v-button-color: var(--warning);
+// 	--v-button-background-color-hover: var(--warning-25);
+// 	--v-button-color-hover: var(--warning);
+// }
 
 .action-delete {
 	--v-button-background-color: var(--danger-10);

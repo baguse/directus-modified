@@ -1215,7 +1215,7 @@ continue_as: >-
 editing_role: '{role} Role'
 creating_webhook: Creating Webhook
 default_label: Default
-delete_label: Deleted
+delete_label: Delete
 soft_delete_label: Soft Delete
 hard_delete_label: Hard Delete
 delete_are_you_sure: >-

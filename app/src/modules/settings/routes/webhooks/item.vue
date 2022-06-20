@@ -222,10 +222,10 @@ export default defineComponent({
 	padding-bottom: var(--content-padding-bottom);
 }
 
-.header-icon {
-	--v-button-background-color: var(--warning-10);
-	--v-button-color: var(--warning);
-	--v-button-background-color-hover: var(--warning-25);
-	--v-button-color-hover: var(--warning);
-}
+// .header-icon {
+// 	--v-button-background-color: var(--warning-10);
+// 	--v-button-color: var(--warning);
+// 	--v-button-background-color-hover: var(--warning-25);
+// 	--v-button-color-hover: var(--warning);
+// }
 </style>

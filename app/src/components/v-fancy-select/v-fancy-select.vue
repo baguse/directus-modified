@@ -83,7 +83,7 @@ export default defineComponent({
 	margin-bottom: 8px;
 	padding: 12px;
 	background-color: var(--background-normal);
-	border: 2px solid var(--background-normal);
+	border: 2px solid var(--border-normal-alt);
 	border-radius: 6px;
 	backface-visibility: hidden;
 	cursor: pointer;

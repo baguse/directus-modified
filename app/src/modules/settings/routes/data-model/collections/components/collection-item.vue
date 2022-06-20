@@ -22,9 +22,7 @@
 					<v-chip
 						v-for="(tag, i) in collectionTags"
 						:key="i"
-						color="red"
-						text-color="blue"
-						style="color: white; font-size: 9pt; background-color: green"
+						style="color: white; font-size: 9pt; background-color: var(--primary)"
 						dense
 						small
 					>

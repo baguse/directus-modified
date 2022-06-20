@@ -87,7 +87,7 @@ export default defineComponent({
 
 <style>
 body {
-	--module-background: #18222f;
+	/* --module-background: #18222f; */
 	--module-background-alt: var(--background-normal);
 	--module-icon: #8196b1;
 	--module-icon-alt: var(--foreground-normal-alt);

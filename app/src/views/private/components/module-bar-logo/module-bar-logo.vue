@@ -14,7 +14,13 @@
 			</transition>
 			<img class="custom-logo" :src="customLogoPath" alt="Project Logo" />
 		</template>
-		<div v-else class="logo" :class="{ running: showLoader }" @animationiteration="stopSpinnerIfQueueIsEmpty" />
+		<!-- <div v-else class="logo" :class="{ running: showLoader }" @animationiteration="stopSpinnerIfQueueIsEmpty" /> -->
+		<template v-else>
+			<transition name="fade">
+				<v-progress-linear v-if="showLoader" indeterminate rounded @animationiteration="stopSpinnerIfQueueIsEmpty" />
+			</transition>
+			<img class="custom-logo" src="./logo.png" alt="Project Logo" />
+		</template>
 	</component>
 </template>
 
@@ -83,7 +89,7 @@ export default defineComponent({
 	width: 60px;
 	height: 60px;
 	padding: 12px;
-	background-color: var(--brand);
+	background-color: var(--primary);
 
 	.v-progress-linear {
 		position: absolute;

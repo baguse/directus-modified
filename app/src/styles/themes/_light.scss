@@ -11,8 +11,8 @@
 	--foreground-subdued: #a2b5cd;
 	--foreground-inverted: #fff;
 
-	--background-normal: #f0f4f9;
-	--background-normal-alt: #e4eaf1;
+	--background-normal: #F8F8F8;
+	--background-normal-alt: #F8F8F8;
 	--background-subdued: #f7fafc;
 	--background-highlight: #f7f9fd;
 	--background-page: #ffffff;
@@ -24,6 +24,11 @@
 	--card-shadow-color: 23, 41, 64;
 	--card-shadow: 0px 0px 6px 0px rgba(var(--card-shadow-color), 0.2);
 	--overlay-color: rgba(38, 50, 56, 0.8);
+
+  // additional
+  --module-background: #FFFFFF;
+  --tr-hover: var(--background-highlight);
+  --tr-border: var(--border-subdued);
 
 	// Generate color variations
 	@include generate-colors($color-mapping, $light-theme-tint, $light-theme-shade);

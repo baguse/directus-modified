@@ -108,7 +108,7 @@ export default defineComponent({
 		white-space: nowrap;
 		text-overflow: ellipsis;
 		background-color: var(--v-table-background-color);
-		border-bottom: var(--border-width) solid var(--border-subdued);
+		border-bottom: var(--border-width) solid var(--tr-border);
 
 		&:last-child {
 			padding: 0 12px;
@@ -125,7 +125,7 @@ export default defineComponent({
 	}
 
 	&.clickable:not(.subdued):hover .cell {
-		background-color: var(--background-subdued);
+		background-color: var(--tr-hover);
 		cursor: pointer;
 	}
 
