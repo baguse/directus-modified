@@ -194,6 +194,9 @@ router.patch(
 		const service = new ItemsService(req.collection, {
 			accountability: req.accountability,
 			schema: req.schema,
+			options: {
+				bearerToken: req.headers.authorization,
+			},
 		});
 
 		const updatedPrimaryKey = await service.updateOne(req.params.pk, req.body);
