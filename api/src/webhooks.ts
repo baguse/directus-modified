@@ -6,6 +6,7 @@ import { Webhook, WebhookHeader } from './types';
 import { WebhooksService } from './services';
 import { getSchema } from './utils/get-schema';
 import { ActionHandler } from '@directus/shared/types';
+import myPackage from '../package.json';
 
 let registered: { event: string; handler: ActionHandler }[] = [];
 
@@ -43,18 +44,27 @@ function createHandler(webhook: Webhook, event: string): ActionHandler {
 				? {
 						user: context.accountability.user,
 						role: context.accountability.role,
+						headers: {
+							bearerToken: context.options?.headers?.bearerToken,
+						},
 				  }
 				: null,
 			...meta,
 		};
+
+		const headers = mergeHeaders(webhook.headers);
+
+		// change axios user-agent
+		headers['user-agent'] = `${myPackage.name}/${myPackage.version}`;
 
 		try {
 			await axios({
 				url: webhook.url,
 				method: webhook.method,
 				data: webhook.data ? webhookPayload : null,
-				headers: mergeHeaders(webhook.headers),
+				headers,
 			});
+			logger.info(`Webhook "${webhook.name}" sent successfully`);
 		} catch (error: any) {
 			logger.warn(`Webhook "${webhook.name}" (id: ${webhook.id}) failed`);
 			logger.warn(error);

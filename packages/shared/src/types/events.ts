@@ -6,6 +6,11 @@ export type EventContext = {
 	database: Knex;
 	schema: SchemaOverview | null;
 	accountability: Accountability | null;
+	options?: {
+		headers?: {
+			bearerToken?: string | null;
+		};
+	};
 };
 
 export type FilterHandler = (payload: any, meta: Record<string, any>, context: EventContext) => any | Promise<any>;

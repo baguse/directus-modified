@@ -22,6 +22,9 @@ router.post(
 		const service = new ItemsService(req.collection, {
 			accountability: req.accountability,
 			schema: req.schema,
+			options: {
+				bearerToken: req.headers.authorization,
+			},
 		});
 
 		const savedKeys: PrimaryKey[] = [];
@@ -61,6 +64,9 @@ const readHandler = asyncHandler(async (req, res, next) => {
 	const service = new ItemsService(req.collection, {
 		accountability: req.accountability,
 		schema: req.schema,
+		options: {
+			bearerToken: req.headers.authorization,
+		},
 	});
 
 	const metaService = new MetaService({
@@ -100,6 +106,9 @@ router.get(
 		const service = new ItemsService(req.collection, {
 			accountability: req.accountability,
 			schema: req.schema,
+			options: {
+				bearerToken: req.headers.authorization,
+			},
 		});
 
 		const result = await service.readOne(req.params.pk, req.sanitizedQuery);
@@ -123,6 +132,9 @@ router.patch(
 		const service = new ItemsService(req.collection, {
 			accountability: req.accountability,
 			schema: req.schema,
+			options: {
+				bearerToken: req.headers.authorization,
+			},
 		});
 
 		if (req.singleton === true) {
@@ -182,6 +194,9 @@ router.patch(
 		const service = new ItemsService(req.collection, {
 			accountability: req.accountability,
 			schema: req.schema,
+			options: {
+				bearerToken: req.headers.authorization,
+			},
 		});
 
 		const updatedPrimaryKey = await service.updateOne(req.params.pk, req.body);
@@ -212,6 +227,9 @@ router.delete(
 		const service = new ItemsService(req.collection, {
 			accountability: req.accountability,
 			schema: req.schema,
+			options: {
+				bearerToken: req.headers.authorization,
+			},
 		});
 
 		if (Array.isArray(req.body)) {
@@ -245,6 +263,9 @@ router.delete(
 		const service = new ItemsService(req.collection, {
 			accountability: req.accountability,
 			schema: req.schema,
+			options: {
+				bearerToken: req.headers.authorization,
+			},
 		});
 
 		await service.deleteOne(req.params.pk, {

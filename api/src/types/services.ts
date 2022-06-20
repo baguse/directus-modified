@@ -8,6 +8,7 @@ export type AbstractServiceOptions = {
 	schema: SchemaOverview;
 	options?: {
 		isSystem?: boolean;
+		bearerToken?: string;
 	};
 };
 
