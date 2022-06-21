@@ -28,6 +28,8 @@ type UsableItem = {
 	isNew: ComputedRef<boolean>;
 	remove: (isForceDelete?: boolean) => Promise<void>;
 	deleting: Ref<boolean>;
+	restore: () => Promise<void>;
+	restoring: Ref<boolean>;
 	archive: () => Promise<void>;
 	isArchived: ComputedRef<boolean | null>;
 	archiving: Ref<boolean>;
@@ -49,6 +51,7 @@ export function useItem(
 	const loading = ref(false);
 	const saving = ref(false);
 	const deleting = ref(false);
+	const restoring = ref(false);
 	const archiving = ref(false);
 	const edits = ref<Record<string, any>>({});
 	const hasEdits = computed(() => Object.keys(edits.value).length > 0);
@@ -92,6 +95,8 @@ export function useItem(
 		isNew,
 		remove,
 		deleting,
+		restoring,
+		restore,
 		archive,
 		isArchived,
 		archiving,
@@ -284,6 +289,26 @@ export function useItem(
 			throw err;
 		} finally {
 			deleting.value = false;
+		}
+	}
+
+	async function restore() {
+		restoring.value = true;
+
+		try {
+			await api.patch(`${itemEndpoint.value}/restore`);
+
+			item.value = null;
+
+			notify({
+				title: i18n.global.t('item_delete_success', isBatch.value ? 2 : 1),
+				type: 'success',
+			});
+		} catch (err: any) {
+			unexpectedError(err);
+			throw err;
+		} finally {
+			restoring.value = false;
 		}
 	}
 

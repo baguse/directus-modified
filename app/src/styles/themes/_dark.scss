@@ -8,12 +8,13 @@
 
 	--foreground-normal: #b3c4cc; // Less contrast for improved hierarchy
 	--foreground-normal-alt: #cfd8dc; // More contrast for titles and labels
-	--foreground-subdued: #acbfc9; // #697a83;
+	--foreground-subdued: #88959d; // #697a83;
 	--foreground-inverted: #263238;
 
 	--background-normal: #161D31; // #37474f
 	--background-normal-alt: #283046; // #455a64
-	--background-subdued: #394463; // #2d3a41;
+	--background-subdued: #262e45; // #2d3a41;
+  // --background-subdued: #394463; 
 	--background-highlight: #2d3a41;
 	--background-page:#161D31;
 	--background-input: #283046;
@@ -29,7 +30,13 @@
   // additional
   --module-background: #283046;
   --tr-hover: #17253E; //#536492;
-  --tr-border: #17253E; //#536492;
+  --tr-border: #3B4253; //#536492;
+  --tr-background: #283045;
+  --warning-hover: #ff823750;
+  --danger-hover: #ff2d3250;
+  --success-hover: #00c85350;
+  --btn-hover: white;
+  --list-item-hover: var(--background-normal-alt);
 
 	// Generate color variations
 	@include generate-colors($color-mapping, $dark-theme-shade, $dark-theme-tint);

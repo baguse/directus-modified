@@ -29,6 +29,12 @@
   --module-background: #FFFFFF;
   --tr-hover: var(--background-highlight);
   --tr-border: var(--border-subdued);
+  --tr-background: #ffffff;
+  --warning-hover: #ff823750;
+  --danger-hover: #ff2d3250;
+  --success-hover: #00c85350;
+  --btn-hover: black;
+  --list-item-hover: rgb(212, 212, 212);
 
 	// Generate color variations
 	@include generate-colors($color-mapping, $light-theme-tint, $light-theme-shade);

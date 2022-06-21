@@ -1216,6 +1216,7 @@ editing_role: '{role} Role'
 creating_webhook: Creating Webhook
 default_label: Default
 delete_label: Delete
+restore_label: Restore
 soft_delete_label: Soft Delete
 hard_delete_label: Hard Delete
 delete_are_you_sure: >-
@@ -1226,6 +1227,8 @@ delete_are_you_sure_soft_delete: >-
   This action is to soft delete your data and can be restore later. Are you sure you would like to proceed?
 delete_field_are_you_sure: >-
   Are you sure you want to delete the field "{field}"? This action can not be undone.
+restore_field_are_you_sure: >-
+  Are you sure you want to restore this data?
 description: Description
 done: Done
 duplicate: Duplicate

@@ -110,7 +110,7 @@ body {
 
 	.v-button {
 		--v-button-color: var(--module-icon);
-		--v-button-color-hover: var(--white);
+		--v-button-color-hover: var(--btn-hover);
 		--v-button-color-active: var(--module-icon-alt);
 		--v-button-background-color: var(--module-background);
 		--v-button-background-color-hover: var(--module-background);

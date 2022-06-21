@@ -384,6 +384,19 @@ export default defineComponent({
 			batchEditActive,
 		} = useBatch();
 
+		const isOutlined = ref({
+			delete: true,
+			edit: true,
+		});
+
+		const changeActionDelete = (value: boolean) => {
+			isOutlined.value.delete = value;
+		};
+
+		const changeActionEdit = (value: boolean) => {
+			isOutlined.value.edit = value;
+		};
+
 		const { bookmarkDialogActive, creatingBookmark, createBookmark, editingBookmark, editBookmark } = useBookmarks();
 
 		const currentLayout = computed(() => layouts.value.find((l) => l.id === layout.value));
@@ -484,6 +497,9 @@ export default defineComponent({
 			archiveFilter,
 			mergeFilters,
 			showSoftDelete,
+			changeActionDelete,
+			changeActionEdit,
+			isOutlined,
 		};
 
 		async function refresh() {

@@ -49,7 +49,7 @@
 						class="avatar-image"
 						@error="avatarError = $event"
 					/>
-					<v-icon v-else name="account_circle" outline />
+					<v-icon v-else name="account_circle" outline class="v-icon-avatar" />
 				</v-avatar>
 			</router-link>
 		</v-hover>
@@ -117,7 +117,7 @@ export default defineComponent({
 
 	.v-avatar {
 		--v-button-color: var(--module-icon);
-		--v-button-color-hover: var(--white);
+		--v-button-color-hover: var(--btn-hover);
 		--v-avatar-color: var(--module-background);
 
 		position: relative;
@@ -152,7 +152,7 @@ export default defineComponent({
 			}
 
 			.v-icon {
-				--v-icon-color: var(--white);
+				--v-icon-color: var(--btn-hover);
 			}
 		}
 	}
@@ -164,7 +164,7 @@ export default defineComponent({
 
 	.notifications {
 		--v-button-color: var(--module-icon);
-		--v-button-color-hover: var(--white);
+		--v-button-color-hover: var(--btn-hover);
 		--v-button-background-color: var(--module-background);
 		--v-button-background-color-hover: var(--module-background);
 	}
