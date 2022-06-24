@@ -6,7 +6,7 @@ import getDatabase from '../database';
 import runAST from '../database/run-ast';
 import emitter from '../emitter';
 import env from '../env';
-import { ForbiddenException } from '../exceptions';
+import { ForbiddenException, InvalidPayloadException } from '../exceptions';
 import { translateDatabaseError } from '../exceptions/database/translate';
 import { Accountability, Query, PermissionsAction, SchemaOverview } from '@directus/shared/types';
 import {
@@ -980,5 +980,118 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		}
 
 		return await this.createOne(data, opts);
+	}
+
+	/**
+	 * Restore data
+	 */
+	async restore(keys: PrimaryKey[], opts?: MutationOptions): Promise<PrimaryKey[]> {
+		const { isSoftDelete, fields, primary: primaryKeyField } = this.schema.collections[this.collection];
+
+		if (isSoftDelete) {
+			let deletedAtField = 'deleted_at';
+			for (const fieldName in fields) {
+				const { special } = fields[fieldName];
+				if (special && special.includes('date-deleted')) {
+					deletedAtField = fieldName;
+					break;
+				}
+			}
+			if (opts?.emitEvents !== false) {
+				await emitter.emitFilter(
+					this.eventScope === 'items'
+						? ['items.restore', `${this.collection}.items.restore`]
+						: `${this.eventScope}.restore`,
+					keys,
+					{
+						collection: this.collection,
+					},
+					{
+						database: this.knex,
+						schema: this.schema,
+						accountability: this.accountability,
+					}
+				);
+			}
+			await this.knex.transaction(async (trx) => {
+				const fieldNames = Object.values(this.schema.collections[this.collection].fields)
+					.filter((field) => {
+						if (field.field == primaryKeyField) return false;
+						// else if (field.special.includes('o2m')) return false;
+						// else if (field.special.includes('m2o')) return false;
+						// else if (field.special.includes('m2m')) return false;
+						else if (field.special.includes('date-deleted')) return false;
+						else if (field.special.includes('date-updated')) return false;
+						else if (field.special.includes('date-created')) return false;
+						else if (field.special.includes('user-created')) return false;
+						else if (field.special.includes('user-updated')) return false;
+						else {
+							if (field.field === deletedAtField) return false;
+							return true;
+						}
+					})
+					.map((field) => field.field);
+
+				const fieldMaybeUniques: { field: string; unique: boolean }[] = await this.knex
+					.select('field', 'unique')
+					.from('directus_fields')
+					.whereIn('field', fieldNames)
+					.andWhere('collection', this.collection);
+
+				const datas = await trx(this.collection).whereIn(primaryKeyField, keys).select('*');
+
+				for (const data of datas) {
+					for (const field of fieldMaybeUniques) {
+						const { unique, field: fieldName } = field;
+						if (unique) {
+							let count: string | number = 0;
+							const [{ count: countData }] = await this.knex
+								.count(fieldName, { as: 'count' })
+								.from(this.collection)
+								.where(fieldName, data[fieldName] || null)
+								.whereNot(primaryKeyField, data[primaryKeyField])
+								.andWhere(deletedAtField, null);
+							count = countData;
+							const counter = count ? Number(count) : 0;
+							if (counter) {
+								throw new RecordNotUniqueException(fieldName, {
+									collection: this.collection,
+									field: fieldName,
+									invalid: data[fieldName],
+								});
+							}
+						}
+						await trx(this.collection)
+							.whereIn(this.schema.collections[this.collection].primary, keys)
+							.update({ [deletedAtField]: null });
+					}
+				}
+				if (opts?.emitEvents !== false) {
+					emitter.emitAction(
+						this.eventScope === 'items'
+							? ['items.restore', `${this.collection}.items.restore`]
+							: `${this.eventScope}.restore`,
+						{
+							payload: keys,
+							collection: this.collection,
+						},
+						{
+							// This hook is called async. If we would pass the transaction here, the hook can be
+							// called after the transaction is done #5460
+							database: this.knex || getDatabase(),
+							schema: this.schema,
+							accountability: this.accountability,
+							options: {
+								headers: {
+									bearerToken: this.bearerToken,
+								},
+							},
+						}
+					);
+				}
+			});
+			return keys;
+		}
+		throw new InvalidPayloadException('Soft delete is not enabled for this collection');
 	}
 }

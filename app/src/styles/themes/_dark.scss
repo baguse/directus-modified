@@ -2,29 +2,41 @@
 
 // Dark Mode
 @mixin dark {
-	--border-normal: #455a64;
+	--border-normal: #404656;
 	--border-normal-alt: #78909c;
 	--border-subdued: #2e3f47;
 
 	--foreground-normal: #b3c4cc; // Less contrast for improved hierarchy
 	--foreground-normal-alt: #cfd8dc; // More contrast for titles and labels
-	--foreground-subdued: #697a83;
+	--foreground-subdued: #88959d; // #697a83;
 	--foreground-inverted: #263238;
 
-	--background-normal: #2e3c43; // #37474f
-	--background-normal-alt: #3a4b53; // #455a64
-	--background-subdued: #2d3a41;
+	--background-normal: #161D31; // #37474f
+	--background-normal-alt: #283046; // #455a64
+	--background-subdued: #262e45; // #2d3a41;
+  // --background-subdued: #394463; 
 	--background-highlight: #2d3a41;
-	--background-page: #263238;
-	--background-input: #263238;
+	--background-page:#161D31;
+	--background-input: #283046;
 	--background-page-rgb: 38, 50, 56;
 	--background-inverted: #fff;
 
 	// --card-shadow-color: 207,216,220;
-	--card-face-color: #36454d;
+	--card-face-color: #283046;
 	--card-shadow-color: 0, 0, 0;
 	--card-shadow: 0px 0px 6px 0px rgba(var(--card-shadow-color), 0.2);
 	--overlay-color: rgba(19, 24, 26, 0.9);
+
+  // additional
+  --module-background: #283046;
+  --tr-hover: #17253E; //#536492;
+  --tr-border: #3B4253; //#536492;
+  --tr-background: #283045;
+  --warning-hover: #ff823750;
+  --danger-hover: #ff2d3250;
+  --success-hover: #00c85350;
+  --btn-hover: white;
+  --list-item-hover: var(--background-normal-alt);
 
 	// Generate color variations
 	@include generate-colors($color-mapping, $dark-theme-shade, $dark-theme-tint);

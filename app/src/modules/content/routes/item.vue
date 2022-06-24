@@ -5,14 +5,11 @@
 
 	<private-view v-else :title="title">
 		<template v-if="collectionInfo.meta && collectionInfo.meta.singleton === true" #title>
-			<h1 class="type-title">
-				{{ collectionInfo.name }}
-			</h1>
+			<h1 class="type-title">{{ collectionInfo.name }}</h1>
 		</template>
 
 		<template v-else-if="isNew === false && collectionInfo.meta && collectionInfo.meta.display_template" #title>
 			<v-skeleton-loader v-if="loading || templateDataLoading" class="title-loader" type="text" />
-
 			<h1 v-else class="type-title">
 				<render-template
 					:collection="collectionInfo.collection"
@@ -57,9 +54,31 @@
 		</template>
 
 		<template #actions>
+			<!-- If data deleted -->
+			<v-dialog v-if="isDeleted" v-model="confirmRestore" @esc="confirmRestore = false">
+				<template #activator="{ on }">
+					<v-button v-tooltip.bottom="t('restore_label')" rounded icon class="action-restore" @click="on">
+						<v-icon name="restore" outline />
+					</v-button>
+				</template>
+
+				<v-card>
+					<v-card-title>{{ t('restore_field_are_you_sure') }}</v-card-title>
+
+					<v-card-actions>
+						<v-button secondary @click="confirmRestore = false">
+							{{ t('cancel') }}
+						</v-button>
+						<v-button kind="success" :loading="restoring" @click="restoreAndQuit()">
+							{{ t('restore_label') }}
+						</v-button>
+					</v-card-actions>
+				</v-card>
+			</v-dialog>
+
 			<!-- If Soft delete activated -->
 			<v-dialog
-				v-if="!isNew && collectionInfo?.meta?.is_soft_delete"
+				v-else-if="!isNew && collectionInfo?.meta?.is_soft_delete"
 				v-model="confirmSoftDelete"
 				:disabled="deleteAllowed === false"
 				@esc="confirmSoftDelete = false"
@@ -97,7 +116,7 @@
 
 			<!-- If soft delete deactivated -->
 			<v-dialog
-				v-if="!isNew && !collectionInfo?.meta?.is_soft_delete"
+				v-else-if="!isNew && !collectionInfo?.meta?.is_soft_delete"
 				v-model="confirmDelete"
 				:disabled="deleteAllowed === false"
 				@esc="confirmDelete = false"
@@ -165,6 +184,7 @@
 			</v-dialog>
 
 			<v-button
+				v-if="!deletedAtField || (item && !item[deletedAtField])"
 				v-tooltip.bottom="saveAllowed ? t('save') : t('not_allowed')"
 				rounded
 				icon
@@ -196,7 +216,7 @@
 			:key="collection"
 			v-model="edits"
 			:autofocus="isNew"
-			:disabled="isNew ? false : updateAllowed === false"
+			:disabled="isDeleted || !editable"
 			:loading="loading"
 			:initial-values="item"
 			:fields="fields"
@@ -264,6 +284,7 @@ import { useTitle } from '@/composables/use-title';
 import { renderStringTemplate } from '@/utils/render-string-template';
 import useTemplateData from '@/composables/use-template-data';
 import usePreset from '@/composables/use-preset';
+import { Field } from '@directus/shared/types';
 
 export default defineComponent({
 	name: 'ContentsItem',
@@ -307,6 +328,7 @@ export default defineComponent({
 			primaryKeyField,
 			isSingleton,
 			accountabilityScope,
+			fields: fieldList,
 		} = useCollection(collection);
 
 		const { showSoftDelete } = usePreset(collection, ref(null));
@@ -322,6 +344,8 @@ export default defineComponent({
 			save,
 			remove,
 			deleting,
+			restore,
+			restoring,
 			archive,
 			archiving,
 			isArchived,
@@ -331,6 +355,21 @@ export default defineComponent({
 		} = useItem(collection, primaryKey, showSoftDelete);
 
 		const { templateData, loading: templateDataLoading } = useTemplateData(collectionInfo, primaryKey);
+
+		const getDeleteAtField = (fields: Field[] | null): string | null => {
+			if (!fields || !collectionInfo.value?.meta?.is_soft_delete) return null;
+			for (const field of fields) {
+				const special: string[] | undefined | null = field?.meta?.special;
+				if (special) {
+					if (special.includes('date-deleted')) {
+						return field.field;
+					}
+				}
+			}
+			return 'deleted_at';
+		};
+
+		const deletedAtField = getDeleteAtField(fieldList.value);
 
 		const isSavable = computed(() => {
 			if (saveAllowed.value === false) return false;
@@ -355,6 +394,7 @@ export default defineComponent({
 		const confirmSoftDelete = ref(false);
 		const confirmHardDelete = ref(false);
 		const confirmArchive = ref(false);
+		const confirmRestore = ref(false);
 
 		const title = computed(() => {
 			if (te(`collection_names_singular.${props.collection}`)) {
@@ -414,6 +454,15 @@ export default defineComponent({
 			return props.primaryKey;
 		});
 
+		const isDeleted = computed(() => {
+			return !!(deletedAtField && item.value && item.value[deletedAtField]);
+		});
+
+		const editable = computed(() => {
+			const updateable = isNew.value ? false : updateAllowed.value === false;
+			return !isDeleted.value || updateable;
+		});
+
 		return {
 			t,
 			router,
@@ -428,12 +477,15 @@ export default defineComponent({
 			collectionInfo,
 			saveAndQuit,
 			deleteAndQuit,
+			restoreAndQuit,
 			confirmDelete,
 			confirmSoftDelete,
 			confirmHardDelete,
 			confirmArchive,
+			confirmRestore,
 			deleting,
 			archiving,
+			restoring,
 			saveAndStay,
 			saveAndAddNew,
 			saveAsCopyAndNavigate,
@@ -465,6 +517,9 @@ export default defineComponent({
 			revert,
 			accountabilityScope,
 			showSoftDelete,
+			deletedAtField,
+			isDeleted,
+			editable,
 		};
 
 		function useBreadcrumb() {
@@ -541,6 +596,15 @@ export default defineComponent({
 			}
 		}
 
+		async function restoreAndQuit() {
+			try {
+				await restore();
+				router.replace(`/content/${props.collection}`);
+			} catch {
+				// `remove` will show the unexpected error dialog
+			}
+		}
+
 		async function toggleArchive() {
 			try {
 				await archive();
@@ -589,6 +653,13 @@ export default defineComponent({
 	--v-button-color: var(--warning);
 	--v-button-background-color-hover: var(--warning-25);
 	--v-button-color-hover: var(--warning);
+}
+
+.action-restore {
+	--v-button-background-color: var(--success-10);
+	--v-button-color: var(--success);
+	--v-button-background-color-hover: var(--success-25);
+	--v-button-color-hover: var(--success);
 }
 
 .action-archive {

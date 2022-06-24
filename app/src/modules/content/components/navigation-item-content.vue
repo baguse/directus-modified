@@ -4,13 +4,11 @@
 	</v-list-item-icon>
 	<v-list-item-content>
 		<v-text-overflow :text="name" :highlight="search"></v-text-overflow>
-		<v-chip-group active-class="primary--text" column>
+		<v-chip-group active-class="blue" column>
 			<v-chip
 				v-for="(tag, i) in tags"
 				:key="i"
-				color="red"
-				text-color="blue"
-				style="color: white; font-size: 9pt; background-color: green"
+				style="color: white; font-size: 9pt; background-color: var(--primary)"
 				dense
 				small
 			>

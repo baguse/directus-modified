@@ -194,12 +194,51 @@ router.patch(
 		const service = new ItemsService(req.collection, {
 			accountability: req.accountability,
 			schema: req.schema,
+			options: {
+				bearerToken: req.headers.authorization,
+			},
 		});
 
 		const updatedPrimaryKey = await service.updateOne(req.params.pk, req.body);
 
 		try {
 			const result = await service.readOne(updatedPrimaryKey, req.sanitizedQuery);
+			res.locals.payload = { data: result || null };
+		} catch (error: any) {
+			if (error instanceof ForbiddenException) {
+				return next();
+			}
+
+			throw error;
+		}
+
+		return next();
+	}),
+	respond
+);
+
+router.patch(
+	'/:collection/:pk/restore',
+	collectionExists,
+	asyncHandler(async (req, res, next) => {
+		if (req.params.collection.startsWith('directus_')) throw new ForbiddenException();
+
+		if (req.singleton) {
+			throw new RouteNotFoundException(req.path);
+		}
+
+		const service = new ItemsService(req.collection, {
+			accountability: req.accountability,
+			schema: req.schema,
+			options: {
+				bearerToken: req.headers.authorization,
+			},
+		});
+
+		const [restoredPrimaryKey] = await service.restore([req.params.pk], req.body);
+
+		try {
+			const result = await service.readOne(restoredPrimaryKey, req.sanitizedQuery);
 			res.locals.payload = { data: result || null };
 		} catch (error: any) {
 			if (error instanceof ForbiddenException) {

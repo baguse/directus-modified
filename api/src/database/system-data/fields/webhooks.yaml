@@ -16,16 +16,28 @@ fields:
     display_options:
       choices:
         - value: POST
-          foreground: 'var(--primary)'
-          background: 'var(--primary-25)'
+          foreground: 'var(--success)'
+          background: 'var(--success-25)'
         - value: GET
           foreground: 'var(--secondary)'
           background: 'var(--secondary-25)'
+        - value: DELETE
+          foreground: 'var(--danger)'
+          background: 'var(--danger-25)'
+        - value: PATCH
+          foreground: 'var(--warning)'
+          background: 'var(--warning-25)'
+        - value: PUT
+          foreground: 'var(--primary)'
+          background: 'var(--primary-25)'
       format: false
     options:
       choices:
         - GET
         - POST
+        - DELETE
+        - PATCH
+        - PUT
     width: half
 
   - field: url
@@ -105,6 +117,8 @@ fields:
           value: update
         - text: $t:delete_label
           value: delete
+        - text: $t:restore_label
+          value: restore
     special: csv
     width: full
     display: labels
@@ -122,6 +136,10 @@ fields:
           value: delete
           foreground: 'var(--danger)'
           background: 'var(--danger-25)'
+        - text: $t:restore_label
+          value: restore
+          foreground: 'var(--success)'
+          background: 'var(--success-25)'
         - text: $t:login
           value: login
           foreground: 'var(--purple)'
