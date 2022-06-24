@@ -301,7 +301,7 @@ export function useItem(
 			item.value = null;
 
 			notify({
-				title: i18n.global.t('item_delete_success', isBatch.value ? 2 : 1),
+				title: i18n.global.t('item_restore_success'),
 				type: 'success',
 			});
 		} catch (err: any) {

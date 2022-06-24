@@ -328,6 +328,7 @@ post_comment_success: Comment posted
 item_create_success: Item Created | Items Created
 item_update_success: Item Updated | Items Updated
 item_delete_success: Item Deleted | Items Deleted
+item_restore_success: Item Restored
 this_collection: This Collection
 related_collection: Related Collection
 related_collections: Related Collections
