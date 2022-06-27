@@ -12,7 +12,10 @@ import { FilesService, MetaService } from '../services';
 import { File, PrimaryKey } from '../types';
 import asyncHandler from '../utils/async-handler';
 import { toArray } from '@directus/shared/utils';
-import fs from 'fs';
+import { nanoid } from 'nanoid';
+import { Magic, MAGIC_MIME_TYPE } from 'mmmagic';
+import MimeType from 'mime-types';
+import { Readable } from 'stream';
 
 const router = express.Router();
 
@@ -108,14 +111,120 @@ const multipartHandler = asyncHandler(async (req, res, next) => {
 			}
 		}
 	} else {
+		const detectMimeType = async (val: Buffer | string): Promise<string> => {
+			const magicJar = new Magic(MAGIC_MIME_TYPE);
+			const promise = new Promise((resolve, reject) => {
+				if (typeof val == 'string') {
+					magicJar.detectFile(val, (err, res) => {
+						if (err) reject(err);
+						else resolve(res);
+					});
+				} else {
+					magicJar.detect(val, (err, res) => {
+						if (err) reject(err);
+						else resolve(res);
+					});
+				}
+			});
+			const mimeType = (await promise) as string;
+			return mimeType;
+		};
+
+		const savedFiles: PrimaryKey[] = [];
+		const service = new FilesService({ accountability: req.accountability, schema: req.schema });
+		const disk: string = toArray(env.STORAGE_LOCATIONS)[0];
+		let payload: {
+			title?: string;
+			folder?: string | null;
+			storage?: string;
+		} = {
+			folder: null,
+		};
+		let fileCount = 0;
+		const tryDone = (target: number) => {
+			if (target === fileCount) {
+				res.locals.savedFiles = savedFiles;
+				return next();
+			}
+		};
 		try {
-			const buffer = Buffer.from(req.body.base64[0], 'base64');
-			await fs.writeFileSync(`a.png`, buffer);
-			console.log(buffer);
-		} catch (_e) {}
-		console.log({
-			body: req.body,
-		});
+			if (Array.isArray(req.body)) {
+				for (const body of req.body) {
+					const { base64, fileName, extension } = body;
+					const buffer = Buffer.from(base64, 'base64');
+					const mimeType = await detectMimeType(buffer);
+					let newFileName = fileName;
+					const DEFAULT_EXTENSION = MimeType.extension(mimeType);
+					if (!fileName && extension) {
+						newFileName = `${nanoid(20)}.${extension}`;
+					} else if (!fileName && !extension) {
+						newFileName = `${nanoid(20)}.${DEFAULT_EXTENSION}`;
+					}
+					if (!payload.title) {
+						payload.title = formatTitle(path.parse(newFileName).name);
+					}
+					const payloadWithRequiredFields: Partial<File> & {
+						filename_download: string;
+						type: string | null;
+						storage: string;
+					} = {
+						...payload,
+						filename_download: newFileName,
+						type: mimeType || null,
+						storage: payload.storage || disk,
+					};
+					payload = {};
+					try {
+						const fileStream = new Readable();
+						fileStream.push(buffer);
+						fileStream.push(null);
+						const primaryKey = await service.uploadOne(fileStream, payloadWithRequiredFields);
+						savedFiles.push(primaryKey);
+						fileCount++;
+						tryDone(req.body.length);
+					} catch (error) {
+						throw 'Failed to upload file';
+					}
+				}
+			} else {
+				const { base64, fileName, extension } = req.body;
+				const buffer = Buffer.from(base64, 'base64');
+				const mimeType = await detectMimeType(buffer);
+				let newFileName = fileName;
+				const DEFAULT_EXTENSION = MimeType.extension(mimeType);
+				if (!fileName && extension) {
+					newFileName = `${nanoid(20)}.${extension}`;
+				} else if (!fileName && !extension) {
+					newFileName = `${nanoid(20)}.${DEFAULT_EXTENSION}`;
+				}
+				if (!payload.title) {
+					payload.title = formatTitle(path.parse(newFileName).name);
+				}
+				const payloadWithRequiredFields: Partial<File> & {
+					filename_download: string;
+					type: string | null;
+					storage: string;
+				} = {
+					...payload,
+					filename_download: newFileName,
+					type: mimeType || null,
+					storage: payload.storage || disk,
+				};
+				try {
+					const fileStream = new Readable();
+					fileStream.push(buffer);
+					fileStream.push(null);
+					const primaryKey = await service.uploadOne(fileStream, payloadWithRequiredFields);
+					savedFiles.push(primaryKey);
+					fileCount++;
+					tryDone(1);
+				} catch (error: any) {
+					throw 'Failed to upload file';
+				}
+			}
+		} catch (_e) {
+			throw 'Failed to upload file';
+		}
 	}
 });
 
@@ -123,7 +232,8 @@ router.post(
 	'/',
 	multipartHandler,
 	asyncHandler(async (req, res, next) => {
-		if (req.is('multipart/form-data') === false) {
+		const uploadType = req.headers['upload-type'];
+		if (req.is('multipart/form-data') === false && uploadType != 'base64') {
 			throw new UnsupportedMediaTypeException(`Unsupported Content-Type header`);
 		}
 
@@ -134,6 +244,8 @@ router.post(
 		let keys: PrimaryKey | PrimaryKey[] = [];
 
 		if (req.is('multipart/form-data')) {
+			keys = res.locals.savedFiles;
+		} else if (uploadType == 'base64') {
 			keys = res.locals.savedFiles;
 		} else {
 			keys = await service.createOne(req.body);
