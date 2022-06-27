@@ -17,10 +17,11 @@
 						rounded
 						icon
 						class="action-delete"
+						secondary
 						:disabled="item === null"
 						@click="on"
 					>
-						<v-icon name="delete" outline />
+						<v-icon name="delete" />
 					</v-button>
 				</template>
 
@@ -38,13 +39,7 @@
 				</v-card>
 			</v-dialog>
 
-			<v-button
-				v-tooltip.bottom="t('invite_users')"
-				rounded
-				icon
-				class="invite-user"
-				@click="userInviteModalActive = true"
-			>
+			<v-button v-tooltip.bottom="t('invite_users')" rounded icon secondary @click="userInviteModalActive = true">
 				<v-icon name="person_add" />
 			</v-button>
 
@@ -231,10 +226,8 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .action-delete {
-	--v-button-background-color: var(--danger-10);
-	--v-button-color: var(--danger);
-	--v-button-background-color-hover: var(--danger-25);
-	--v-button-color-hover: var(--danger);
+	--v-button-background-color-hover: var(--danger) !important;
+	--v-button-color-hover: var(--white) !important;
 }
 
 .roles {
@@ -257,12 +250,5 @@ export default defineComponent({
 .permissions-overview,
 .roles .v-notice {
 	margin-bottom: 48px;
-}
-
-.invite-user {
-	--v-button-background-color: var(--primary-10);
-	--v-button-color: var(--primary);
-	--v-button-background-color-hover: var(--primary-25);
-	--v-button-color-hover: var(--primary);
 }
 </style>

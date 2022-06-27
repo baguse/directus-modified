@@ -18,12 +18,15 @@ import RolesPublicItem from './routes/roles/public-item.vue';
 import WebhooksCollection from './routes/webhooks/collection.vue';
 import WebhooksItem from './routes/webhooks/item.vue';
 import { urlReplacer } from '@/utils/text-replacer';
+import FlowsOverview from './routes/flows/overview.vue';
+import FlowsDetail from './routes/flows/flow.vue';
+import FlowOperationDetail from './routes/flows/components/operation-detail.vue';
+import TranslationStringsCollection from './routes/translation-strings/collection.vue';
 
 export default defineModule({
 	id: 'settings',
 	name: '$t:settings',
 	icon: 'settings',
-	// color: 'var(--warning)',
 	routes: [
 		{
 			path: '',
@@ -182,6 +185,42 @@ export default defineModule({
 					path: ':primaryKey',
 					component: WebhooksItem,
 					props: true,
+				},
+			],
+		},
+		{
+			path: 'flows',
+			component: RouterPass,
+			children: [
+				{
+					name: 'settings-flows-collection',
+					path: '',
+					component: FlowsOverview,
+				},
+				{
+					name: 'settings-flows-item',
+					path: ':primaryKey',
+					component: FlowsDetail,
+					props: true,
+					children: [
+						{
+							name: 'settings-flows-operation',
+							path: ':operationId',
+							component: FlowOperationDetail,
+							props: true,
+						},
+					],
+				},
+			],
+		},
+		{
+			path: 'translation-strings',
+			component: RouterPass,
+			children: [
+				{
+					name: 'settings-translation-strings-collection',
+					path: '',
+					component: TranslationStringsCollection,
 				},
 			],
 		},

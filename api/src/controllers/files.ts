@@ -1,8 +1,13 @@
 import formatTitle from '@directus/format-title';
+import { toArray } from '@directus/shared/utils';
 import Busboy, { BusboyHeaders } from 'busboy';
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import Joi from 'joi';
 import path from 'path';
+import { nanoid } from 'nanoid';
+import { Magic, MAGIC_MIME_TYPE } from 'mmmagic';
+import MimeType from 'mime-types';
+import { Readable } from 'stream';
 import env from '../env';
 import { ForbiddenException, InvalidPayloadException, UnsupportedMediaTypeException } from '../exceptions';
 import { respond } from '../middleware/respond';
@@ -11,20 +16,16 @@ import { validateBatch } from '../middleware/validate-batch';
 import { FilesService, MetaService } from '../services';
 import { File, PrimaryKey } from '../types';
 import asyncHandler from '../utils/async-handler';
-import { toArray } from '@directus/shared/utils';
-import { nanoid } from 'nanoid';
-import { Magic, MAGIC_MIME_TYPE } from 'mmmagic';
-import MimeType from 'mime-types';
-import { Readable } from 'stream';
 
 const router = express.Router();
 
 router.use(useCollection('directus_files'));
 
-const multipartHandler = asyncHandler(async (req, res, next) => {
-	if (req.is('multipart/form-data')) {
-		let headers: BusboyHeaders;
+export const multipartHandler: RequestHandler = (req, res, next) => {
+	if (req.is('multipart/form-data') === false) return next();
 
+		let headers: BusboyHeaders;
+		
 		if (req.headers['content-type']) {
 			headers = req.headers as BusboyHeaders;
 		} else {
@@ -64,8 +65,12 @@ const multipartHandler = asyncHandler(async (req, res, next) => {
 			payload[fieldname] = fieldValue;
 		});
 
-		busboy.on('file', async (fieldname, fileStream, filename, encoding, mimetype) => {
-			fileCount++;
+	busboy.on('file', async (fieldname, fileStream, filename, encoding, mimetype) => {
+		if (!filename) {
+			return busboy.emit('error', new InvalidPayloadException(`File is missing filename`));
+		}
+
+		fileCount++;
 
 			if (!payload.title) {
 				payload.title = formatTitle(path.parse(filename).name);
@@ -106,6 +111,10 @@ const multipartHandler = asyncHandler(async (req, res, next) => {
 
 		function tryDone() {
 			if (savedFiles.length === fileCount) {
+				if (fileCount === 0) {
+					return next(new InvalidPayloadException(`No files where included in the body`));
+				}
+
 				res.locals.savedFiles = savedFiles;
 				return next();
 			}
@@ -226,11 +235,11 @@ const multipartHandler = asyncHandler(async (req, res, next) => {
 			throw 'Failed to upload file';
 		}
 	}
-});
+};
 
 router.post(
 	'/',
-	multipartHandler,
+	asyncHandler(multipartHandler),
 	asyncHandler(async (req, res, next) => {
 		const uploadType = req.headers['upload-type'];
 		if (req.is('multipart/form-data') === false && uploadType != 'base64') {
@@ -396,7 +405,7 @@ router.patch(
 
 router.patch(
 	'/:pk',
-	multipartHandler,
+	asyncHandler(multipartHandler),
 	asyncHandler(async (req, res, next) => {
 		const service = new FilesService({
 			accountability: req.accountability,

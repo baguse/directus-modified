@@ -18,10 +18,11 @@
 						rounded
 						icon
 						class="action-delete"
+						secondary
 						:disabled="item === null"
 						@click="on"
 					>
-						<v-icon name="delete" outline />
+						<v-icon name="delete" />
 					</v-button>
 				</template>
 
@@ -78,7 +79,7 @@
 		</div>
 
 		<template #sidebar>
-			<sidebar-detail icon="info_outline" :title="t('information')" close>
+			<sidebar-detail icon="info" :title="t('information')" close>
 				<div v-md="t('page_help_settings_datamodel_fields')" class="page-description" />
 			</sidebar-detail>
 		</template>
@@ -249,9 +250,7 @@ export default defineComponent({
 // }
 
 .action-delete {
-	--v-button-background-color: var(--danger-10);
-	--v-button-color: var(--danger);
-	--v-button-background-color-hover: var(--danger-25);
-	--v-button-color-hover: var(--danger);
+	--v-button-background-color-hover: var(--danger) !important;
+	--v-button-color-hover: var(--white) !important;
 }
 </style>

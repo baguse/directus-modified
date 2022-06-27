@@ -58,6 +58,10 @@
 									value: 'auto_int',
 								},
 								{
+									text: t('auto_increment_big_integer'),
+									value: 'auto_big_int',
+								},
+								{
 									text: t('generated_uuid'),
 									value: 'uuid',
 								},
@@ -216,7 +220,7 @@ export default defineComponent({
 		const singleton = ref(false);
 		const isSoftDelete = ref(false);
 		const primaryKeyFieldName = ref('id');
-		const primaryKeyFieldType = ref<'auto_int' | 'uuid' | 'manual'>('auto_int');
+		const primaryKeyFieldType = ref<'auto_int' | 'auto_big_int' | 'uuid' | 'manual'>('auto_int');
 
 		const sortField = ref<string>();
 
@@ -298,7 +302,6 @@ export default defineComponent({
 
 				notify({
 					title: t('collection_created'),
-					type: 'success',
 				});
 
 				router.replace(`/settings/data-model/${collectionName.value}`);
@@ -344,7 +347,7 @@ export default defineComponent({
 			} else {
 				return {
 					field: primaryKeyFieldName.value,
-					type: 'integer',
+					type: primaryKeyFieldType.value === 'auto_big_int' ? 'bigInteger' : 'integer',
 					meta: {
 						hidden: true,
 						interface: 'input',
@@ -390,16 +393,22 @@ export default defineComponent({
 							showAsDot: true,
 							choices: [
 								{
-									background: '#00C897',
+									text: '$t:published',
 									value: 'published',
+									foreground: '#FFFFFF',
+									background: 'var(--primary)',
 								},
 								{
-									background: '#D3DAE4',
+									text: '$t:draft',
 									value: 'draft',
+									foreground: '#18222F',
+									background: '#D3DAE4',
 								},
 								{
-									background: '#F7971C',
+									text: '$t:archived',
 									value: 'archived',
+									foreground: '#FFFFFF',
+									background: 'var(--warning)',
 								},
 							],
 						},

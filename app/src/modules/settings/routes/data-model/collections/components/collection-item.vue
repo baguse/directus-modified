@@ -13,11 +13,11 @@
 			</v-list-item-icon>
 			<div class="collection-item-detail">
 				<v-icon
-					:color="collection.meta?.hidden ? 'var(--foreground-subdued)' : collection.color"
+					:color="collection.meta?.hidden ? 'var(--foreground-subdued)' : collection.color ?? 'var(--primary)'"
 					class="collection-icon"
 					:name="collection.meta?.hidden ? 'visibility_off' : collection.icon"
 				/>
-				<span>{{ nameReplacer(collection.name) }}</span>
+				<span ref="collectionName" class="collection-name">{{ nameReplacer(collection.collection) }}</span>
 				<div style="margin-left: 3px">
 					<v-chip
 						v-for="(tag, i) in collectionTags"
@@ -59,8 +59,8 @@
 				<collection-item
 					:collection="element"
 					:collections="collections"
-					@editCollection="$emit('editCollection', $event)"
-					@setNestedSort="$emit('setNestedSort', $event)"
+					@edit-collection="$emit('editCollection', $event)"
+					@set-nested-sort="$emit('setNestedSort', $event)"
 				/>
 			</template>
 		</draggable>

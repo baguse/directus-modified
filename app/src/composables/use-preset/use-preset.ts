@@ -1,4 +1,5 @@
 import { usePresetsStore, useUserStore } from '@/stores';
+import { translate } from '@/utils/translate-literal';
 import { Filter, Preset } from '@directus/shared/types';
 import { assign, debounce, isEqual } from 'lodash';
 import { computed, ComputedRef, ref, Ref, watch } from 'vue';
@@ -91,6 +92,11 @@ export function usePreset(
 		initLocalPreset();
 	});
 
+	// update current bookmark title when it is edited in navigation-bookmark
+	presetsStore.$subscribe(() => {
+		initLocalPreset();
+	});
+
 	const layoutOptions = computed<Record<string, any>>({
 		get() {
 			return localPreset.value.layout_options?.[layout.value] || null;
@@ -137,7 +143,7 @@ export function usePreset(
 	});
 
 	const bookmarkTitle = computed<string | null>({
-		get: () => localPreset.value?.bookmark || null,
+		get: () => translate(localPreset.value?.bookmark) || null,
 		set: (bookmark) => updatePreset({ bookmark }, true),
 	});
 

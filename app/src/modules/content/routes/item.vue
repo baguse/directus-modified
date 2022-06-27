@@ -128,6 +128,7 @@
 						rounded
 						icon
 						class="action-delete"
+						secondary
 						:disabled="item === null || deleteAllowed !== true"
 						@click="on"
 					>
@@ -161,7 +162,7 @@
 						v-tooltip.bottom="archiveTooltip"
 						rounded
 						icon
-						class="action-archive"
+						secondary
 						:disabled="item === null || archiveAllowed !== true"
 						@click="on"
 					>
@@ -197,7 +198,7 @@
 				<template #append-outer>
 					<save-options
 						v-if="collectionInfo.meta && collectionInfo.meta.singleton !== true && isSavable === true"
-						:disabled-options="createAllowed ? [] : ['save-and-add-new', 'save-as-copy']"
+						:disabled-options="disabledOptions"
 						@save-and-stay="saveAndStay"
 						@save-and-add-new="saveAndAddNew"
 						@save-as-copy="saveAsCopyAndNavigate"
@@ -260,6 +261,12 @@
 				:primary-key="internalPrimaryKey"
 				:allowed="shareAllowed"
 			/>
+			<flow-sidebar-detail
+				v-if="isNew === false && internalPrimaryKey"
+				location="item"
+				:collection="collection"
+				:primary-key="internalPrimaryKey"
+			/>
 		</template>
 	</private-view>
 </template>
@@ -274,6 +281,7 @@ import { useCollection } from '@directus/shared/composables';
 import RevisionsDrawerDetail from '@/views/private/components/revisions-drawer-detail';
 import CommentsSidebarDetail from '@/views/private/components/comments-sidebar-detail';
 import SharesSidebarDetail from '@/views/private/components/shares-sidebar-detail';
+import FlowSidebarDetail from '@/views/private/components/flow-sidebar-detail.vue';
 import useItem from '@/composables/use-item';
 import SaveOptions from '@/views/private/components/save-options';
 import useShortcut from '@/composables/use-shortcut';
@@ -294,6 +302,7 @@ export default defineComponent({
 		RevisionsDrawerDetail,
 		CommentsSidebarDetail,
 		SharesSidebarDetail,
+		FlowSidebarDetail,
 		SaveOptions,
 	},
 	props: {
@@ -449,9 +458,15 @@ export default defineComponent({
 		const internalPrimaryKey = computed(() => {
 			if (isNew.value) return '+';
 
-			if (isSingleton.value) return item.value?.[primaryKeyField.value?.field];
+			if (isSingleton.value) return item.value?.[primaryKeyField.value?.field] ?? '+';
 
 			return props.primaryKey;
+		});
+
+		const disabledOptions = computed(() => {
+			if (!createAllowed.value) return ['save-and-add-new', 'save-as-copy'];
+			if (isNew.value) return ['save-as-copy'];
+			return [];
 		});
 
 		const isDeleted = computed(() => {
@@ -485,6 +500,7 @@ export default defineComponent({
 			confirmRestore,
 			deleting,
 			archiving,
+			disabledOptions,
 			restoring,
 			saveAndStay,
 			saveAndAddNew,
@@ -580,7 +596,7 @@ export default defineComponent({
 		async function saveAsCopyAndNavigate() {
 			try {
 				const newPrimaryKey = await saveAsCopy();
-				if (newPrimaryKey) router.push(`/content/${props.collection}/${encodeURIComponent(newPrimaryKey)}`);
+				if (newPrimaryKey) router.replace(`/content/${props.collection}/${encodeURIComponent(newPrimaryKey)}`);
 			} catch {
 				// Save shows unexpected error dialog
 			}
