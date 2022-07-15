@@ -1,14 +1,14 @@
 {
-	"name": "create-directus-project",
-	"version": "9.12.2",
-	"description": "A small installer util that will create a directory, add boilerplate folders, and install Directus through npm.",
+	"name": "create-mv-data-core-project",
+	"version": "9.12.0",
+	"description": "A small installer util that will create a directory, add boilerplate folders, and install MV Data Core through npm.",
 	"main": "lib/index.js",
 	"exports": {
 		".": "./lib/index.js",
 		"./package.json": "./package.json"
 	},
 	"bin": {
-		"create-directus-project": "./lib/index.js",
+		"create-mv-data-core-project": "./lib/index.js",
 		"cdp": "./lib/index.js"
 	},
 	"keywords": [

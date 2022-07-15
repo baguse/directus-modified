@@ -171,6 +171,7 @@
 					v-tooltip.bottom="batchEditAllowed ? t('edit') : t('not_allowed')"
 					rounded
 					icon
+					class="action-edit"
 					secondary
 					:disabled="batchEditAllowed === false"
 					@click="batchEditActive = true"
@@ -689,6 +690,11 @@ export default defineComponent({
 <style lang="scss" scoped>
 .action-delete {
 	--v-button-background-color-hover: var(--danger) !important;
+	--v-button-color-hover: var(--white) !important;
+}
+
+.action-edit {
+	--v-button-background-color-hover: var(--warning) !important;
 	--v-button-color-hover: var(--white) !important;
 }
 

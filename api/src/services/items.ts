@@ -8,12 +8,13 @@ import runAST from '../database/run-ast';
 import emitter from '../emitter';
 import env from '../env';
 import { ForbiddenException, InvalidPayloadException } from '../exceptions';
+import { RecordNotUniqueException } from '../exceptions/database/record-not-unique';
 import { translateDatabaseError } from '../exceptions/database/translate';
 import { AbstractService, AbstractServiceOptions, Item as AnyItem, MutationOptions, PrimaryKey } from '../types';
 import getASTFromQuery from '../utils/get-ast-from-query';
+import { validateKeys } from '../utils/validate-keys';
 import { AuthorizationService } from './authorization';
-import { ActivityService, RevisionsService } from './index';
-
+import { ActivityService, RevisionsService, PayloadService } from './index';
 
 export type QueryOptions = {
 	stripNonRequested?: boolean;
@@ -108,17 +109,17 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				if (unique) {
 					let count: string | number;
 					if (!isSoftDelete) {
-						const [{ count: countData }] = await this.knex
+						const [{ count: countData }] = (await this.knex
 							.count(fieldName, { as: 'count' })
 							.from(this.collection)
-							.where(fieldName, data[fieldName] || null);
+							.where(fieldName, data[fieldName] || null)) as { count: string | number }[];
 						count = countData;
 					} else {
-						const [{ count: countData }] = await this.knex
+						const [{ count: countData }] = (await this.knex
 							.count(fieldName, { as: 'count' })
 							.from(this.collection)
 							.where(fieldName, data[fieldName] || null)
-							.andWhere(deletedAtField, null);
+							.andWhere(deletedAtField, null)) as { count: string | number }[];
 						count = countData;
 					}
 					const counter = count ? Number(count) : 0;
@@ -552,19 +553,19 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			if (unique) {
 				let count: string | number;
 				if (!isSoftDelete) {
-					const [{ count: countData }] = await this.knex
+					const [{ count: countData }] = (await this.knex
 						.count(fieldName, { as: 'count' })
 						.from(this.collection)
 						.where(fieldName, data[fieldName] || null)
-						.whereNotIn(primaryKeyField, keys);
+						.whereNotIn(primaryKeyField, keys)) as { count: string | number }[];
 					count = countData;
 				} else {
-					const [{ count: countData }] = await this.knex
+					const [{ count: countData }] = (await this.knex
 						.count(fieldName, { as: 'count' })
 						.from(this.collection)
 						.where(fieldName, data[fieldName] || null)
 						.whereNotIn(primaryKeyField, keys)
-						.andWhere(deletedAtField, null);
+						.andWhere(deletedAtField, null)) as { count: string | number }[];
 					count = countData;
 				}
 				const counter = count ? Number(count) : 0;
@@ -903,7 +904,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 					await trx(this.collection)
 						.whereIn(primaryKeyField, keys)
 						.andWhere(deletedAtField, null)
-						.update({ [deletedAtField]: new Date() });
+						.update({ [deletedAtField]: new Date().toISOString() });
 				}
 			} else {
 				await trx(this.collection).whereIn(primaryKeyField, keys).delete();
@@ -1072,12 +1073,12 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 						const { unique, field: fieldName } = field;
 						if (unique) {
 							let count: string | number = 0;
-							const [{ count: countData }] = await this.knex
+							const [{ count: countData }] = (await this.knex
 								.count(fieldName, { as: 'count' })
 								.from(this.collection)
 								.where(fieldName, data[fieldName] || null)
 								.whereNot(primaryKeyField, data[primaryKeyField])
-								.andWhere(deletedAtField, null);
+								.andWhere(deletedAtField, null)) as { count: string | number }[];
 							count = countData;
 							const counter = count ? Number(count) : 0;
 							if (counter) {

@@ -188,9 +188,9 @@ export default defineComponent({
 }
 
 .v-button.active {
-	--v-button-background-color-hover: var(--primary);
-	--v-button-color-hover: var(--foreground-inverted);
-	--v-button-background-color: var(--primary);
-	--v-button-color: var(--foreground-inverted);
+	--v-button-background-color-hover: var(--primary) !important;
+	--v-button-color-hover: var(--foreground-inverted) !important;
+	--v-button-background-color: var(--primary) !important;
+	--v-button-color: var(--foreground-inverted) !important;
 }
 </style>

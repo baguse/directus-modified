@@ -47,7 +47,18 @@ const readHandler = asyncHandler(async (req, res, next) => {
 	if (req.body.keys) {
 		result = await collectionsService.readMany(req.body.keys);
 	} else {
-		result = await collectionsService.readByQuery();
+		let includeSystemTable: boolean | undefined;
+
+		if (req.query.includeSystemTable == 'true') {
+			includeSystemTable = true;
+		} else if (req.query.includeSystemTable == 'false') {
+			includeSystemTable = false;
+		}
+
+		result = await collectionsService.readByQuery({
+			query: req.sanitizedQuery,
+			includeSystemTable,
+		});
 	}
 
 	const meta = await metaService.getMetaForQuery('directus_collections', {});

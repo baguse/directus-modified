@@ -22,6 +22,11 @@ import { getHelpers, Helpers } from '../database/helpers';
 import Keyv from 'keyv';
 import { REGEX_BETWEEN_PARENS } from '@directus/shared/constants';
 
+interface ICountUnique {
+	count: string | number;
+	[uniqueColumn: string]: any;
+}
+
 export class FieldsService {
 	knex: Knex;
 	helpers: Helpers;
@@ -362,6 +367,47 @@ export class FieldsService {
 			}
 
 			if (hookAdjustedField.meta) {
+				const clientDB = this.knex.client.config.client;
+				const { isSoftDelete, fields } = this.schema.collections[collection];
+				// check unique data
+				if (hookAdjustedField.meta.unique) {
+					let counts: ICountUnique[];
+					if (isSoftDelete) {
+						let deletedAtField = 'deleted_at';
+						for (const fieldName in fields) {
+							const { special } = fields[fieldName];
+							if (special.includes('date-deleted')) {
+								deletedAtField = fieldName;
+								break;
+							}
+						}
+
+						const query = this.knex.count(field.field, { as: 'count' }).from(collection).where(deletedAtField, null);
+
+						if (clientDB === 'mssql') {
+							query.select(this.knex.raw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS as ${field.field}`));
+							query.groupByRaw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS`);
+						}
+						counts = (await query) as ICountUnique[];
+					} else {
+						const query = this.knex.count(field.field, { as: 'count' }).from(collection);
+
+						if (clientDB === 'mssql') {
+							query.select(this.knex.raw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS as ${field.field}`));
+							query.groupByRaw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS`);
+						}
+						counts = (await query) as ICountUnique[];
+					}
+					for (const { count, [field.field]: uniqueColumn } of counts) {
+						const counter = count ? Number(count) : 0;
+
+						if (counter > 1) {
+							throw new InvalidPayloadException(
+								`Field "${field.field}" [${uniqueColumn}] has ${counter} duplicate values`
+							);
+						}
+					}
+				}
 				if (record) {
 					await this.itemsService.updateOne(
 						record.id,
@@ -406,93 +452,6 @@ export class FieldsService {
 
 			await clearSystemCache();
 		}
-
-		const clientDB = this.knex.client.config.client;
-
-		if (hookAdjustedField.meta) {
-			const { isSoftDelete, fields } = this.schema.collections[collection];
-			// check unique data
-			if (hookAdjustedField.meta.unique) {
-				let counts: { count: string | number; [uniqueColumn: string]: any }[];
-				if (isSoftDelete) {
-					let deletedAtField = 'deleted_at';
-					for (const fieldName in fields) {
-						const { special } = fields[fieldName];
-						if (special.includes('date-deleted')) {
-							deletedAtField = fieldName;
-							break;
-						}
-					}
-
-					const query = this.knex.count(field.field, { as: 'count' }).from(collection).where(deletedAtField, null);
-
-					if (clientDB === 'mssql') {
-						query.select(this.knex.raw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS as ${field.field}`));
-						query.groupByRaw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS`);
-					}
-					counts = await query;
-				} else {
-					const query = this.knex.count(field.field, { as: 'count' }).from(collection);
-
-					if (clientDB === 'mssql') {
-						query.select(this.knex.raw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS as ${field.field}`));
-						query.groupByRaw(`${field.field} COLLATE SQL_Latin1_General_CP1_CS_AS`);
-					}
-					counts = await query;
-				}
-				for (const { count, [field.field]: uniqueColumn } of counts) {
-					const counter = count ? Number(count) : 0;
-
-					if (counter > 1) {
-						throw new InvalidPayloadException(
-							`Field "${field.field}" [${uniqueColumn}] has ${counter} duplicate values`
-						);
-					}
-				}
-			}
-			if (record) {
-				await this.itemsService.updateOne(
-					record.id,
-					{
-						...hookAdjustedField.meta,
-						collection: collection,
-						field: hookAdjustedField.field,
-					},
-					{ emitEvents: false }
-				);
-			} else {
-				await this.itemsService.createOne(
-					{
-						...hookAdjustedField.meta,
-						collection: collection,
-						field: hookAdjustedField.field,
-					},
-					{ emitEvents: false }
-				);
-			}
-		}
-
-		if (this.cache && env.CACHE_AUTO_PURGE) {
-			await this.cache.clear();
-		}
-
-		await this.systemCache.clear();
-
-		emitter.emitAction(
-			`fields.update`,
-			{
-				payload: hookAdjustedField,
-				keys: [hookAdjustedField.field],
-				collection: collection,
-			},
-			{
-				database: getDatabase(),
-				schema: this.schema,
-				accountability: this.accountability,
-			}
-		);
-
-		return field.field;
 	}
 
 	async deleteField(collection: string, field: string): Promise<void> {

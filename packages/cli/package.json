@@ -1,7 +1,7 @@
 {
-	"name": "@directus/cli",
-	"version": "9.12.2",
-	"description": "The official Directus CLI",
+	"name": "@mv-data-core/cli",
+	"version": "9.12.0",
+	"description": "The official MV Datacore CLI done",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/directus/directus.git",
@@ -42,8 +42,8 @@
 	"author": "João Biondo <wolfulus@gmail.com>",
 	"license": "MIT",
 	"dependencies": {
-		"@directus/format-title": "9.12.2",
-		"@directus/sdk": "9.12.2",
+		"@directus/format-title": "npm:@mv-data-core/format-title@9.12.0",
+		"@directus/sdk": "npm:@mv-data-core/sdk@9.12.0",
 		"@types/yargs": "^17.0.0",
 		"app-module-path": "^2.2.0",
 		"chalk": "^4.1.0",

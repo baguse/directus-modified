@@ -52,7 +52,13 @@ export default defineComponent({
 		const modules = computed(() => {
 			if (!settingsStore.settings) return [];
 
-			return (settingsStore.settings.module_bar ?? MODULE_BAR_DEFAULT)
+			let settings = MODULE_BAR_DEFAULT;
+
+			if (typeof settingsStore.settings.module_bar == 'string') {
+				settings = JSON.parse(settingsStore.settings.module_bar);
+			}
+
+			return settings
 				.filter((modulePart) => {
 					if (modulePart.type === 'link') return true;
 					return modulePart.enabled && registeredModuleIDs.value.includes(modulePart.id);

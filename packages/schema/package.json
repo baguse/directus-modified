@@ -1,7 +1,7 @@
 {
-	"name": "@directus/schema",
-	"version": "9.12.2",
-	"description": "Utility for extracting information about existing DB schema",
+	"name": "@mv-data-core/schema",
+	"version": "9.12.0",
+	"description": "Utility for extracting information about existing DB schema MV Data Core",
 	"main": "dist/index.js",
 	"exports": {
 		".": "./dist/index.js",

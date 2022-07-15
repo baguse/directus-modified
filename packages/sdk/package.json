@@ -1,7 +1,7 @@
 {
-	"name": "@directus/sdk",
-	"version": "9.12.2",
-	"description": "The official Directus SDK for use in JavaScript!",
+	"name": "@mv-data-core/sdk",
+	"version": "9.12.0",
+	"description": "The official MV Datacore SDK for use in JavaScript!",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/directus/directus.git"

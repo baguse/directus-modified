@@ -21,11 +21,10 @@ const router = express.Router();
 
 router.use(useCollection('directus_files'));
 
-export const multipartHandler: RequestHandler = (req, res, next) => {
-	if (req.is('multipart/form-data') === false) return next();
-
+export const multipartHandler: RequestHandler = async (req, res, next) => {
+	if (req.is('multipart/form-data')) {
 		let headers: BusboyHeaders;
-		
+
 		if (req.headers['content-type']) {
 			headers = req.headers as BusboyHeaders;
 		} else {
@@ -40,6 +39,17 @@ export const multipartHandler: RequestHandler = (req, res, next) => {
 		const service = new FilesService({ accountability: req.accountability, schema: req.schema });
 
 		const existingPrimaryKey = req.params.pk || undefined;
+
+		const tryDone = () => {
+			if (savedFiles.length === fileCount) {
+				if (fileCount === 0) {
+					return next(new InvalidPayloadException(`No files where included in the body`));
+				}
+
+				res.locals.savedFiles = savedFiles;
+				return next();
+			}
+		};
 
 		/**
 		 * The order of the fields in multipart/form-data is important. We require that all fields
@@ -65,12 +75,12 @@ export const multipartHandler: RequestHandler = (req, res, next) => {
 			payload[fieldname] = fieldValue;
 		});
 
-	busboy.on('file', async (fieldname, fileStream, filename, encoding, mimetype) => {
-		if (!filename) {
-			return busboy.emit('error', new InvalidPayloadException(`File is missing filename`));
-		}
+		busboy.on('file', async (fieldname, fileStream, filename, encoding, mimetype) => {
+			if (!filename) {
+				return busboy.emit('error', new InvalidPayloadException(`File is missing filename`));
+			}
 
-		fileCount++;
+			fileCount++;
 
 			if (!payload.title) {
 				payload.title = formatTitle(path.parse(filename).name);
@@ -108,17 +118,6 @@ export const multipartHandler: RequestHandler = (req, res, next) => {
 		});
 
 		req.pipe(busboy);
-
-		function tryDone() {
-			if (savedFiles.length === fileCount) {
-				if (fileCount === 0) {
-					return next(new InvalidPayloadException(`No files where included in the body`));
-				}
-
-				res.locals.savedFiles = savedFiles;
-				return next();
-			}
-		}
 	} else {
 		const detectMimeType = async (val: Buffer | string): Promise<string> => {
 			const magicJar = new Magic(MAGIC_MIME_TYPE);

@@ -39,6 +39,34 @@ export class RelationsService {
 		this.systemCache = getCache().systemCache;
 	}
 
+	async readByQuery(query?: Query, opts?: QueryOptions): Promise<Relation[]> {
+		if (this.accountability && this.accountability.admin !== true && this.hasReadAccess === false) {
+			throw new ForbiddenException();
+		}
+
+		const collection = undefined;
+
+		const metaReadQuery: Query = {
+			limit: -1,
+		};
+
+		if (query?.limit) {
+			metaReadQuery.limit = query.limit;
+		}
+
+		const metaRows = [
+			...(await this.relationsItemService.readByQuery(metaReadQuery, opts)),
+			...systemRelationRows,
+		].filter((metaRow) => {
+			if (!collection) return true;
+			return metaRow.many_collection === collection;
+		});
+
+		const schemaRows = await this.schemaInspector.foreignKeys(collection);
+		const results = this.stitchRelations(metaRows, schemaRows);
+		return await this.filterForbidden(results);
+	}
+
 	async readAll(collection?: string, opts?: QueryOptions): Promise<Relation[]> {
 		if (this.accountability && this.accountability.admin !== true && this.hasReadAccess === false) {
 			throw new ForbiddenException();
@@ -163,6 +191,16 @@ export class RelationsService {
 			throw new InvalidPayloadException(
 				`Field "${relation.field}" in collection "${relation.collection}" already has an associated relationship`
 			);
+		}
+
+		const existingRelationWithSameTable = this.schema.relations.find(
+			(existingRelation) =>
+				existingRelation.collection === relation.collection &&
+				existingRelation.related_collection === relation.related_collection
+		);
+
+		if (existingRelationWithSameTable) {
+			if (relation.schema) relation.schema.on_delete = 'NO ACTION';
 		}
 
 		try {

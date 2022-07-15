@@ -423,10 +423,10 @@ keyv@^3.0.0:
   dependencies:
     json-buffer "3.0.0"
 
-knex-schema-inspector@^1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/knex-schema-inspector/-/knex-schema-inspector-1.7.0.tgz#e0d7b75f786a9f4bbcf26ad60acdba7f4c9950bf"
-  integrity sha512-cExO1u/vjEMI+txlnu2tmmaATKN0i5T3MqY9yD1pNbeNGRx8VRc0gc5AR245CPFBUVNi/Z7hz7o4O9d8aSIPJg==
+knex-schema-inspector@1.7.3:
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/knex-schema-inspector/-/knex-schema-inspector-1.7.3.tgz#68afa00f3ea90fd7e11c7dcf35c2c06e78187d03"
+  integrity sha512-jbH46UaAx0eLf7jmLsaHQ+2x76CxvAEBtGP0NZ262qW+VcCxh89CJ/fNnwyrrMWqVPNNxmtlEtshc6k9z7Aalw==
   dependencies:
     lodash.flatten "^4.4.0"
     lodash.isnil "^4.0.0"

@@ -20,7 +20,6 @@ import {
 	generateExtensionsEntry,
 	getLocalExtensions,
 	getPackageExtensions,
-	resolvePackage,
 } from '@directus/shared/utils/node';
 import {
 	API_EXTENSION_PACKAGE_TYPES,
@@ -43,12 +42,12 @@ import { getSchema } from './utils/get-schema';
 
 import * as services from './services';
 import { schedule, validate } from 'node-cron';
-import { rollup } from 'rollup';
+import { Plugin, rollup } from 'rollup';
 import virtual from '@rollup/plugin-virtual';
 import alias from '@rollup/plugin-alias';
 import { Url } from './utils/url';
 import getModuleDefault from './utils/get-module-default';
-import { clone, escapeRegExp, method } from 'lodash';
+import { clone, escapeRegExp } from 'lodash';
 import chokidar, { FSWatcher } from 'chokidar';
 import { isExtensionObject, isHybridExtension, pluralize } from '@directus/shared/utils';
 import { getFlowManager } from './flows';
@@ -140,9 +139,9 @@ class ExtensionManager {
 
 				const prevExtensions = clone(this.extensions);
 
-			this.apiDocs = { paths: {}, schemas: [] };
-			await this.unload();
-			await this.load();
+				this.apiDocs = { paths: {}, schemas: [] };
+				await this.unload();
+				await this.load();
 
 				const added = this.extensions.filter(
 					(extension) => !prevExtensions.some((prevExtension) => extension.path === prevExtension.path)
@@ -298,7 +297,7 @@ class ExtensionManager {
 					input: 'entry',
 					external: Object.values(sharedDepsMapping),
 					makeAbsoluteExternalsRelative: false,
-					plugins: [virtual({ entry }), alias({ entries: internalImports })],
+					plugins: [(virtual({ entry }), alias({ entries: internalImports })) as Plugin],
 				});
 				const { output } = await bundle.generate({ format: 'es', compact: true });
 
@@ -306,7 +305,7 @@ class ExtensionManager {
 
 				await bundle.close();
 			} catch (error: any) {
-				logger.warn(`Couldn't bundle App extensions`);
+				logger.warn(`Couldn't bundle ${extensionType} extensions`);
 				logger.warn(error);
 			}
 		}
@@ -315,7 +314,8 @@ class ExtensionManager {
 	}
 
 	private async getSharedDepsMapping(deps: string[]) {
-		const appDir = await fse.readdir(path.join(resolvePackage('@directus/app'), 'dist', 'assets'));
+		const adminPath = require.resolve('@directus/app');
+		const appDir = await fse.readdir(path.join(`${adminPath}`, '..', 'assets'));
 
 		const depsMapping: Record<string, string> = {};
 		for (const dep of deps) {
@@ -478,7 +478,7 @@ class ExtensionManager {
 	private registerEndpoint(config: EndpointConfig, path: string, name: string, router: Router) {
 		const register = typeof config === 'function' ? config : config.handler;
 		const routeName = typeof config === 'function' ? name : config.id;
-		const endpointInstance: EndpointConfig | { default: EndpointConfig } = require(path);
+		const endpointInstance: any = require(path);
 
 		const prefix = Reflect.getMetadata('prefix', endpointInstance);
 		const isClass = Reflect.getMetadata('isClass', endpointInstance) || false;
@@ -487,7 +487,7 @@ class ExtensionManager {
 		const scopedRouter = express.Router();
 		if (isClass) {
 			logger.info(`Registering class decorator endpoint "${routeName}"`);
-			const instance = new (mod as any)();
+			const instance = new endpointInstance();
 			const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => {
 				Promise.resolve(fn(req, res, next)).catch(next);
 			};
@@ -715,7 +715,7 @@ class ExtensionManager {
 				}
 			}
 			this.apiExtensions.endpoints.push({
-				path: endpointPath,
+				path: path,
 			});
 		} else {
 			router.use(`/${routeName}`, scopedRouter);
@@ -729,6 +729,7 @@ class ExtensionManager {
 				logger: logger as any,
 				getSchema,
 			});
+		}
 
 		this.apiExtensions.endpoints.push({
 			path,

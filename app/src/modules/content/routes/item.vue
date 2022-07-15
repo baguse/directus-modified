@@ -185,7 +185,7 @@
 			</v-dialog>
 
 			<v-button
-				v-if="!deletedAtField || (item && !item[deletedAtField])"
+				v-if="isNew || !isDeleted"
 				v-tooltip.bottom="saveAllowed ? t('save') : t('not_allowed')"
 				rounded
 				icon

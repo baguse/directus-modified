@@ -10,7 +10,7 @@ import { FieldsService } from '../services/fields';
 import { ItemsService } from '../services/items';
 import Keyv from 'keyv';
 import { AbstractServiceOptions, Collection, CollectionMeta, MutationOptions } from '../types';
-import { Accountability, FieldMeta, Filter, RawField, SchemaOverview } from '@directus/shared/types';
+import { Accountability, FieldMeta, Filter, Query, RawField, SchemaOverview } from '@directus/shared/types';
 import { Table } from 'knex-schema-inspector/dist/types/table';
 import { addFieldFlag } from '@directus/shared/utils';
 import { getHelpers, Helpers } from '../database/helpers';
@@ -199,9 +199,15 @@ export class CollectionsService {
 	/**
 	 * Read all collections. Currently doesn't support any query.
 	 */
-	async readByQuery(opts?: { includePhysicalTable?: boolean; includeExternalTable?: boolean }): Promise<Collection[]> {
-		const includePhysicalTable = typeof opts?.includePhysicalTable == 'undefined' ? true : opts.includePhysicalTable;
+	async readByQuery(opts?: {
+		includePhysicalTable?: boolean;
+		includeExternalTable?: boolean;
+		includeSystemTable?: boolean;
+		query?: Query;
+	}): Promise<Collection[]> {
+		const includePhysicalTable = typeof opts?.includePhysicalTable == 'undefined' ? false : opts.includePhysicalTable;
 		const includeExternalTable = typeof opts?.includeExternalTable == 'undefined' ? false : opts.includeExternalTable;
+		const includeSystemTable = typeof opts?.includeSystemTable == 'undefined' ? true : opts.includeSystemTable;
 		const collectionItemsService = new ItemsService('directus_collections', {
 			knex: this.knex,
 			schema: this.schema,
@@ -231,12 +237,25 @@ export class CollectionsService {
 					],
 			  };
 
-		let meta = (await collectionItemsService.readByQuery({
+		const query: Query = {
 			limit: -1,
 			filter: isExternalSourceFilter,
-		})) as CollectionMeta[];
+		};
 
-		meta.push(...systemCollectionRows);
+		if (opts?.query) {
+			query.limit = opts.query.limit || -1;
+			if (!opts.query.filter) {
+				query.filter = isExternalSourceFilter;
+			} else {
+				query.filter = {
+					_and: [opts.query.filter, isExternalSourceFilter],
+				};
+			}
+		}
+
+		let meta = (await collectionItemsService.readByQuery(query)) as CollectionMeta[];
+
+		if (includeSystemTable) meta.push(...systemCollectionRows);
 
 		if (this.accountability && this.accountability.admin !== true) {
 			const collectionsGroups: { [key: string]: string } = meta.reduce(

@@ -1,7 +1,7 @@
 {
-	"name": "@directus/extensions-sdk",
-	"version": "9.12.2",
-	"description": "A toolkit to develop extensions to extend Directus.",
+	"name": "@mv-data-core/extensions-sdk",
+	"version": "9.12.0",
+	"description": "A toolkit to develop extensions to extend MV Data Core.",
 	"main": "dist/cjs/index.js",
 	"exports": {
 		".": {
@@ -34,7 +34,7 @@
 	],
 	"gitHead": "24621f3934dc77eb23441331040ed13c676ceffd",
 	"dependencies": {
-		"@directus/shared": "9.12.2",
+		"@directus/shared": "npm:@mv-data-core/shared@9.12.0",
 		"@rollup/plugin-commonjs": "^21.0.1",
 		"@rollup/plugin-json": "^4.1.0",
 		"@rollup/plugin-node-resolve": "^13.1.3",

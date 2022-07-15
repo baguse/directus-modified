@@ -6,6 +6,9 @@
 		"api"
 	],
 	"version": "9.12.2",
+  "useNx": true,
+  "npmClient": "yarn",
+  "useWorkspaces": true,
 	"command": {
 		"bootstrap": {
 			"npmClientArgs": [

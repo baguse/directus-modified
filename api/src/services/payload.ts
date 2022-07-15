@@ -33,7 +33,9 @@ interface ITransformerOptions {
 		conceal?: boolean;
 		hash?: boolean;
 		json?: boolean;
+		'cast-json'?: boolean;
 		boolean?: boolean;
+		'cast-boolean'?: boolean;
 		uuid?: boolean;
 		'user-created'?: boolean;
 		'user-updated'?: boolean;
@@ -42,6 +44,7 @@ interface ITransformerOptions {
 		'date-created'?: boolean;
 		'date-updated'?: boolean;
 		csv?: boolean;
+		'cast-csv'?: boolean;
 		'json-stringify'?: boolean;
 	};
 }
@@ -83,6 +86,19 @@ export class PayloadService {
 
 			return value;
 		},
+		async boolean({ action, value }) {
+			if (action === 'read') {
+				if (value === true || value === 1 || value === '1') {
+					return true;
+				} else if (value === false || value === 0 || value === '0') {
+					return false;
+				} else if (value === null || value === '') {
+					return null;
+				}
+			}
+
+			return value;
+		},
 		async 'cast-boolean'({ action, value }) {
 			if (action === 'read') {
 				if (value === true || value === 1 || value === '1') {
@@ -95,6 +111,17 @@ export class PayloadService {
 			}
 
 			return value;
+		},
+		async json({ action, value }) {
+			if (action === 'read') {
+				if (typeof value === 'string') {
+					try {
+						return parseJSON(value);
+					} catch {
+						return value;
+					}
+				}
+			}
 		},
 		async 'cast-json'({ action, value }) {
 			if (action === 'read') {
@@ -137,6 +164,21 @@ export class PayloadService {
 			if (action === 'update') return new Date(helpers.date.writeTimestamp(new Date().toISOString()));
 			return value;
 		},
+		async csv({ action, value }) {
+			if (Array.isArray(value) === false && typeof value !== 'string') return;
+
+			if (action === 'read' && Array.isArray(value) === false) {
+				if (value === '') return [];
+
+				return value.split(',');
+			}
+
+			if (Array.isArray(value)) {
+				return value.join(',');
+			}
+
+			return value;
+		},
 		async 'cast-csv'({ action, value }) {
 			if (Array.isArray(value) === false && typeof value !== 'string') return;
 
@@ -175,9 +217,21 @@ export class PayloadService {
 			conceal: typeof options?.transformers?.conceal === 'boolean' ? options?.transformers?.conceal : true,
 			hash: typeof options?.transformers?.hash === 'boolean' ? options?.transformers?.hash : true,
 			json: typeof options?.transformers?.json === 'boolean' ? options?.transformers?.json : true,
+			'cast-json':
+				options?.transformers && typeof options?.transformers['cast-json'] === 'boolean'
+					? options?.transformers['cast-json']
+					: true,
 			boolean: typeof options?.transformers?.boolean === 'boolean' ? options?.transformers?.boolean : true,
+			'cast-boolean':
+				options?.transformers && typeof options?.transformers['cast-boolean'] === 'boolean'
+					? options?.transformers['cast-boolean']
+					: true,
 			uuid: typeof options?.transformers?.uuid === 'boolean' ? options?.transformers?.uuid : true,
 			csv: typeof options?.transformers?.csv === 'boolean' ? options?.transformers?.csv : true,
+			'cast-csv':
+				options?.transformers && typeof options?.transformers['cast-csv'] === 'boolean'
+					? options?.transformers['cast-csv']
+					: true,
 			'user-created':
 				typeof (options?.transformers || {})['user-created'] === 'boolean'
 					? (options?.transformers['user-created'] as boolean)
