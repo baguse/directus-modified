@@ -68,6 +68,7 @@ export function useRelationSingle(
 			const response = await api.get(getEndpoint(relatedCollection) + `/${encodeURIComponent(id)}`, {
 				params: {
 					fields: Array.from(fields),
+					show_soft_delete: true,
 				},
 			});
 

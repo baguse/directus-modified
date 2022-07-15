@@ -17,7 +17,7 @@
 					class="collection-icon"
 					:name="collection.meta?.hidden ? 'visibility_off' : collection.icon"
 				/>
-				<span ref="collectionName" class="collection-name">{{ nameReplacer(collection.collection) }}</span>
+				<span ref="collectionName" class="collection-name">{{ nameReplacer(collection.name) }}</span>
 				<div style="margin-left: 3px">
 					<v-chip
 						v-for="(tag, i) in collectionTags"

@@ -71,10 +71,10 @@
 				v-model="edits.meta"
 				collection="directus_collections"
 				:loading="loading"
-				:initial-values="item && item.meta"
+				:initial-values="modifiedItem && modifiedItem.meta"
 				:batch-mode="isBatch"
 				:primary-key="collection"
-				:disabled="item && item.collection.startsWith('directus_')"
+				:disabled="modifiedItem && modifiedItem.collection.startsWith('directus_')"
 			/>
 		</div>
 
@@ -111,7 +111,7 @@ import { useRouter } from 'vue-router';
 import { useCollectionsStore, useFieldsStore } from '@/stores';
 import useShortcut from '@/composables/use-shortcut';
 import useEditsGuard from '@/composables/use-edits-guard';
-import { nameReplacer, urlRevertReplacer } from '@/utils/text-replacer';
+import { nameReplacer, urlReplacer, urlRevertReplacer } from '@/utils/text-replacer';
 
 export default defineComponent({
 	components: { SettingsNavigation, FieldsManagement },
@@ -146,6 +146,14 @@ export default defineComponent({
 			ref('directus_collections'),
 			originalCollectionName
 		);
+
+		const modifiedItem = computed<Record<string, any>>(() => {
+			const newItem = { ...item.value };
+			if (newItem?.meta?.system) {
+				newItem.meta.collection = urlReplacer(newItem.meta.collection);
+			}
+			return newItem;
+		});
 
 		const hasEdits = computed<boolean>(() => {
 			if (!edits.value.meta) return false;
@@ -189,6 +197,7 @@ export default defineComponent({
 			discardAndLeave,
 			title,
 			originalCollectionName,
+			modifiedItem,
 		};
 
 		async function deleteAndQuit() {

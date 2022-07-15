@@ -6,10 +6,12 @@
 		{{ t('display_template_not_setup') }}
 	</v-notice>
 	<div v-else class="many-to-one">
-		<!-- <v-notice v-if="!isRelationDataFound" type="warning">{{ t('relational_data_not_found') }}</v-notice> -->
+		<v-notice v-if="deletedAtField && displayItem && displayItem[deletedAtField]" type="warning">
+			{{ t('relational_data_not_found') }}
+		</v-notice>
 		<v-skeleton-loader v-if="loading" type="input" />
 		<v-input v-else clickable :placeholder="t('select_an_item')" :disabled="disabled" @click="onPreviewClick">
-			<template v-if="displayItem" #input>
+			<template v-if="displayItem && !displayItem[deletedAtField || '']" #input>
 				<div class="preview">
 					<render-template
 						:collection="relationInfo.relatedCollection.collection"
@@ -71,11 +73,12 @@ import adjustFieldsForDisplays from '@/utils/adjust-fields-for-displays';
 import { parseFilter } from '@/utils/parse-filter';
 import DrawerCollection from '@/views/private/components/drawer-collection';
 import DrawerItem from '@/views/private/components/drawer-item';
-import { Filter } from '@directus/shared/types';
+import { useCollection } from '@directus/shared/composables';
+import { Field, Filter } from '@directus/shared/types';
 import { deepMap, getFieldsFromTemplate } from '@directus/shared/utils';
 import { get } from 'lodash';
 import { render } from 'micromustache';
-import { computed, inject, ref, toRefs } from 'vue';
+import { computed, inject, Ref, ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const props = withDefaults(
@@ -128,6 +131,8 @@ const value = computed({
 const selectModalActive = ref(false);
 const editModalActive = ref(false);
 
+let deletedAtField: Ref<string | null> = ref(null);
+
 const displayTemplate = computed(() => {
 	if (props.template) return props.template;
 
@@ -148,8 +153,34 @@ const requiredFields = computed(() => {
 	);
 });
 
+const relatedCollection = relationInfo.value?.relatedCollection.collection;
+
+if (relatedCollection) {
+	const { info: collectionInfo, fields: fieldList } = useCollection(relatedCollection);
+
+	const getDeleteAtField = (fields: Field[] | null): string | null => {
+		if (!fields || !collectionInfo.value?.meta?.is_soft_delete) return null;
+		for (const field of fields) {
+			const special: string[] | undefined | null = field?.meta?.special;
+			if (special) {
+				if (special.includes('date-deleted')) {
+					return field.field;
+				}
+			}
+		}
+		return 'deleted_at';
+	};
+
+	deletedAtField.value = getDeleteAtField(fieldList.value);
+
+	if (deletedAtField.value) {
+		requiredFields.value.push(deletedAtField.value);
+	}
+}
+
 const query = computed<RelationQuerySingle>(() => ({
 	fields: requiredFields.value,
+	show_soft_delete: true,
 }));
 
 const { update, remove, displayItem, loading } = useRelationSingle(value, query, relationInfo);
