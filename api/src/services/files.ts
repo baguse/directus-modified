@@ -18,6 +18,8 @@ import { toArray } from '@directus/shared/utils';
 import { ItemsService } from './items';
 import net from 'net';
 import os from 'os';
+import { PayloadService } from './index';
+import * as fs from 'fs';
 
 const lookupDNS = promisify(lookup);
 
@@ -301,5 +303,43 @@ export class FilesService extends ItemsService {
 		}
 
 		return keys;
+	}
+
+	/**
+	 * duplicate single file
+	 */
+	async duplicateOne(primaryKey?: PrimaryKey): Promise<PrimaryKey> {
+		const payloadService = new PayloadService(this.collection, {
+			accountability: this.accountability,
+			knex: this.knex,
+			schema: this.schema,
+		});
+
+		const data = await this.readOne(primaryKey as string);
+		delete data.id;
+
+		let payload: any = await payloadService.processValues('create', data);
+
+		fs.copyFile(
+			path.join(__dirname, `../../uploads/${payload.filename_disk}`),
+			path.join(
+				__dirname,
+				`../../uploads/${payload.filename_disk.replace((primaryKey as string).toLowerCase(), payload.id)}`
+			),
+			(err) => {
+				if (err) throw err;
+			}
+		);
+
+		payload = {
+			...payload,
+			filename_disk: payload.filename_disk.replace((primaryKey as string).toLowerCase(), payload.id),
+		};
+
+		payload = clone(payload);
+
+		const key = await this.createOne(payload, { emitEvents: false });
+
+		return key;
 	}
 }
