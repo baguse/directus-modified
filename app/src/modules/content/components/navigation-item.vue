@@ -53,6 +53,14 @@
 					<v-text-overflow :text="t('edit_collection')" />
 				</v-list-item-content>
 			</v-list-item>
+			<v-list-item clickable :to="`/erd-viewer/${collection.collection}`">
+				<v-list-item-icon>
+					<v-icon name="device_hub" />
+				</v-list-item-icon>
+				<v-list-item-content>
+					<v-text-overflow :text="t('goto_collection_erd')" />
+				</v-list-item-content>
+			</v-list-item>
 		</v-list>
 	</v-menu>
 </template>

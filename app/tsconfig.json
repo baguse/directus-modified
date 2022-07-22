@@ -17,6 +17,7 @@
 			"@/*": ["src/*"],
 			"preact/*": ["stub/empty.d.ts"]
 		},
+    "typeRoots": ["./types", "./node_modules/@types"],
 		"lib": ["esnext", "dom", "dom.iterable", "scripthost"]
 	},
 	"include": ["src/**/*.ts", "src/**/*.vue"],

@@ -11,6 +11,7 @@ type ShareUser = {
 		admin_access: false;
 		app_access: false;
 	};
+	theme: 'auto' | 'dark' | 'light';
 };
 
 export const useUserStore = defineStore({

@@ -13,6 +13,10 @@ import { getCache, clearSystemCache } from '../cache';
 import Keyv from 'keyv';
 import { AbstractServiceOptions } from '../types';
 
+interface IOpts {
+	includeUndefinedMeta?: boolean;
+}
+
 export class RelationsService {
 	knex: Knex;
 	permissionsService: PermissionsService;
@@ -39,7 +43,12 @@ export class RelationsService {
 		this.systemCache = getCache().systemCache;
 	}
 
-	async readByQuery(query?: Query, opts?: QueryOptions): Promise<Relation[]> {
+	async readByQuery(opts: {
+		query?: Query;
+		opts?: QueryOptions;
+		includeSystemTable?: boolean;
+		includeUndefinedMeta?: boolean;
+	}): Promise<Relation[]> {
 		if (this.accountability && this.accountability.admin !== true && this.hasReadAccess === false) {
 			throw new ForbiddenException();
 		}
@@ -47,23 +56,24 @@ export class RelationsService {
 		const collection = undefined;
 
 		const metaReadQuery: Query = {
+			...(opts.query || {}),
 			limit: -1,
 		};
 
-		if (query?.limit) {
-			metaReadQuery.limit = query.limit;
+		if (opts?.query?.limit) {
+			metaReadQuery.limit = opts?.query.limit;
 		}
 
 		const metaRows = [
-			...(await this.relationsItemService.readByQuery(metaReadQuery, opts)),
-			...systemRelationRows,
+			...(await this.relationsItemService.readByQuery(metaReadQuery, opts?.opts)),
+			...(opts?.includeSystemTable ? systemRelationRows : []),
 		].filter((metaRow) => {
 			if (!collection) return true;
 			return metaRow.many_collection === collection;
 		});
 
 		const schemaRows = await this.schemaInspector.foreignKeys(collection);
-		const results = this.stitchRelations(metaRows, schemaRows);
+		const results = this.stitchRelations(metaRows, schemaRows, { includeUndefinedMeta: opts.includeUndefinedMeta });
 		return await this.filterForbidden(results);
 	}
 
@@ -384,22 +394,40 @@ export class RelationsService {
 	 * Combine raw schema foreign key information with Directus relations meta rows to form final
 	 * Relation objects
 	 */
-	private stitchRelations(metaRows: RelationMeta[], schemaRows: ForeignKey[]) {
-		const results = schemaRows.map((foreignKey): Relation => {
-			return {
-				collection: foreignKey.table,
-				field: foreignKey.column,
-				related_collection: foreignKey.foreign_key_table,
-				schema: foreignKey,
-				meta:
-					metaRows.find((meta) => {
-						if (meta.many_collection !== foreignKey.table) return false;
-						if (meta.many_field !== foreignKey.column) return false;
-						if (meta.one_collection && meta.one_collection !== foreignKey.foreign_key_table) return false;
-						return true;
-					}) || null,
-			};
-		});
+	private stitchRelations(metaRows: RelationMeta[], schemaRows: ForeignKey[], opts?: IOpts) {
+		const results: Relation[] = [];
+
+		for (const foreignKey of schemaRows) {
+			const meta =
+				metaRows.find((meta) => {
+					if (meta.many_collection !== foreignKey.table) return false;
+					if (meta.many_field !== foreignKey.column) return false;
+					if (meta.one_collection && meta.one_collection !== foreignKey.foreign_key_table) return false;
+					return true;
+				}) || null;
+
+			const includeUndefinedMeta = typeof opts?.includeUndefinedMeta == 'undefined' ? true : opts.includeUndefinedMeta;
+
+			if (includeUndefinedMeta) {
+				results.push({
+					collection: foreignKey.table,
+					field: foreignKey.column,
+					related_collection: foreignKey.foreign_key_table,
+					schema: foreignKey,
+					meta,
+				});
+			} else {
+				if (meta) {
+					results.push({
+						collection: foreignKey.table,
+						field: foreignKey.column,
+						related_collection: foreignKey.foreign_key_table,
+						schema: foreignKey,
+						meta,
+					});
+				}
+			}
+		}
 
 		/**
 		 * Meta rows that don't have a corresponding schema foreign key

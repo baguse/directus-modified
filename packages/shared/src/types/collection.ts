@@ -28,12 +28,17 @@ export type CollectionMeta = {
 	collapse: 'open' | 'closed' | 'locked';
 	is_soft_delete: boolean;
 	schema: string;
+	credential: number;
+	database_name: string;
+	is_external_source: boolean;
+	tags: string[];
 };
 
 export interface Collection {
 	collection: string;
 	meta: CollectionMeta | null;
 	schema: Table | null;
+	name: string;
 }
 
 export interface AppCollection extends Collection {

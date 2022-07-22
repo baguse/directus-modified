@@ -305,6 +305,7 @@ router.delete(
 		});
 
 		await service.deleteOne(req.params.pk, {
+			deleteds: req.sanitizedQuery.deleteds,
 			forceDelete: req.sanitizedQuery.forceDelete,
 		});
 		return next();
