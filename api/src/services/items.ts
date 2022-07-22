@@ -95,15 +95,14 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			})
 			.map((field) => field.field);
 
-		const fieldMaybeUniques: { field: string; unique: boolean }[] = [];
+		let fieldMaybeUniques: { field: string; unique: boolean }[] = [];
 		const excludedColections = ['directus_fields'];
 		if (!excludedColections.includes(this.collection)) {
-			await this.knex
+			fieldMaybeUniques = await this.knex
 				.select('field', 'unique')
 				.from('directus_fields')
 				.whereIn('field', fieldNames)
 				.andWhere('collection', this.collection);
-
 			for (const field of fieldMaybeUniques) {
 				const { unique, field: fieldName } = field;
 				if (unique) {

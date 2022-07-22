@@ -84,7 +84,7 @@ fields:
     field: conditions
     hidden: true
     special: cast-json
-  
+
   - collection: directus_fields
     field: unique
     hidden: true
@@ -99,4 +99,12 @@ fields:
 
   - collection: directus_fields
     field: data_type
+    width: half
+
+  - collection: directus_fields
+    field: validation
+    special: cast-json
+    width: half
+  - collection: directus_fields
+    field: validation_message
     width: half

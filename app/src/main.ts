@@ -17,6 +17,8 @@ import { router } from './router';
 import './styles/main.scss';
 import { registerViews } from './views/register';
 import { registerOperations } from './operations/register';
+import 'viewerjs/dist/viewer.css';
+import VueViewer from 'v-viewer';
 
 init();
 
@@ -39,6 +41,7 @@ async function init() {
 	app.use(router);
 	app.use(i18n);
 	app.use(createPinia());
+	app.use(VueViewer);
 
 	registerDirectives(app);
 	registerComponents(app);

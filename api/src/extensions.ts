@@ -42,7 +42,7 @@ import { getSchema } from './utils/get-schema';
 
 import * as services from './services';
 import { schedule, validate } from 'node-cron';
-import { Plugin, rollup } from 'rollup';
+import { rollup } from 'rollup';
 import virtual from '@rollup/plugin-virtual';
 import alias from '@rollup/plugin-alias';
 import { Url } from './utils/url';
@@ -297,7 +297,7 @@ class ExtensionManager {
 					input: 'entry',
 					external: Object.values(sharedDepsMapping),
 					makeAbsoluteExternalsRelative: false,
-					plugins: [(virtual({ entry }), alias({ entries: internalImports })) as Plugin],
+					plugins: [virtual({ entry }), alias({ entries: internalImports })],
 				});
 				const { output } = await bundle.generate({ format: 'es', compact: true });
 
@@ -305,7 +305,7 @@ class ExtensionManager {
 
 				await bundle.close();
 			} catch (error: any) {
-				logger.warn(`Couldn't bundle ${extensionType} extensions`);
+				logger.warn(`Couldn't bundle App extensions`);
 				logger.warn(error);
 			}
 		}
@@ -516,6 +516,7 @@ class ExtensionManager {
 				const queries = Reflect.getMetadata('query', instance, methodName) || [];
 				const bodies = Reflect.getMetadata('body', instance, methodName) || [];
 				const requests = Reflect.getMetadata('request', instance, methodName) || [];
+				const responses = Reflect.getMetadata('response', instance, methodName) || [];
 				const contexts = Reflect.getMetadata('context', instance, methodName) || [];
 				const originalMethod = instance[methodName];
 				// this.apiDocs.paths[`/${routePath}${swaggerPath}`] = apiDoc.paths[swaggerPath];
@@ -589,6 +590,12 @@ class ExtensionManager {
 									const { parameterIndex } = request;
 									args[parameterIndex] = req;
 								}
+
+								for (const response of responses) {
+									const { parameterIndex } = response;
+									args[parameterIndex] = res;
+								}
+
 								for (const context of contexts) {
 									const { parameterIndex } = context;
 									args[parameterIndex] = {

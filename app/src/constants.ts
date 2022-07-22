@@ -75,6 +75,12 @@ export const MODULE_BAR_DEFAULT = [
 		enabled: true,
 		locked: true,
 	},
+	{
+		type: 'module',
+		id: 'erd-viewer',
+		enabled: true,
+		locked: true,
+	},
 ];
 
 export const FIELD_TYPES_SELECT: Array<{ value: Type; text: string } | { divider: true }> = [

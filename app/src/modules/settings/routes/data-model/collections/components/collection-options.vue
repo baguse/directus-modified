@@ -14,6 +14,15 @@
 					</v-list-item-content>
 				</v-list-item>
 
+				<v-list-item v-if="isERDViewerEnabled" clickable :to="`/erd-viewer/${collection.collection}`">
+					<v-list-item-icon>
+						<v-icon name="device_hub" />
+					</v-list-item-icon>
+					<v-list-item-content>
+						{{ t('goto_collection_erd') }}
+					</v-list-item-content>
+				</v-list-item>
+
 				<v-list-item clickable @click="update({ meta: { hidden: !collection.meta?.hidden } })">
 					<template v-if="collection.meta?.hidden === false">
 						<v-list-item-icon><v-icon name="visibility_off" /></v-list-item-icon>
@@ -64,9 +73,10 @@
 
 <script lang="ts">
 import { useI18n } from 'vue-i18n';
-import { defineComponent, PropType, ref } from 'vue';
+import { computed, defineComponent, PropType, ref } from 'vue';
 import { Collection } from '@/types';
-import { useCollectionsStore } from '@/stores/';
+import { useCollectionsStore, useSettingsStore } from '@/stores/';
+import { MODULE_BAR_DEFAULT } from '@/constants';
 
 export default defineComponent({
 	props: {
@@ -81,7 +91,26 @@ export default defineComponent({
 		const collectionsStore = useCollectionsStore();
 		const { deleting, deleteActive, deleteCollection } = useDelete();
 
-		return { t, deleting, deleteActive, deleteCollection, update };
+		let settings = MODULE_BAR_DEFAULT;
+
+		const settingsStore = useSettingsStore();
+		const isERDViewerEnabled = computed(() => {
+			if (!settingsStore.settings) return [];
+
+			if (typeof settingsStore.settings.module_bar == 'string') {
+				settings = JSON.parse(settingsStore.settings.module_bar);
+			} else {
+				settings = settingsStore.settings.module_bar;
+			}
+
+			const erdViewerModule = settings.find((module) => module.id == 'erd-viewer');
+
+			if (!erdViewerModule) return false;
+
+			return erdViewerModule.enabled;
+		});
+
+		return { t, deleting, deleteActive, deleteCollection, update, isERDViewerEnabled };
 
 		async function update(updates: Partial<Collection>) {
 			await collectionsStore.updateCollection(props.collection.collection, updates);
