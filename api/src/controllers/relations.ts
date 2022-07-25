@@ -6,6 +6,7 @@ import { RelationsService } from '../services';
 import asyncHandler from '../utils/async-handler';
 import validateCollection from '../middleware/collection-exists';
 import Joi from 'joi';
+import { Relation } from '@directus/shared/types';
 
 const router = express.Router();
 
@@ -19,7 +20,16 @@ router.get(
 			schema: req.schema,
 		});
 
-		const relations = await service.readAll();
+		let relations: Relation[];
+		if (req.sanitizedQuery.filter) {
+			relations = await service.readByQuery({
+				query: req.sanitizedQuery,
+				includeUndefinedMeta: false,
+			});
+		} else {
+			relations = await service.readAll();
+		}
+
 		res.locals.payload = { data: relations || null };
 		return next();
 	}),
