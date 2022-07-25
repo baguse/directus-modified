@@ -168,6 +168,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 								database: trx,
 								schema: this.schema,
 								accountability: this.accountability,
+								options: {
+									headers: {
+										bearerToken: this.bearerToken,
+									},
+								},
 							}
 					  )
 					: payload;
@@ -425,6 +430,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				database: this.knex,
 				schema: this.schema,
 				accountability: this.accountability,
+				options: {
+					headers: {
+						bearerToken: this.bearerToken,
+					},
+				},
 			}
 		);
 
@@ -741,6 +751,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 					database: this.knex || getDatabase(),
 					schema: this.schema,
 					accountability: this.accountability,
+					options: {
+						headers: {
+							bearerToken: this.bearerToken,
+						},
+					},
 				}
 			);
 		}
@@ -891,6 +906,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 					database: this.knex,
 					schema: this.schema,
 					accountability: this.accountability,
+					options: {
+						headers: {
+							bearerToken: this.bearerToken,
+						},
+					},
 				}
 			);
 		}
@@ -1037,6 +1057,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 						database: this.knex,
 						schema: this.schema,
 						accountability: this.accountability,
+						options: {
+							headers: {
+								bearerToken: this.bearerToken,
+							},
+						},
 					}
 				);
 			}
