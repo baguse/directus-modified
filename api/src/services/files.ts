@@ -321,11 +321,8 @@ export class FilesService extends ItemsService {
 		let payload: any = await payloadService.processValues('create', data);
 
 		fs.copyFile(
-			path.join(__dirname, `../../uploads/${payload.filename_disk}`),
-			path.join(
-				__dirname,
-				`../../uploads/${payload.filename_disk.replace((primaryKey as string).toLowerCase(), payload.id)}`
-			),
+			`./uploads/${payload.filename_disk}`,
+			`./uploads/${payload.filename_disk.replace((primaryKey as string).toLowerCase(), payload.id)}`,
 			(err) => {
 				if (err) throw err;
 			}
