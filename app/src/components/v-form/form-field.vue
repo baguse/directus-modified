@@ -141,6 +141,8 @@ const validationMessage = computed(() => {
 
 	if (props.validationError.code === 'RECORD_NOT_UNIQUE') {
 		return t('validationError.unique');
+	} else if (props.validationError.code === 'RECORD_NOT_UNIQUE_COMBINATION') {
+		return t('validationError.unique_combination');
 	} else {
 		return t(`validationError.${props.validationError.type}`, props.validationError);
 	}

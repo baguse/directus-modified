@@ -66,7 +66,7 @@ async function getDatabaseSchema(
 
 	const collections = [
 		...(await database
-			.select('collection', 'singleton', 'note', 'sort_field', 'accountability', 'is_soft_delete')
+			.select('collection', 'singleton', 'note', 'sort_field', 'accountability', 'is_soft_delete', 'schema')
 			.from('directus_collections')
 			.where('is_external_source', false)
 			.orWhereNull('is_external_source')),
@@ -99,6 +99,7 @@ async function getDatabaseSchema(
 			sortField: collectionMeta?.sort_field || null,
 			accountability: collectionMeta ? collectionMeta.accountability : 'all',
 			isSoftDelete: collectionMeta.is_soft_delete || false,
+			schema: collectionMeta.schema || '',
 			fields: mapValues(schemaOverview[collection].columns, (column) => {
 				return {
 					field: column.column_name,

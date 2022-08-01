@@ -108,3 +108,13 @@ fields:
   - collection: directus_fields
     field: validation_message
     width: half
+  - collection: directus_fields
+    field: locked
+    hidden: true
+    special: boolean
+    width: full
+  - collection: directus_fields
+    field: unique_combination
+    hidden: false
+    special: boolean
+    width: full

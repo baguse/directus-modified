@@ -4,26 +4,31 @@ import path from 'path';
 
 const main = async () => {
 	try {
-		const pathFile = path.resolve('./uploads/tmpfile');
+		const pathFile = path.resolve('./a.png');
 		// console.log({pathFile})
 		// console.log(process.cwd())
+		const api = 'https://datcore.lanius.tech';
 		const file = await fs.readFileSync(pathFile, 'base64');
+		// console.log({
+		// 	file,
+		// });
 		const {
 			data: { data: loginData },
-		} = await axios.post('http://localhost:8056/auth/login', {
+		} = await axios.post(`${api}/auth/login`, {
 			email: 'andreanto.bagus@gmail.com',
 			password: 'indonesiaraya',
 		});
+		// console.log
 		const { data } = await axios.post(
-			'http://localhost:8056/files',
+			`${api}/files`,
 			[
 				{
 					base64: file,
-					fileName: 'tesss_28062022.pdf',
+					fileName: 'cobak.png',
 				},
-				{
-					base64: file,
-				},
+				// {
+				// 	base64: file,
+				// },
 			],
 			{
 				headers: {

@@ -1,4 +1,5 @@
 import { Accountability, Action, PermissionsAction, Query, SchemaOverview } from '@directus/shared/types';
+import { count } from 'console';
 import Keyv from 'keyv';
 import { Knex } from 'knex';
 import { assign, clone, cloneDeep, pick, without } from 'lodash';
@@ -9,6 +10,7 @@ import emitter from '../emitter';
 import env from '../env';
 import { ForbiddenException, InvalidPayloadException } from '../exceptions';
 import { RecordNotUniqueException } from '../exceptions/database/record-not-unique';
+import { RecordNotUniqueCombinationException } from '../exceptions/database/record-not-unique-combination';
 import { translateDatabaseError } from '../exceptions/database/translate';
 import { AbstractService, AbstractServiceOptions, Item as AnyItem, MutationOptions, PrimaryKey } from '../types';
 import getASTFromQuery from '../utils/get-ast-from-query';
@@ -81,9 +83,6 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		const fieldNames = Object.values(this.schema.collections[this.collection].fields)
 			.filter((field) => {
 				if (field.field == primaryKeyField) return false;
-				// else if (field.special.includes('o2m')) return false;
-				// else if (field.special.includes('m2o')) return false;
-				// else if (field.special.includes('m2m')) return false;
 				else if (field.special.includes('date-deleted')) {
 					if (isSoftDelete) deletedAtField = field.field;
 					return false;
@@ -95,16 +94,17 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			})
 			.map((field) => field.field);
 
-		let fieldMaybeUniques: { field: string; unique: boolean }[] = [];
+		let fieldMaybeUniques: { field: string; unique: boolean; unique_combination: boolean }[] = [];
 		const excludedColections = ['directus_fields'];
 		if (!excludedColections.includes(this.collection)) {
+			const uniqueCombinationFields: string[] = [];
 			fieldMaybeUniques = await this.knex
-				.select('field', 'unique')
+				.select('field', 'unique', 'unique_combination')
 				.from('directus_fields')
 				.whereIn('field', fieldNames)
 				.andWhere('collection', this.collection);
 			for (const field of fieldMaybeUniques) {
-				const { unique, field: fieldName } = field;
+				const { unique, unique_combination: uniqueCombination, field: fieldName } = field;
 				if (unique) {
 					let count: string | number;
 					if (!isSoftDelete) {
@@ -128,6 +128,32 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 							field: fieldName,
 							invalid: data[fieldName],
 						});
+				} else if (uniqueCombination) {
+					uniqueCombinationFields.push(fieldName);
+				}
+			}
+
+			const queryUniqueCombination = this.knex(this.collection).count('*', { as: 'count' });
+			if (isSoftDelete) {
+				queryUniqueCombination.where(deletedAtField, null);
+			}
+			for (const uniqueCombinationField of uniqueCombinationFields) {
+				queryUniqueCombination.where(uniqueCombinationField, data[uniqueCombinationField] || null);
+			}
+			if (uniqueCombinationFields.length) {
+				const [{ count }] = await queryUniqueCombination;
+				if (Number(count) > 0) {
+					const errs: RecordNotUniqueException[] = [];
+					for (const field of uniqueCombinationFields) {
+						errs.push(
+							new RecordNotUniqueCombinationException(field, {
+								collection: this.collection,
+								field: field,
+								invalid: data[field],
+							})
+						);
+					}
+					throw errs;
 				}
 			}
 		}
@@ -537,9 +563,6 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		const fieldNames = Object.values(this.schema.collections[this.collection].fields)
 			.filter((field) => {
 				if (field.field == primaryKeyField) return false;
-				// else if (field.special.includes('o2m')) return false;
-				// else if (field.special.includes('m2o')) return false;
-				// else if (field.special.includes('m2m')) return false;
 				else if (field.special.includes('date-deleted')) {
 					if (isSoftDelete) deletedAtField = field.field;
 					return false;
@@ -551,14 +574,16 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			})
 			.map((field) => field.field);
 
-		const fieldMaybeUniques: { field: string; unique: boolean }[] = await this.knex
-			.select('field', 'unique')
+		//check uniqueness
+		const fieldMaybeUniques: { field: string; unique: boolean; unique_combination: boolean }[] = await this.knex
+			.select('field', 'unique', 'unique_combination')
 			.from('directus_fields')
 			.whereIn('field', fieldNames)
 			.andWhere('collection', this.collection);
+		const uniqueCombinationFields: string[] = [];
 
 		for (const field of fieldMaybeUniques) {
-			const { unique, field: fieldName } = field;
+			const { unique, field: fieldName, unique_combination: uniqueCombination } = field;
 			if (unique) {
 				let count: string | number;
 				if (!isSoftDelete) {
@@ -590,6 +615,74 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 						field: fieldName,
 						invalid: data[fieldName],
 					});
+			} else if (uniqueCombination) {
+				uniqueCombinationFields.push(fieldName);
+			}
+		}
+
+		// check unique with combination
+		if (uniqueCombinationFields.length) {
+			if (keys.length > 1) {
+				let isMaybeNotUnique = false;
+				const fieldUniqueNotProvideds = [];
+				const errs: RecordNotUniqueCombinationException[] = [];
+				for (const uniqueCombinationField of uniqueCombinationFields) {
+					if (typeof data[uniqueCombinationField] != 'undefined') {
+						errs.push(
+							new RecordNotUniqueCombinationException(uniqueCombinationField, {
+								collection: this.collection,
+								field: uniqueCombinationField,
+								invalid: data[uniqueCombinationField],
+							})
+						);
+						isMaybeNotUnique = true;
+					} else {
+						fieldUniqueNotProvideds.push(uniqueCombinationField);
+					}
+				}
+
+				if (isMaybeNotUnique) {
+					const query = this.knex(this.collection)
+						.count('*', { as: 'count' })
+						.whereIn(primaryKeyField, keys)
+						.orderBy('count', 'desc');
+					if (isSoftDelete) {
+						query.where(deletedAtField, null);
+					}
+					if (fieldUniqueNotProvideds.length > 0) {
+						query.select(fieldUniqueNotProvideds).groupBy(fieldUniqueNotProvideds);
+					} else {
+						if (errs.length >= uniqueCombinationFields.length) throw errs;
+					}
+					const [{ count }] = await query;
+					if (Number(count) > 1) throw errs;
+				}
+			} else if (keys.length === 1) {
+				const queryCurrentData = this.knex(this.collection).select('*');
+				const query = this.knex(this.collection).select('*').first();
+				if (isSoftDelete) {
+					queryCurrentData.where(deletedAtField, null);
+					query.where(deletedAtField, null);
+				}
+				const currentData = await queryCurrentData.first();
+				if (currentData) {
+					const errs: RecordNotUniqueCombinationException[] = [];
+					for (const uniqueCombinationField of uniqueCombinationFields) {
+						const uniqueData = data[uniqueCombinationField] || currentData[uniqueCombinationField];
+						query.where(uniqueCombinationField, uniqueData);
+						errs.push(
+							new RecordNotUniqueCombinationException(uniqueCombinationField, {
+								collection: this.collection,
+								field: uniqueCombinationField,
+								invalid: uniqueData,
+							})
+						);
+					}
+					query.whereNot(primaryKeyField, keys[0]);
+					const existingData = await query;
+
+					if (existingData) throw errs;
+				}
 			}
 		}
 

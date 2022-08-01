@@ -42,7 +42,7 @@
 
 <script lang="ts">
 import { useI18n } from 'vue-i18n';
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, Ref } from 'vue';
 import SettingsNavigation from '../../components/navigation.vue';
 import { useCollection } from '@directus/shared/composables';
 import { useSettingsStore, useServerStore } from '@/stores';
@@ -59,10 +59,41 @@ export default defineComponent({
 
 		const router = useRouter();
 
+		const godMode = ref(false);
+
 		const settingsStore = useSettingsStore();
 		const serverStore = useServerStore();
 
-		const { fields } = useCollection('directus_settings');
+		const { fields: originalFields } = useCollection('directus_settings');
+
+		const HIDDEN_FIELDS: Ref<{ [collectionName: string]: string[] }> = ref({
+			directus_settings: ['mode'],
+		});
+
+		const setting = settingsStore.settings;
+
+		const isProductionMode = computed(() => {
+			return setting?.mode == 'PRODUCTION';
+		});
+
+		let fields = originalFields;
+
+		if (isProductionMode.value) {
+			fields = computed(() =>
+				originalFields.value.map((field) => {
+					if (godMode.value && HIDDEN_FIELDS.value['directus_settings']?.includes(field.field)) {
+						if (field.meta) {
+							field.meta.hidden = false;
+						}
+					} else if (!godMode.value && HIDDEN_FIELDS.value['directus_settings']?.includes(field.field)) {
+						if (field.meta) {
+							field.meta.hidden = true;
+						}
+					}
+					return field;
+				})
+			);
+		}
 
 		const initialValues = ref(clone(settingsStore.settings));
 
@@ -77,6 +108,10 @@ export default defineComponent({
 		});
 
 		const { confirmLeave, leaveTo } = useEditsGuard(hasEdits);
+
+		useShortcut('meta+shift+g', () => {
+			godMode.value = true;
+		});
 
 		return {
 			t,

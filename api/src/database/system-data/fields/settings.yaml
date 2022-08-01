@@ -392,3 +392,13 @@ fields:
   - field: translation_strings
     special: cast-json
     hidden: true
+  - field: mode
+    interface: select-dropdown
+    options:
+      choices:
+        - text: Development
+          value: DEVELOPMENT
+        - text: Production
+          value: PRODUCTION
+    width: full
+    hidden: false

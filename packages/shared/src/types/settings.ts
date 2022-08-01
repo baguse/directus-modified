@@ -45,4 +45,5 @@ export type Settings = {
 	mapbox_key: string | null;
 	module_bar: (SettingsModuleBarLink | SettingsModuleBarModule)[];
 	translation_strings: Record<string, any>[];
+	mode: 'PRODUCTION' | 'DEVELOPMENT';
 };

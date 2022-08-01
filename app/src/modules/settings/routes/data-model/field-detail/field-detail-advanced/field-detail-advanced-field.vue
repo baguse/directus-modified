@@ -10,14 +10,24 @@
 			<v-checkbox v-model="required" :label="t('require_value_to_be_set')" block />
 		</div>
 
-		<div class="field half-left">
+		<div class="field full">
 			<div class="label type-label">{{ t('hidden') }}</div>
 			<v-checkbox v-model="hidden" :label="t('hidden_on_detail')" block />
 		</div>
 
-		<div class="field half-right">
+		<div class="field half-left">
 			<div class="label type-label">{{ t('unique') }}</div>
-			<v-checkbox v-model="unique" :label="t('value_unique')" block />
+			<v-checkbox v-model="unique" :label="t('value_unique')" block @update:model-value="checkUnique('unique')" />
+		</div>
+
+		<div class="field half-right">
+			<div class="label type-label">{{ t('unique_combination') }}</div>
+			<v-checkbox
+				v-model="uniqueCombination"
+				:label="t('value_unique_combination')"
+				block
+				@update:model-value="checkUnique('uniqueCombination')"
+			/>
 		</div>
 
 		<div v-if="type !== 'group'" class="field full">
@@ -65,6 +75,11 @@
 				@input="translations = $event"
 			/>
 		</div>
+
+		<div v-if="!isProductionMode" class="field full">
+			<div class="label type-label">{{ t('locked') }}</div>
+			<v-checkbox v-model="locked" :label="t('value_locked')" block />
+		</div>
 	</div>
 </template>
 
@@ -73,21 +88,53 @@ import { useI18n } from 'vue-i18n';
 import { defineComponent, computed } from 'vue';
 import { useFieldDetailStore, syncFieldDetailStoreProperty } from '../store';
 import { storeToRefs } from 'pinia';
+import { useSettingsStore } from '@/stores';
 
 export default defineComponent({
 	setup() {
 		const { t } = useI18n();
 		const fieldDetailStore = useFieldDetailStore();
+		const settingStore = useSettingsStore();
 		const readonly = syncFieldDetailStoreProperty('field.meta.readonly', false);
 		const hidden = syncFieldDetailStoreProperty('field.meta.hidden', false);
 		const required = syncFieldDetailStoreProperty('field.meta.required', false);
 		const unique = syncFieldDetailStoreProperty('field.meta.unique', false);
+		const uniqueCombination = syncFieldDetailStoreProperty('field.meta.unique_combination', false);
+		const locked = syncFieldDetailStoreProperty('field.meta.locked', false);
 		const note = syncFieldDetailStoreProperty('field.meta.note');
 		const translations = syncFieldDetailStoreProperty('field.meta.translations');
 		const { field } = storeToRefs(fieldDetailStore);
 		const type = computed(() => field.value.type);
 		const isGenerated = computed(() => field.value.schema?.is_generated);
-		return { t, readonly, hidden, required, note, translations, type, isGenerated, unique };
+
+		const setting = settingStore.settings;
+
+		const isProductionMode = computed(() => {
+			return setting?.mode == 'PRODUCTION';
+		});
+		return {
+			t,
+			readonly,
+			hidden,
+			required,
+			note,
+			translations,
+			type,
+			isGenerated,
+			unique,
+			locked,
+			isProductionMode,
+			uniqueCombination,
+			checkUnique,
+		};
+
+		function checkUnique(type: string) {
+			if (type == 'unique') {
+				if (uniqueCombination.value) uniqueCombination.value = !unique.value;
+			} else {
+				if (unique.value) unique.value = !uniqueCombination.value;
+			}
+		}
 	},
 });
 </script>

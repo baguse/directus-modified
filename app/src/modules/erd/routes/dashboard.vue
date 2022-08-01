@@ -99,4 +99,8 @@ export default defineComponent({
 .ml-3 {
 	margin-left: 3px;
 }
+
+.viewer-canvas {
+	background-color: blue !important;
+}
 </style>

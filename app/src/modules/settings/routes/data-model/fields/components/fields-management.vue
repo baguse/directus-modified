@@ -22,11 +22,11 @@
 			</template>
 		</draggable>
 
-		<v-button full-width :to="`/settings/data-model/${urlReplacer(collection)}/+`">
+		<v-button v-if="isAddEnabled" full-width :to="`/settings/data-model/${urlReplacer(collection)}/+`">
 			{{ t('create_field') }}
 		</v-button>
 
-		<v-menu show-arrow>
+		<v-menu v-if="isAddEnabled" show-arrow>
 			<template #activator="{ toggle, active }">
 				<button class="add-field-advanced" :dashed="!active" :class="{ active }" @click="toggle">
 					{{ t('create_in_advanced_field_creation_mode') }}
@@ -55,7 +55,7 @@ import { defineComponent, computed, toRefs } from 'vue';
 import { useCollection } from '@directus/shared/composables';
 import Draggable from 'vuedraggable';
 import { Field } from '@directus/shared/types';
-import { useFieldsStore } from '@/stores/';
+import { useFieldsStore, useSettingsStore } from '@/stores/';
 import FieldSelect from './field-select.vue';
 import hideDragImage from '@/utils/hide-drag-image';
 import { orderBy, isNil } from 'lodash';
@@ -75,7 +75,7 @@ export default defineComponent({
 		const { t } = useI18n();
 
 		const { collection } = toRefs(props);
-		const { fields } = useCollection(urlRevertReplacer(collection.value));
+		const { fields, info: collectionInfo } = useCollection(urlRevertReplacer(collection.value));
 		const fieldsStore = useFieldsStore();
 
 		const parsedFields = computed(() => {
@@ -84,12 +84,30 @@ export default defineComponent({
 			);
 		});
 
+		const settingStore = useSettingsStore();
+		const setting = settingStore.settings;
+
+		const isAddEnabled = computed(() => {
+			if (setting?.mode == 'PRODUCTION') {
+				if (collectionInfo.value?.meta?.schema == 'configuration') {
+					return false;
+				}
+			}
+			return true;
+		});
+
 		const lockedFields = computed(() => {
-			return parsedFields.value.filter((field) => field.meta?.system === true);
+			return parsedFields.value.filter(
+				(field) => field.meta?.system === true || (setting?.mode == 'PRODUCTION' && field.meta?.locked)
+			);
 		});
 
 		const usableFields = computed(() => {
-			return parsedFields.value.filter((field) => field.meta?.system !== true);
+			if (setting?.mode == 'DEVELOPMENT') {
+				return parsedFields.value.filter((field) => field.meta?.system !== true);
+			} else {
+				return parsedFields.value.filter((field) => field.meta?.system !== true && !field.meta?.locked);
+			}
 		});
 
 		const addOptions = computed<Array<{ type: LocalType; icon: string; text: any } | { divider: boolean }>>(() => [
@@ -164,6 +182,7 @@ export default defineComponent({
 			setNestedSort,
 			isNil,
 			urlReplacer,
+			isAddEnabled,
 		};
 
 		async function setSort(fields: Field[]) {

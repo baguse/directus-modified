@@ -1,6 +1,6 @@
 import { Type } from '@directus/shared/types';
 
-export const VALIDATION_TYPES = ['FAILED_VALIDATION', 'RECORD_NOT_UNIQUE'];
+export const VALIDATION_TYPES = ['FAILED_VALIDATION', 'RECORD_NOT_UNIQUE', 'RECORD_NOT_UNIQUE_COMBINATION'];
 
 export const DIRECTUS_LOGO = `
                          @                        

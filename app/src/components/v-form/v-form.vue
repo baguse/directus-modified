@@ -67,7 +67,7 @@
 <script lang="ts">
 import { useElementSize } from '@/composables/use-element-size';
 import useFormFields from '@/composables/use-form-fields';
-import { useFieldsStore } from '@/stores/';
+import { useFieldsStore, useSettingsStore } from '@/stores/';
 import { applyConditions } from '@/utils/apply-conditions';
 import { extractFieldFromFunction } from '@/utils/extract-field-from-function';
 import { Field, ValidationError } from '@directus/shared/types';
@@ -144,6 +144,17 @@ export default defineComponent({
 		const { t } = useI18n();
 
 		const fieldsStore = useFieldsStore();
+		const settingStore = useSettingsStore();
+
+		const DISABLED_FIELDS: { [collectionName: string]: string[] } = {
+			directus_collections: ['schema'],
+		};
+
+		const setting = settingStore.settings;
+
+		const isProductionMode = computed(() => {
+			return setting?.mode == 'PRODUCTION';
+		});
 
 		const fields = computed(() => {
 			if (props.collection) {
@@ -288,6 +299,7 @@ export default defineComponent({
 			return { formFields, isDisabled, getFieldsForGroup, fieldsForGroup };
 
 			function isDisabled(field: Field) {
+				if (isProductionMode.value && DISABLED_FIELDS[props.collection as string]?.includes(field.field)) return true;
 				return (
 					props.loading ||
 					props.disabled === true ||

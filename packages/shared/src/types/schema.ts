@@ -26,6 +26,7 @@ export type CollectionsOverview = {
 		note: string | null;
 		accountability: 'all' | 'activity' | null;
 		isSoftDelete: boolean;
+		schema: string;
 		fields: {
 			[name: string]: FieldOverview;
 		};

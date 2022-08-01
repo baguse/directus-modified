@@ -74,7 +74,7 @@
 				:initial-values="modifiedItem && modifiedItem.meta"
 				:batch-mode="isBatch"
 				:primary-key="collection"
-				:disabled="modifiedItem && modifiedItem.collection.startsWith('directus_')"
+				:disabled="modifiedItem && modifiedItem.collection && modifiedItem.collection.startsWith('directus_')"
 			/>
 		</div>
 
@@ -101,14 +101,14 @@
 
 <script lang="ts">
 import { useI18n } from 'vue-i18n';
-import { defineComponent, computed, toRefs, ref, unref, Ref } from 'vue';
+import { defineComponent, computed, toRefs, ref } from 'vue';
 import SettingsNavigation from '../../../components/navigation.vue';
 import { useCollection } from '@directus/shared/composables';
 import FieldsManagement from './components/fields-management.vue';
 
 import useItem from '@/composables/use-item';
 import { useRouter } from 'vue-router';
-import { useCollectionsStore, useFieldsStore } from '@/stores';
+import { useCollectionsStore, useFieldsStore, useSettingsStore } from '@/stores';
 import useShortcut from '@/composables/use-shortcut';
 import useEditsGuard from '@/composables/use-edits-guard';
 import { nameReplacer, urlReplacer, urlRevertReplacer } from '@/utils/text-replacer';
@@ -141,11 +141,18 @@ export default defineComponent({
 		const { info: collectionInfo, fields } = useCollection(originalCollectionName);
 		const collectionsStore = useCollectionsStore();
 		const fieldsStore = useFieldsStore();
+		const settingStore = useSettingsStore();
 
 		const { isNew, edits, item, saving, loading, error, save, remove, deleting, saveAsCopy, isBatch } = useItem(
 			ref('directus_collections'),
 			originalCollectionName
 		);
+
+		const setting = settingStore.settings;
+
+		const isProductionMode = computed(() => {
+			return setting?.mode == 'PRODUCTION';
+		});
 
 		const modifiedItem = computed<Record<string, any>>(() => {
 			const newItem = { ...item.value };
@@ -198,6 +205,7 @@ export default defineComponent({
 			title,
 			originalCollectionName,
 			modifiedItem,
+			isProductionMode,
 		};
 
 		async function deleteAndQuit() {

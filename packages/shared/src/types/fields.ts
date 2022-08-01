@@ -42,6 +42,8 @@ export type FieldMeta = {
 	validation_message: string | null;
 	system?: true;
 	unique?: boolean;
+	unique_combination?: boolean;
+	locked?: boolean;
 };
 
 export interface FieldRaw {

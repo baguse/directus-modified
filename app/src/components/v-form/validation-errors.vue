@@ -34,6 +34,9 @@
 						<template v-if="validationError.code === 'RECORD_NOT_UNIQUE'">
 							{{ t('validationError.unique', validationError) }}
 						</template>
+						<template v-else-if="validationError.code === 'RECORD_NOT_UNIQUE_COMBINATION'">
+							{{ t('validationError.unique_combination', validationError) }}
+						</template>
 						<template v-else>
 							{{ t(`validationError.${validationError.type}`, validationError) }}
 						</template>

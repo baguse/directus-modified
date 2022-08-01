@@ -22,6 +22,8 @@ export type RawCollection = {
 	meta?: Partial<CollectionMeta> | null;
 };
 
+const SCHEMA_TYPES = ['public', 'datacore', 'configuration'];
+
 export class CollectionsService {
 	knex: Knex;
 	helpers: Helpers;
@@ -57,10 +59,21 @@ export class CollectionsService {
 			throw new ForbiddenException();
 		}
 
+		if (!SCHEMA_TYPES.includes(payload.meta?.schema || ''))
+			throw new InvalidPayloadException('Schema is not registered');
+
 		if (!payload.collection) throw new InvalidPayloadException(`"collection" is required`);
 
 		if (payload.collection.startsWith('directus_')) {
 			throw new InvalidPayloadException(`Collections can't start with "directus_"`);
+		}
+
+		const setting = await this.knex('directus_settings').select('*').first();
+
+		if (setting?.mode == 'PRODUCTION') {
+			if ((payload.meta?.schema || '').toUpperCase() !== 'PUBLIC') {
+				throw new InvalidPayloadException('Cant create collection with that schema');
+			}
 		}
 
 		try {

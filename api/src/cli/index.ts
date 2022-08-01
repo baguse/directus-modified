@@ -7,6 +7,7 @@ import count from './commands/count';
 import dbInstall from './commands/database/install';
 import dbMigrate from './commands/database/migrate';
 import dbSeed from './commands/database/seed';
+import dbLocker from './commands/database/lock';
 import init from './commands/init';
 import rolesCreate from './commands/roles/create';
 import usersCreate from './commands/users/create';
@@ -65,6 +66,8 @@ export async function createCli(): Promise<Command> {
 		.description('Revert some seeder')
 		.argument('<count>', 'The number of seeder to revert')
 		.action(dbSeed.revert);
+	dbCommand.command('lock').description('Lock Configuration and Datacore fields').action(dbLocker.lock);
+	dbCommand.command('unlock').description('Unlock Public fields').action(dbLocker.unlock);
 	const usersCommand = program.command('users');
 
 	usersCommand

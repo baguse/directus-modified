@@ -14,7 +14,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
 		errors: [],
 	};
 
-	const errors = toArray(err);
+	const errors = Array.isArray(err) ? err : toArray(err);
 
 	if (errors.some((err) => err instanceof BaseException === false)) {
 		res.status(500);

@@ -86,6 +86,7 @@
 					>
 						<div class="type-label">{{ t(info.label) }}</div>
 						<v-input
+							v-if="info.type == 'input'"
 							v-model="info.name"
 							class="monospace"
 							:class="{ active: info.enabled }"
@@ -100,6 +101,7 @@
 								<v-icon :name="info.icon" />
 							</template>
 						</v-input>
+						<v-select v-if="info.type == 'select'" v-model="info.name" :items="info.items" />
 					</div>
 				</div>
 			</v-tab-item>
@@ -137,74 +139,107 @@ import { cloneDeep } from 'lodash';
 import { defineComponent, ref, reactive, watch, computed } from 'vue';
 import api from '@/api';
 import { Field, Relation } from '@directus/shared/types';
-import { useFieldsStore, useCollectionsStore, useRelationsStore } from '@/stores/';
+import { useFieldsStore, useCollectionsStore, useRelationsStore, useSettingsStore } from '@/stores/';
 import { notify } from '@/utils/notify';
 import { useDialogRoute } from '@/composables/use-dialog-route';
 import { useRouter } from 'vue-router';
 import { unexpectedError } from '@/utils/unexpected-error';
 import { DeepPartial } from '@directus/shared/types';
 
-const defaultSystemFields = {
-	status: {
-		enabled: false,
-		inputDisabled: false,
-		name: 'status',
-		label: 'status',
-		icon: 'flag',
-	},
-	sort: {
-		enabled: false,
-		inputDisabled: false,
-		name: 'sort',
-		label: 'sort',
-		icon: 'low_priority',
-	},
-	dateCreated: {
-		enabled: false,
-		inputDisabled: false,
-		name: 'created_at',
-		label: 'Created At',
-		icon: 'access_time',
-	},
-	userCreated: {
-		enabled: false,
-		inputDisabled: false,
-		name: 'created_by',
-		label: 'Created By',
-		icon: 'account_circle',
-	},
-	dateUpdated: {
-		enabled: false,
-		inputDisabled: false,
-		name: 'updated_at',
-		label: 'Updated At',
-		icon: 'access_time',
-	},
-	userUpdated: {
-		enabled: false,
-		inputDisabled: false,
-		name: 'updated_by',
-		label: 'updated By',
-		icon: 'account_circle',
-	},
-	deletedAt: {
-		enabled: false,
-		inputDisabled: false,
-		name: 'deleted_at',
-		label: 'Deleted At',
-		icon: 'access_time',
-	},
-	schema: {
-		enabled: false,
-		inputDisabled: false,
-		name: 'public',
-		label: 'Schema',
-		icon: 'flag',
-	},
-};
-
 export default defineComponent({
 	setup() {
+		const schemaItems = [
+			{
+				text: 'Public',
+				value: 'public',
+			},
+		];
+
+		const settingStore = useSettingsStore();
+		const setting = settingStore.settings;
+
+		if (setting?.mode == 'DEVELOPMENT') {
+			schemaItems.push(
+				...[
+					{
+						text: 'Datacore',
+						value: 'datacore',
+					},
+					{
+						text: 'Configuration',
+						value: 'configuration',
+					},
+				]
+			);
+		}
+
+		const defaultSystemFields = {
+			status: {
+				type: 'input',
+				enabled: false,
+				inputDisabled: false,
+				name: 'status',
+				label: 'status',
+				icon: 'flag',
+			},
+			sort: {
+				type: 'input',
+				enabled: false,
+				inputDisabled: false,
+				name: 'sort',
+				label: 'sort',
+				icon: 'low_priority',
+			},
+			dateCreated: {
+				type: 'input',
+				enabled: false,
+				inputDisabled: false,
+				name: 'created_at',
+				label: 'Created At',
+				icon: 'access_time',
+			},
+			userCreated: {
+				type: 'input',
+				enabled: false,
+				inputDisabled: false,
+				name: 'created_by',
+				label: 'Created By',
+				icon: 'account_circle',
+			},
+			dateUpdated: {
+				type: 'input',
+				enabled: false,
+				inputDisabled: false,
+				name: 'updated_at',
+				label: 'Updated At',
+				icon: 'access_time',
+			},
+			userUpdated: {
+				type: 'input',
+				enabled: false,
+				inputDisabled: false,
+				name: 'updated_by',
+				label: 'updated By',
+				icon: 'account_circle',
+			},
+			deletedAt: {
+				type: 'input',
+				enabled: false,
+				inputDisabled: false,
+				name: 'deleted_at',
+				label: 'Deleted At',
+				icon: 'access_time',
+			},
+			schema: {
+				type: 'select',
+				enabled: true,
+				inputDisabled: false,
+				name: 'public',
+				label: 'Schema',
+				icon: 'flag',
+				items: schemaItems,
+			},
+		};
 		const { t } = useI18n();
 
 		const router = useRouter();
