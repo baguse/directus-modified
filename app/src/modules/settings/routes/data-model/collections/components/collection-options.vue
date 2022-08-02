@@ -14,12 +14,21 @@
 					</v-list-item-content>
 				</v-list-item>
 
-				<v-list-item v-if="isERDViewerEnabled" clickable :to="`/erd-viewer/${collection.collection}`">
+				<v-list-item v-if="moduleEnabled['erd-viewer']" clickable :to="`/erd-viewer/${collection.collection}`">
 					<v-list-item-icon>
 						<v-icon name="device_hub" />
 					</v-list-item-icon>
 					<v-list-item-content>
-						{{ t('goto_collection_erd') }}
+						<v-text-overflow :text="t('goto_collection_erd')" />
+					</v-list-item-content>
+				</v-list-item>
+
+				<v-list-item v-if="moduleEnabled['fields-builder']" clickable :to="`/fields-builder/${collection.collection}`">
+					<v-list-item-icon>
+						<v-icon name="memory" />
+					</v-list-item-icon>
+					<v-list-item-content>
+						<v-text-overflow :text="t('goto_collection_fields_builder')" />
 					</v-list-item-content>
 				</v-list-item>
 
@@ -73,7 +82,7 @@
 
 <script lang="ts">
 import { useI18n } from 'vue-i18n';
-import { computed, defineComponent, PropType, ref } from 'vue';
+import { defineComponent, PropType, ref, Ref } from 'vue';
 import { Collection } from '@/types';
 import { useCollectionsStore, useSettingsStore } from '@/stores/';
 import { MODULE_BAR_DEFAULT } from '@/constants';
@@ -91,26 +100,22 @@ export default defineComponent({
 		const collectionsStore = useCollectionsStore();
 		const { deleting, deleteActive, deleteCollection } = useDelete();
 
-		let settings = MODULE_BAR_DEFAULT;
+		let moduleBars = MODULE_BAR_DEFAULT;
 
 		const settingsStore = useSettingsStore();
-		const isERDViewerEnabled = computed(() => {
-			if (!settingsStore.settings) return [];
+		if (typeof settingsStore.settings?.module_bar == 'string') {
+			moduleBars = JSON.parse(settingsStore.settings.module_bar);
+		} else {
+			moduleBars = settingsStore.settings?.module_bar || [];
+		}
 
-			if (typeof settingsStore.settings.module_bar == 'string') {
-				settings = JSON.parse(settingsStore.settings.module_bar);
-			} else {
-				settings = settingsStore.settings.module_bar;
-			}
+		const moduleEnabled: { [moduleId: string]: boolean } = {};
 
-			const erdViewerModule = settings.find((module) => module.id == 'erd-viewer');
+		for (const moduleBar of moduleBars) {
+			moduleEnabled[moduleBar.id] = moduleBar.enabled;
+		}
 
-			if (!erdViewerModule) return false;
-
-			return erdViewerModule.enabled;
-		});
-
-		return { t, deleting, deleteActive, deleteCollection, update, isERDViewerEnabled };
+		return { t, deleting, deleteActive, deleteCollection, update, moduleEnabled };
 
 		async function update(updates: Partial<Collection>) {
 			await collectionsStore.updateCollection(props.collection.collection, updates);
@@ -118,7 +123,7 @@ export default defineComponent({
 
 		function useDelete() {
 			const deleting = ref(false);
-			const deleteActive = ref(false);
+			const deleteActive: Ref<boolean | null> = ref(false);
 
 			return { deleting, deleteActive, deleteCollection };
 

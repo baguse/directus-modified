@@ -49,6 +49,7 @@
   --success-hover: #00c85350;
   --btn-hover: white;
   --list-item-hover: var(--background-normal-alt);
+  --selected-text-background: #87878782;
 
 	// Generate color variations
 	@include generate-colors($color-mapping, $dark-theme-shade, $dark-theme-tint);

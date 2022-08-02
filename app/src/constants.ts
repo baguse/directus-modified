@@ -71,13 +71,17 @@ export const MODULE_BAR_DEFAULT = [
 	},
 	{
 		type: 'module',
-		id: 'settings',
-		enabled: true,
-		locked: true,
+		id: 'erd-viewer',
+		enabled: false,
 	},
 	{
 		type: 'module',
-		id: 'erd-viewer',
+		id: 'fields-builder',
+		enabled: false,
+	},
+	{
+		type: 'module',
+		id: 'settings',
 		enabled: true,
 		locked: true,
 	},

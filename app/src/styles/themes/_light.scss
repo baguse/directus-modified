@@ -39,6 +39,7 @@
 	--module-background-alt: var(--background-normal);
 	--module-icon: #8196b1;
 	--module-icon-alt: var(--foreground-normal-alt);
+  --selected-text-background: #87878782;
 
 	// Generate color variations
 	@include generate-colors($color-mapping, $light-theme-tint, $light-theme-shade);

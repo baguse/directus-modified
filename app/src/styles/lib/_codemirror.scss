@@ -522,10 +522,10 @@ div.CodeMirror-dragcursors {
 }
 
 .CodeMirror-selected {
-	background: var(--background-normal-alt);
+	background: var(--selected-text-background) !important;
 }
 .CodeMirror-focused .CodeMirror-selected {
-	background: var(--background-normal-alt);
+	background: var(--selected-text-background) !important;
 }
 .CodeMirror-crosshair {
 	cursor: crosshair;

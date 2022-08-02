@@ -643,6 +643,7 @@ make_folder_visible: Make Folder Visible
 make_folder_hidden: Make Folder Hidden
 goto_collection_content: View Content
 goto_collection_erd: View ERD
+goto_collection_fields_builder: Goto Field Builder Generator
 start_end_of_count_items: '{start}-{end} of {count} items'
 start_end_of_count_filtered_items: '{start}-{end} of {count} filtered items'
 one_item: '1 item'
@@ -814,6 +815,7 @@ operation_handle_reject: 'Reject: Click to Add or Drag to Reroute'
 insights: Insights
 dashboard: Dashboard
 erd_viewer: ERD Viewer
+fields-query-builder: Fields Query Builder
 panel: Panel
 panel_options: Panel Options
 panel_header: Panel Header

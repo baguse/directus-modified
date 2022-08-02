@@ -2033,10 +2033,10 @@
     debug "^3.1.0"
     lodash.once "^4.1.1"
 
-"@directus/app@npm:@mv-data-core/app@9.12.3":
-  version "9.12.3"
-  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.12.3.tgz#95826f3d67b02e034b406525fa54f78e19073e92"
-  integrity sha512-led0EAoSlNHMC4xY56GZcXDKAUXQbPmtHsHLaRfwRckAAl1kSJ04mqXy+5AmJ0ZTdFI7gnSN2HroXCTBas19sA==
+"@directus/app@npm:@mv-data-core/app@9.12.4":
+  version "9.12.4"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.12.4.tgz#f76736593fbe766ce2d552a825a3f61bead57285"
+  integrity sha512-WVjfOY8+Y0RNqaky0UZKHUP5R5TWFeW/7lshPH/ffKGVIFRj6R3PiJ8ynBYP4ofY4URamiqEouQgAxUCpmTmwQ==
   dependencies:
     bytes "^3.1.2"
     color "^4.2.3"
@@ -7432,10 +7432,10 @@ builtins@^5.0.0:
   dependencies:
     semver "^7.0.0"
 
-bull@^4.8.1:
-  version "4.8.4"
-  resolved "https://registry.yarnpkg.com/bull/-/bull-4.8.4.tgz#c538610492050d5160dbd9180704145f135a0aa9"
-  integrity sha512-vDNhM/pvfFY3+msulMbqPBdBO7ntKxRZRtMfi3EguVW/Ozo4uez+B81I8ZoDxYCLgSOBfwRuPnFtcv7QNzm4Ew==
+bull@^4.8.5:
+  version "4.8.5"
+  resolved "https://registry.yarnpkg.com/bull/-/bull-4.8.5.tgz#eebafddc3249d6d5e8ced1c42b8bfa8efcc274aa"
+  integrity sha512-2Z630e4f6VsLJnWMAtfEHwIqJYmND4W3dcG48RIbXeWpvb4UnYtpe/zxEdslJu0PKrltB4IkFj5YtBsdeQRn8w==
   dependencies:
     cron-parser "^4.2.1"
     debuglog "^1.0.0"

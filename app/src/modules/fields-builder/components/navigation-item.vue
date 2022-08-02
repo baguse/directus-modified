@@ -29,10 +29,11 @@
 	<v-list-item
 		v-else-if="matchesSearch"
 		v-context-menu="hasContextMenu ? 'contextMenu' : null"
-		:to="to"
 		:value="collection.collection"
 		:class="{ hidden: collection.meta?.hidden }"
+		style="cursor: pointer"
 		query
+		:to="`/fields-builder/${collection.collection}`"
 	>
 		<navigation-item-content
 			:search="search"
@@ -53,20 +54,20 @@
 					<v-text-overflow :text="t('edit_collection')" />
 				</v-list-item-content>
 			</v-list-item>
+			<v-list-item clickable :to="`/content/${collection.collection}`">
+				<v-list-item-icon>
+					<v-icon name="box" />
+				</v-list-item-icon>
+				<v-list-item-content>
+					<v-text-overflow :text="t('goto_collection_content')" />
+				</v-list-item-content>
+			</v-list-item>
 			<v-list-item v-if="moduleEnabled['erd-viewer']" clickable :to="`/erd-viewer/${collection.collection}`">
 				<v-list-item-icon>
 					<v-icon name="device_hub" />
 				</v-list-item-icon>
 				<v-list-item-content>
 					<v-text-overflow :text="t('goto_collection_erd')" />
-				</v-list-item-content>
-			</v-list-item>
-			<v-list-item v-if="moduleEnabled['fields-builder']" clickable :to="`/fields-builder/${collection.collection}`">
-				<v-list-item-icon>
-					<v-icon name="memory" />
-				</v-list-item-icon>
-				<v-list-item-content>
-					<v-text-overflow :text="t('goto_collection_fields_builder')" />
 				</v-list-item-content>
 			</v-list-item>
 		</v-list>
@@ -101,7 +102,8 @@ export default defineComponent({
 			default: null,
 		},
 	},
-	setup(props) {
+	emits: ['select-collection'],
+	setup(props, context) {
 		const { t } = useI18n();
 
 		const { isAdmin } = useUserStore();
@@ -169,6 +171,7 @@ export default defineComponent({
 			isAdmin,
 			t,
 			hasContextMenu,
+			selectCollection,
 			moduleEnabled,
 		};
 
@@ -186,6 +189,10 @@ export default defineComponent({
 
 		function getChildBookmarks(collection: Collection) {
 			return presetsStore.bookmarks.filter((bookmark) => bookmark.collection === collection.collection);
+		}
+
+		function selectCollection(collection: string) {
+			context.emit('select-collection', collection);
 		}
 	},
 });
