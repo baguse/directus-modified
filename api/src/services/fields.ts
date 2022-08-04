@@ -494,75 +494,77 @@ export class FieldsService {
 							.where('collection', collection)
 							.whereNot('field', field.field)
 							.where('unique_combination', true);
-						if (isSoftDelete) {
-							const query = this.knex
-								.count(field.field, { as: 'count' })
-								.from(collection)
-								.where(deletedAtField, null)
-								.orderBy('count', 'desc');
+						if (uniqueCombinations.length) {
+							if (isSoftDelete) {
+								const query = this.knex
+									.count(field.field, { as: 'count' })
+									.from(collection)
+									.where(deletedAtField, null)
+									.orderBy('count', 'desc');
 
-							if (clientDB === 'mssql') {
-								const fieldNames: string[] = [];
-								const groupBys: string[] = [];
-								for (const uniqueCombination of uniqueCombinations) {
-									const fieldConfig = fields[uniqueCombination.field];
-									if (fieldConfig) {
-										if (fieldConfig.type == 'string') {
-											fieldNames.push(
-												`[${fieldConfig.field}] COLLATE SQL_Latin1_General_CP1_CS_AS as [${fieldConfig.field}]`
-											);
-											groupBys.push(`[${fieldConfig.field}] COLLATE SQL_Latin1_General_CP1_CS_AS`);
-										} else {
-											fieldNames.push(`[${fieldConfig.field}]`);
-											groupBys.push(`[${fieldConfig.field}]`);
+								if (clientDB === 'mssql') {
+									const fieldNames: string[] = [];
+									const groupBys: string[] = [];
+									for (const uniqueCombination of uniqueCombinations) {
+										const fieldConfig = fields[uniqueCombination.field];
+										if (fieldConfig) {
+											if (fieldConfig.type == 'string') {
+												fieldNames.push(
+													`[${fieldConfig.field}] COLLATE SQL_Latin1_General_CP1_CS_AS as [${fieldConfig.field}]`
+												);
+												groupBys.push(`[${fieldConfig.field}] COLLATE SQL_Latin1_General_CP1_CS_AS`);
+											} else {
+												fieldNames.push(`[${fieldConfig.field}]`);
+												groupBys.push(`[${fieldConfig.field}]`);
+											}
 										}
 									}
+									query.select(this.knex.raw(fieldNames.join(', ')));
+									query.groupByRaw(groupBys.join(', '));
+								} else {
+									const fieldNames = uniqueCombinations.map((field) => field.field);
+									query.select(fieldNames).groupBy(fieldNames);
 								}
-								query.select(this.knex.raw(fieldNames.join(', ')));
-								query.groupByRaw(groupBys.join(', '));
+
+								counts = (await query) as ICountUnique[];
 							} else {
-								const fieldNames = uniqueCombinations.map((field) => field.field);
-								query.select(fieldNames).groupBy(fieldNames);
-							}
+								const query = this.knex.count(field.field, { as: 'count' }).from(collection).orderBy('count', 'desc');
 
-							counts = (await query) as ICountUnique[];
-						} else {
-							const query = this.knex.count(field.field, { as: 'count' }).from(collection).orderBy('count', 'desc');
-
-							if (clientDB === 'mssql') {
-								const fieldNames: string[] = [];
-								const groupBys: string[] = [];
-								for (const uniqueCombination of uniqueCombinations) {
-									const fieldConfig = fields[uniqueCombination.field];
-									if (fieldConfig) {
-										if (fieldConfig.type == 'string') {
-											fieldNames.push(
-												`[${fieldConfig.field}] COLLATE SQL_Latin1_General_CP1_CS_AS as [${fieldConfig.field}]`
-											);
-											groupBys.push(`[${fieldConfig.field}] COLLATE SQL_Latin1_General_CP1_CS_AS`);
-										} else {
-											fieldNames.push(`[${fieldConfig.field}]`);
-											groupBys.push(`[${fieldConfig.field}]`);
+								if (clientDB === 'mssql') {
+									const fieldNames: string[] = [];
+									const groupBys: string[] = [];
+									for (const uniqueCombination of uniqueCombinations) {
+										const fieldConfig = fields[uniqueCombination.field];
+										if (fieldConfig) {
+											if (fieldConfig.type == 'string') {
+												fieldNames.push(
+													`[${fieldConfig.field}] COLLATE SQL_Latin1_General_CP1_CS_AS as [${fieldConfig.field}]`
+												);
+												groupBys.push(`[${fieldConfig.field}] COLLATE SQL_Latin1_General_CP1_CS_AS`);
+											} else {
+												fieldNames.push(`[${fieldConfig.field}]`);
+												groupBys.push(`[${fieldConfig.field}]`);
+											}
 										}
 									}
+									query.select(this.knex.raw(fieldNames.join(', ')));
+									query.groupByRaw(groupBys.join(', '));
+								} else {
+									const fieldNames = uniqueCombinations.map((field) => field.field);
+									query.select([field.field, ...fieldNames]).groupBy([field.field, ...fieldNames]);
 								}
-								query.select(this.knex.raw(fieldNames.join(', ')));
-								query.groupByRaw(groupBys.join(', '));
-							} else {
-								const fieldNames = uniqueCombinations.map((field) => field.field);
-								query.select([field.field, ...fieldNames]).groupBy([field.field, ...fieldNames]);
+								counts = (await query) as ICountUnique[];
 							}
-							counts = (await query) as ICountUnique[];
-						}
-						for (const { count, ...uniqueColumns } of counts) {
-							const counter = count ? Number(count) : 0;
+							for (const { count, ...uniqueColumns } of counts) {
+								const counter = count ? Number(count) : 0;
 
-							if (counter > 1) {
-								throw new InvalidPayloadException(
-									`Failed to edit: Combination Field [${Object.keys(uniqueColumns).join(
-										','
-									)}] has ${counter} duplicate values`
-								);
+								if (counter > 1) {
+									throw new InvalidPayloadException(
+										`Failed to edit: Combination Field [${Object.keys(uniqueColumns).join(
+											','
+										)}] has ${counter} duplicate values`
+									);
+								}
 							}
 						}
 					}
