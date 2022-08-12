@@ -658,7 +658,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 					if (Number(count) > 1) throw errs;
 				}
 			} else if (keys.length === 1) {
-				const queryCurrentData = this.knex(this.collection).select('*');
+				const queryCurrentData = this.knex(this.collection).select('*').where(primaryKeyField, keys[0]);
 				const query = this.knex(this.collection).select('*').first();
 				if (isSoftDelete) {
 					queryCurrentData.where(deletedAtField, null);
@@ -668,7 +668,10 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				if (currentData) {
 					const errs: RecordNotUniqueCombinationException[] = [];
 					for (const uniqueCombinationField of uniqueCombinationFields) {
-						const uniqueData = data[uniqueCombinationField] || currentData[uniqueCombinationField];
+						const uniqueData =
+							typeof data[uniqueCombinationField] == 'undefined'
+								? currentData[uniqueCombinationField]
+								: data[uniqueCombinationField];
 						query.where(uniqueCombinationField, uniqueData);
 						errs.push(
 							new RecordNotUniqueCombinationException(uniqueCombinationField, {

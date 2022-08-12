@@ -11,7 +11,7 @@
 		</template>
 
 		<template #navigation>
-			<Navigation :current-collection="currentCollectionName" @select-collection="selectCollection($event)" />
+			<Navigation :current-collection="currentCollectionName" />
 		</template>
 
 		<template #actions></template>
@@ -30,7 +30,7 @@
 			</div>
 			<div class="col-5 ml-15 mr-9" style="max-width: 100vh !important; overflow-x: scroll">
 				<span class="label">Field List</span>
-				<v-checkbox v-model="useWildCard">Use Wildcard</v-checkbox>
+				<v-checkbox v-model="useWildCard" @change="updateUrlValue()">Use Wildcard</v-checkbox>
 				<v-table :items="filteredFields" :headers="headers" class="mt-6" :showResize="true">
 					<template #[`item.fieldName`]="{ item }">{{ getFieldDisplayName(item.name) }}</template>
 					<template #[`item.useWildcard`]="{ item }">
@@ -61,6 +61,15 @@
 			</div>
 		</div>
 		<div class="flex-container mt-15 ml-15 mb-15">
+			<v-input
+				v-model="url"
+				v-tooltip="'Press enter to process'"
+				small
+				placeholder="Input your url"
+				@keypress.enter="editUrl"
+			/>
+		</div>
+		<div class="flex-container mt-15 ml-15 mb-15">
 			<div class="col-5" style="max-width: 100vh">
 				<span class="label">Result</span>
 				<v-button class="ml-9" x-small primary @click="tryIt">Try</v-button>
@@ -80,7 +89,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, Ref, ref, computed, watch } from 'vue';
+import { defineComponent, Ref, ref, computed, watch, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { md } from '@/utils/md';
 import { useCollectionsStore, useFieldsStore, useRelationsStore } from '@/stores/';
@@ -91,7 +100,6 @@ import { extractFieldFromFunction } from '@/utils/extract-field-from-function';
 import { Relation, Field } from '@directus/shared/types';
 import { getRelationType } from '@directus/shared/utils';
 import api from '@/api';
-import useClipboard from '@/composables/use-clipboard';
 import { notify } from '@/utils/notify';
 
 export default defineComponent({
@@ -111,7 +119,6 @@ export default defineComponent({
 		const { allCollections } = useCollectionsStore();
 		const fieldsStore = useFieldsStore();
 		const relationsStore = useRelationsStore();
-		const { copyToClipboard } = useClipboard();
 
 		const { t } = useI18n();
 
@@ -166,7 +173,9 @@ export default defineComponent({
 
 		const response = ref('{}');
 
-		const collectionName = allCollections.length > 0 ? ref(allCollections[0].collection) : ref('');
+		const defaultCollectionName = allCollections.length > 0 ? ref(allCollections[0].collection) : ref('');
+
+		const newCollectionName = ref('');
 
 		const headers: HeaderRaw[] = [
 			{
@@ -189,13 +198,37 @@ export default defineComponent({
 			},
 		];
 
-		const currentCollectionName = computed(() => {
-			return props.collection || collectionName.value;
-		});
+		const collectionNameFromProps = toRefs(props).collection;
 
-		watch(currentCollectionName, () => {
+		watch(collectionNameFromProps, () => {
+			newCollectionName.value = props.collection;
 			fields.value = [];
 			response.value = '';
+			wildCards.value = {};
+		});
+
+		watch(useWildCard, () => {
+			updateUrlValue();
+		});
+
+		const currentCollectionName = computed(() => {
+			return newCollectionName.value || props.collection || defaultCollectionName.value;
+		});
+
+		const newUrl = ref('');
+
+		const url = computed({
+			get() {
+				const fieldNameList = fieldNames.value.map((fieldName: string) => {
+					const useWildcard = wildCards.value[fieldName];
+					if (useWildcard) return `${fieldName}.*`;
+					return fieldName;
+				});
+				return `/items/${currentCollectionName.value}?fields=${fieldNameList.join(',')}`;
+			},
+			set(value: string) {
+				newUrl.value = value;
+			},
 		});
 
 		return {
@@ -203,7 +236,6 @@ export default defineComponent({
 			md,
 			addField,
 			selectCollection,
-			collectionName,
 			fields,
 			removeField,
 			headers,
@@ -219,37 +251,45 @@ export default defineComponent({
 			tryIt,
 			useWildCard,
 			currentCollectionName,
+			url,
+			editUrl,
+			newUrl,
+			updateUrlValue,
 		};
 
-		function addField(field: string) {
+		function addField(field: string, currrentUseWildcard = false) {
 			const fieldConfig = fieldsStore.getField(currentCollectionName.value, field);
 			let fieldRelation: string[] = [];
-			if (fieldConfig) {
+			if (fieldConfig && !fieldNames.value.includes(field)) {
 				fieldRelation = getRelatedCollections(fieldConfig);
+				const hasChildren = !!fieldRelation.length;
+
+				fields.value = [
+					...fields.value,
+					{
+						name: field,
+						hasChildren,
+						useWildcard: currrentUseWildcard,
+					},
+				];
+
+				if (hasChildren) wildCards.value[field] = currrentUseWildcard;
+
+				updateUrlValue();
 			}
-
-			const hasChildren = !!fieldRelation.length;
-
-			fields.value = [
-				...fields.value,
-				{
-					name: field,
-					hasChildren,
-				},
-			];
-
-			if (hasChildren) wildCards.value[field] = false;
 		}
 
 		function removeField(fieldKey: string) {
 			fields.value = fields.value.filter((field) => field.name !== fieldKey);
 			if (fields.value.length <= MAX_ITEM) page.value = 1;
+			updateUrlValue();
 		}
 
 		function selectCollection(collection: string) {
-			collectionName.value = collection;
+			newCollectionName.value = collection;
 			fields.value = [];
-			response.value = '';
+			response.value = '{}';
+			wildCards.value = {};
 		}
 
 		function getFieldDisplayName(fieldKey: string) {
@@ -322,8 +362,12 @@ export default defineComponent({
 				if (data[0]) {
 					response.value = JSON.stringify(data[0], null, 2);
 				}
-				copyToClipboard(`/items/${currentCollectionName.value}?fields=${fieldNames}`, {
-					success: 'Success & Path copied to clipboard',
+				// copyToClipboard(`/items/${currentCollectionName.value}?fields=${fieldNames}`, {
+				// 	success: 'Success & Path copied to clipboard',
+				// });
+				notify({
+					title: 'Succes',
+					type: 'success',
 				});
 			} catch {
 				notify({
@@ -331,6 +375,81 @@ export default defineComponent({
 					type: 'error',
 				});
 			}
+		}
+
+		function editUrl() {
+			try {
+				const urlData = new URL(`http://localhost${newUrl.value}`);
+
+				const query = urlData.search.replace('?', '');
+
+				const queryArr = query.split('&');
+
+				const currentFieldNames: string[] = [];
+
+				for (const queryData of queryArr) {
+					const fieldQuery = queryData.split('=');
+					if (fieldQuery[0] == 'fields[]') {
+						currentFieldNames.push(fieldQuery[1]);
+					}
+				}
+
+				const collectionArr = urlData.pathname.split('/items/');
+				if (collectionArr.length <= 1) return;
+				const [_, collectionName] = collectionArr;
+
+				selectCollection(collectionName);
+
+				let fieldsQuery = urlData.searchParams.get('fields') || '';
+
+				if (currentFieldNames.length) {
+					if (fieldsQuery) fieldsQuery += `,${currentFieldNames.join(',')}`;
+					else fieldsQuery = currentFieldNames.join(',');
+				}
+
+				if (fieldsQuery) {
+					const fieldsArr = fieldsQuery.split(',');
+					let wildCard = false;
+					for (const field of fieldsArr) {
+						if (field == '*') {
+							wildCard = true;
+						} else {
+							if (field) {
+								const generatedFieldName = field.split('.');
+								const lastField = generatedFieldName.pop();
+								let currentUseWildcard = false;
+								if (lastField == '*') {
+									currentUseWildcard = true;
+								} else if (lastField) {
+									generatedFieldName.push(lastField);
+								}
+								addField(
+									generatedFieldName.length ? generatedFieldName.join('.') : (lastField as string),
+									currentUseWildcard
+								);
+							}
+						}
+					}
+
+					useWildCard.value = wildCard;
+
+					updateUrlValue();
+				}
+			} catch (_e) {
+				notify({
+					title: 'Failed to parse url',
+					type: 'error',
+				});
+			}
+		}
+
+		function updateUrlValue() {
+			const fieldNameList = fieldNames.value.map((fieldName: string) => {
+				const useWildcard = wildCards.value[fieldName];
+				if (useWildcard) return `${fieldName}.*`;
+				return fieldName;
+			});
+			newUrl.value = `/items/${currentCollectionName.value}?fields=${fieldNameList.join(',')}`;
 		}
 	},
 });

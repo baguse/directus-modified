@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-text-v-html-on-component -->
 <template>
 	<div class="content-navigation-wrapper">
 		<div v-if="showSearch" class="search-input">
@@ -17,7 +16,7 @@
 			<v-list-group v-for="(rootItem, schemaName) in rootItems" :key="schemaName" no-action>
 				<template #activator>
 					<v-list-item-content>
-						<v-list-item-title v-text="schemaName.toString().toUpperCase()"></v-list-item-title>
+						<span>{{ schemaName.toString().toUpperCase() }}</span>
 					</v-list-item-content>
 				</template>
 
@@ -60,8 +59,7 @@ export default defineComponent({
 			default: null,
 		},
 	},
-	emits: ['select-collection'],
-	setup(props, context) {
+	setup(props) {
 		const { t } = useI18n();
 		const { currentCollection } = toRefs(props);
 		const { activeGroups, showHidden } = useNavigation(currentCollection);

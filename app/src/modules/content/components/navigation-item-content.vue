@@ -4,7 +4,7 @@
 	</v-list-item-icon>
 	<v-list-item-content>
 		<v-text-overflow :text="name" :highlight="search"></v-text-overflow>
-		<v-chip-group active-class="blue" column>
+		<div active-class="blue" column>
 			<v-chip
 				v-for="(tag, i) in tags"
 				:key="i"
@@ -14,7 +14,7 @@
 			>
 				{{ tag }}
 			</v-chip>
-		</v-chip-group>
+		</div>
 	</v-list-item-content>
 </template>
 

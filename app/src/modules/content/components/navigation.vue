@@ -16,7 +16,7 @@
 			<v-list-group v-for="(rootItem, schemaName) in rootItems" :key="schemaName" no-action>
 				<template #activator>
 					<v-list-item-content>
-						<v-list-item-title v-text="schemaName.toString().toUpperCase()"></v-list-item-title>
+						<span>{{ schemaName.toString().toUpperCase() }}</span>
 					</v-list-item-content>
 				</template>
 

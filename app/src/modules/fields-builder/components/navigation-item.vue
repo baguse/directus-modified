@@ -38,8 +38,8 @@
 		<navigation-item-content
 			:search="search"
 			:name="collection.name"
-			:icon="collection.meta?.icon"
-			:color="collection.meta?.color"
+			:icon="collection.meta?.icon || undefined"
+			:color="collection.meta?.color || undefined"
 			:tags="collection.meta?.tags"
 		/>
 	</v-list-item>
@@ -80,7 +80,6 @@ import { Collection } from '@/types';
 import { Preset } from '@directus/shared/types';
 import { useUserStore, useCollectionsStore, usePresetsStore, useSettingsStore } from '@/stores';
 import NavigationItemContent from './navigation-item-content.vue';
-// import NavigationBookmark from './navigation-bookmark.vue';
 import { useI18n } from 'vue-i18n';
 import { orderBy } from 'lodash';
 import { MODULE_BAR_DEFAULT } from '@/constants';
@@ -102,8 +101,7 @@ export default defineComponent({
 			default: null,
 		},
 	},
-	emits: ['select-collection'],
-	setup(props, context) {
+	setup(props) {
 		const { t } = useI18n();
 
 		const { isAdmin } = useUserStore();
@@ -171,7 +169,6 @@ export default defineComponent({
 			isAdmin,
 			t,
 			hasContextMenu,
-			selectCollection,
 			moduleEnabled,
 		};
 
@@ -189,10 +186,6 @@ export default defineComponent({
 
 		function getChildBookmarks(collection: Collection) {
 			return presetsStore.bookmarks.filter((bookmark) => bookmark.collection === collection.collection);
-		}
-
-		function selectCollection(collection: string) {
-			context.emit('select-collection', collection);
 		}
 	},
 });

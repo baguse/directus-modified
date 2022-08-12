@@ -16,6 +16,16 @@ import hljsGraphQL from './src/utils/hljs-graphql';
 
 hljs.registerLanguage('graphql', hljsGraphQL);
 
+import { dependencies } from './package.json';
+const renderChunks = (deps) => {
+	let chunks = {};
+	Object.keys(deps).forEach((key) => {
+		if (['pinia', 'lodash', 'vue-i18n', 'vue-router', 'v-viewer'].includes(key)) return;
+		chunks[key] = [key];
+	});
+	return chunks;
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [
@@ -136,6 +146,17 @@ export default defineConfig({
 		},
 		fs: {
 			allow: [searchForWorkspaceRoot(process.cwd()), '/admin/'],
+		},
+	},
+	build: {
+		sourcemap: false,
+		rollupOptions: {
+			output: {
+				manualChunks: {
+					vendor: ['pinia', 'lodash', 'vue-i18n', 'vue-router', 'v-viewer'],
+					...renderChunks(dependencies),
+				},
+			},
 		},
 	},
 });
