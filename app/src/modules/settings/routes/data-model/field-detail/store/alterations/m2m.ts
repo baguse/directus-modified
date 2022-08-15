@@ -189,7 +189,7 @@ export function generateCollections(updates: StateUpdates, state: State, { getCu
 
 	const collectionInfo = useCollectionsStore().getCollection(getCurrent('collection'));
 
-	const schemaName = collectionInfo?.schema?.schema || 'public';
+	const schemaName = collectionInfo?.meta?.schema || 'public';
 
 	if (!junctionCollection || collectionExists(junctionCollection)) {
 		set(updates, 'collections.junction', undefined);
