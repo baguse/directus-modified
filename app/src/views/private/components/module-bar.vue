@@ -50,14 +50,12 @@ export default defineComponent({
 		const registeredModuleIDs = computed(() => registeredModules.value.map((module) => module.id));
 
 		const modules = computed(() => {
-			if (!settingsStore.settings) return [];
-
 			let settings = MODULE_BAR_DEFAULT;
 
-			if (typeof settingsStore.settings.module_bar == 'string') {
+			if (typeof settingsStore?.settings?.module_bar == 'string') {
 				settings = JSON.parse(settingsStore.settings.module_bar);
-			} else {
-				settings = settingsStore.settings.module_bar;
+			} else if (typeof settingsStore?.settings?.module_bar == 'object') {
+				settings = settingsStore?.settings?.module_bar || [];
 			}
 
 			return settings
