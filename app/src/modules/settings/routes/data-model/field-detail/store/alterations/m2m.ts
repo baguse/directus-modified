@@ -187,6 +187,10 @@ export function generateCollections(updates: StateUpdates, state: State, { getCu
 	const junctionCollection = getCurrent('relations.o2m.collection');
 	const relatedCollection = getCurrent('relations.m2o.related_collection');
 
+	const collectionInfo = useCollectionsStore().getCollection(getCurrent('collection'));
+
+	const schemaName = collectionInfo?.schema?.schema || 'public';
+
 	if (!junctionCollection || collectionExists(junctionCollection)) {
 		set(updates, 'collections.junction', undefined);
 	} else {
@@ -195,6 +199,7 @@ export function generateCollections(updates: StateUpdates, state: State, { getCu
 			meta: {
 				hidden: true,
 				icon: 'import_export',
+				schema: schemaName,
 			},
 			schema: {
 				name: junctionCollection,
