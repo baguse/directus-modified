@@ -1996,10 +1996,10 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@directus/app@npm:@mv-data-core/app@9.12.6":
-  version "9.12.6"
-  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.12.6.tgz#e0b7cbdc8deea55c3e80ec2dc1d75a23c303ee0c"
-  integrity sha512-fBqq6tR2JqItFHD7aKiVfxFoPFnz6Mli3EH+lnLYf9F40ICkFBouWQ1GS9PrjqR1j9oix5cCjrauUOnyIHwnlQ==
+"@directus/app@npm:@mv-data-core/app@9.12.8":
+  version "9.12.8"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.12.8.tgz#b4bad109e08c70cb3fbaa467436c479e7677b18e"
+  integrity sha512-ZCrEemU4ozjKd8Qi8waxxYrUv/dDPLpuDkRovXhaWG+LMj37pqo+pX5KwsrPlV/RDZ6ucx0wb2QpZ6JawToEHw==
   dependencies:
     bytes "^3.1.2"
     color "^4.2.3"
