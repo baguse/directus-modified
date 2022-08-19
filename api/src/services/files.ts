@@ -302,6 +302,21 @@ export class FilesService extends ItemsService {
 			await this.cache.clear();
 		}
 
+		if (opts?.emitEvents !== false) {
+			emitter.emitAction(
+				'files.delete',
+				{
+					keys: keys,
+					collection: this.collection,
+				},
+				{
+					database: this.knex,
+					schema: this.schema,
+					accountability: this.accountability,
+				}
+			);
+		}
+
 		return keys;
 	}
 
