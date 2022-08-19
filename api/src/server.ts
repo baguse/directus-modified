@@ -13,9 +13,21 @@ import emitter from './emitter';
 import checkForUpdate from 'update-check';
 import pkg from '../package.json';
 import { getConfigFromEnv } from './utils/get-config-from-env';
+import socketIO from 'socket.io';
+import { getExtensionManager } from './extensions';
 
 export async function createServer(): Promise<http.Server> {
 	const server = http.createServer(await createApp());
+
+	if (env.WEBSOCKET_ENABLED) {
+		const io = new socketIO.Server(server, {
+			cors: {
+				origin: env.WEBSOCKET_CORS,
+				methods: ['GET', 'POST'],
+			},
+		});
+		getExtensionManager().registerWebsockets(io);
+	}
 
 	Object.assign(server, getConfigFromEnv('SERVER_'));
 
@@ -142,6 +154,9 @@ export async function startServer(): Promise<void> {
 				});
 
 			logger.info(`Server started at http://${host}:${port}`);
+			if (env.WEBSOCKET_ENABLED) {
+				logger.info(`Websocket started at http://${host}:${port}/socket.io`);
+			}
 
 			emitter.emitAction(
 				'server.start',

@@ -159,6 +159,10 @@ const allowedEnvironmentVars = [
 	// limits & optimization
 	'RELATIONAL_BATCH_SIZE',
 	'EXPORT_BATCH_SIZE',
+	// websocket
+	'WEBSOCKET_ENABLED',
+	// elastic
+	'ELASTIC_SEARCH_ENABLED',
 ].map((name) => new RegExp(`^${name}$`));
 
 const acceptedEnvTypes = ['string', 'number', 'regex', 'array', 'json'];
@@ -242,12 +246,16 @@ const defaults: Record<string, any> = {
 
 	REDIS_HOST: 'localhost',
 	REDIS_PORT: 6379,
-	
+
 	EXPORT_BATCH_SIZE: 5000,
 
 	FILE_METADATA_ALLOW_LIST: 'ifd0.Make,ifd0.Model,exif.FNumber,exif.ExposureTime,exif.FocalLength,exif.ISO',
 
 	GRAPHQL_INTROSPECTION: true,
+
+	WEBSOCKET_ENABLED: false,
+
+	ELASTIC_SEARCH_ENABLED: false,
 };
 
 // Allows us to force certain environment variable into a type, instead of relying
@@ -268,6 +276,10 @@ const typeMap: Record<string, string> = {
 	FILE_METADATA_ALLOW_LIST: 'array',
 
 	GRAPHQL_INTROSPECTION: 'boolean',
+
+	WEBSOCKET_ENABLED: 'boolean',
+
+	ELASTIC_SEARCH_ENABLED: 'boolean',
 };
 
 let env: Record<string, any> = {

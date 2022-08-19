@@ -56,6 +56,10 @@ import { EventHandler } from './types';
 import { JobQueue } from './utils/job-queue';
 import { ServerResponse } from 'http';
 import { BaseException } from '@directus/shared/exceptions';
+import { Server, Socket } from 'socket.io';
+import isDirectusJWT from './utils/is-directus-jwt';
+import { verifyAccessJWT } from './utils/jwt';
+import { InvalidCredentialsException, TokenExpiredException } from './exceptions';
 
 let extensionManager: ExtensionManager | undefined;
 
@@ -102,6 +106,8 @@ class ExtensionManager {
 	private watcher: FSWatcher | null = null;
 
 	private apiDocs: { paths: any; schemas: any[] } = { paths: {}, schemas: [] };
+
+	private socket?: Server;
 
 	constructor() {
 		this.options = defaultOptions;
@@ -470,6 +476,7 @@ class ExtensionManager {
 			emitter: this.apiEmitter,
 			logger: logger as any,
 			getSchema,
+			socket: this.socket,
 		});
 
 		this.apiExtensions.hooks.push(hookHandler);
@@ -606,6 +613,7 @@ class ExtensionManager {
 										emitter: this.apiEmitter,
 										logger,
 										getSchema,
+										socket: this.socket,
 									};
 								}
 
@@ -735,6 +743,7 @@ class ExtensionManager {
 				emitter: this.apiEmitter,
 				logger: logger as any,
 				getSchema,
+				socket: this.socket,
 			});
 		}
 
@@ -798,5 +807,95 @@ class ExtensionManager {
 		flowManager.clearOperations();
 
 		this.apiExtensions.operations = [];
+	}
+
+	public registerWebsockets(socketServer: Server): void {
+		this.socket = socketServer;
+
+		this.socket.use(async (socket, next) => {
+			const authHeader = socket.handshake.headers.authorization;
+
+			if (authHeader) {
+				const token = authHeader.split(' ')[1];
+				if (isDirectusJWT(token)) {
+					try {
+						const payload = verifyAccessJWT(token, env.SECRET);
+						socket.data.accountability = {
+							share: payload.share,
+							share_scope: payload.share_scope,
+							user: payload.id,
+							role: payload.role,
+							admin: payload.admin_access === true || payload.admin_access == 1,
+							app: payload.app_access === true || payload.app_access == 1,
+						};
+					} catch (e) {
+						next(new TokenExpiredException('Token expired.'));
+					}
+				} else {
+					// Try finding the user with the provided token
+					const database = getDatabase();
+					const user = await database
+						.select(
+							'directus_users.id',
+							'directus_users.role',
+							'directus_roles.admin_access',
+							'directus_roles.app_access'
+						)
+						.from('directus_users')
+						.leftJoin('directus_roles', 'directus_users.role', 'directus_roles.id')
+						.where({
+							'directus_users.token': token,
+							status: 'active',
+						})
+						.first();
+
+					if (!user) {
+						next(new InvalidCredentialsException());
+					}
+
+					socket.data.accountability = {
+						user: user.id,
+						role: user.role,
+						admin: user.admin_access === true || user.admin_access == 1,
+						app: user.app_access === true || user.app_access == 1,
+					};
+				}
+			}
+
+			next();
+		});
+
+		this.socket.on('connection', (socket) => {
+			logger.info(`Client [${(socket.client as any).id}] connected`);
+			socket.on('disconnect', function () {
+				logger.info(`Client [${(socket.client as any).id}] disconnected`);
+			});
+
+			const extensionPath = env.EXTENSIONS_PATH;
+			const websocketPath = path.resolve(path.join(extensionPath, 'websockets'));
+
+			if (fse.pathExistsSync(websocketPath)) {
+				for (const websocketFileExtension of fse.readdirSync(websocketPath)) {
+					const websocketFileExtensionPath = path.resolve(path.join(websocketPath, websocketFileExtension));
+					const websocketInstance = require(websocketFileExtensionPath);
+					try {
+						websocketInstance({
+							socketServer: this.socket,
+							socket,
+							services,
+							exceptions: { ...exceptions, ...sharedExceptions },
+							env,
+							database: getDatabase(),
+							emitter: this.apiEmitter,
+							logger: logger as any,
+							getSchema,
+						});
+						logger.info(`Extension webSocket [${websocketFileExtension}] loaded`);
+					} catch (e: any) {
+						logger.error(e);
+					}
+				}
+			}
+		});
 	}
 }

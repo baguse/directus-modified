@@ -30,6 +30,7 @@ import { Query } from './query';
 import { PermissionsAction } from './permissions';
 import { Item as AnyItem, PrimaryKey, MutationOptions } from './items';
 import { AbstractService, AbstractServiceOptions } from './services';
+import { Server } from 'socket.io';
 
 export type AppWithoutHybridExtensionType = typeof APP_WITHOUT_HYBRID_EXTENSION_TYPES[number];
 export type ApiWithoutHybridExtensionType = typeof API_WITHOUT_HYBRID_EXTENSION_TYPES[number];
@@ -283,6 +284,7 @@ export type ApiExtensionContext = {
 	env: Record<string, any>;
 	logger: Logger;
 	getSchema: (options?: { accountability?: Accountability; database?: Knex }) => Promise<SchemaOverview>;
+	socket?: Server;
 };
 
 export type ExtensionOptionsContext = {

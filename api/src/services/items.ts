@@ -353,6 +353,8 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	 * Get items by query
 	 */
 	async readByQuery(query: Query, opts?: QueryOptions): Promise<Item[]> {
+		if (!this.schema.collections[this.collection])
+			throw new InvalidPayloadException(`Collection ${this.collection} doesn't exist`);
 		const { isSoftDelete, fields } = this.schema.collections[this.collection];
 
 		let queryData: Partial<Query> = { ...query };
