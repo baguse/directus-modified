@@ -66,3 +66,7 @@ columns:
     type: string
     nullable: true
     default: null
+  is_submission_form:
+    type: boolean
+    nullable: true
+    default: false

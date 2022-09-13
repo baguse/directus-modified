@@ -1996,10 +1996,10 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@directus/app@npm:@mv-data-core/app@9.12.9":
-  version "9.12.9"
-  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.12.9.tgz#16b1b503c2fb1ad107d8c190e88981265986e079"
-  integrity sha512-PkP6sk4RPg2ewpnmOeaYLpraDuJhTk8ZlgypeMKk2m9ZFjBKPU2zSlIq6kddN7wJQrTDyzp4/eKbVRSsF+h5Yw==
+"@directus/app@npm:@mv-data-core/app@9.12.10":
+  version "9.12.10"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.12.10.tgz#a81dc6f50f5ef5c4ab1228653cfeceb0da148bd2"
+  integrity sha512-i/xsJLGfmxjlbpSCvZpzBVlFB0sC+h86uXbVAXp01CMsbGjFm1k+/SxN1ow/GpuLb5KBo6YO4EUSN9li/xNjUw==
   dependencies:
     bytes "^3.1.2"
     color "^4.2.3"
@@ -2155,10 +2155,30 @@
     vue-i18n "*"
     vue-router "*"
 
-"@directus/specs@npm:@mv-data-core/specs@9.12.0":
-  version "9.12.0"
-  resolved "https://registry.yarnpkg.com/@mv-data-core/specs/-/specs-9.12.0.tgz#8a55a8bec600e9ab83b762029309f1b44cb88a4a"
-  integrity sha512-Ta+tuTlbXt7WvD6f6FqvPZnvcSBs/E3I4wU7GZLnd8A+sGK8S1Nc1g/rVki/w79oEjT18nI/Al4Q1nJBJZ9mlA==
+"@directus/shared@npm:@mv-data-core/shared@9.12.3":
+  version "9.12.3"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/shared/-/shared-9.12.3.tgz#2ca60e3d70f33d11cf00574ae2ebaea9e7312436"
+  integrity sha512-GusxaQYuRXt+vlKP1tD2b+9oMo1zlmTEC7IB4413g0OVyoyPjOS7T83C4h8/oeIB1hHcKeWW/JozKDsfe6D/wg==
+  dependencies:
+    axios "*"
+    date-fns "2.24.0"
+    express "^4.17.1"
+    fs-extra "10.0.0"
+    geojson "^0.5.0"
+    joi "17.4.2"
+    keyv "^4.0.3"
+    knex "^2.1.0"
+    knex-schema-inspector "1.7.3"
+    lodash "4.17.21"
+    pino "6.13.3"
+    vue "*"
+    vue-i18n "*"
+    vue-router "*"
+
+"@directus/specs@npm:@mv-data-core/specs@9.12.1":
+  version "9.12.1"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/specs/-/specs-9.12.1.tgz#ccf1dd1e38ec20836dde5965db45911d2fb7d2a6"
+  integrity sha512-4W6uPmvq1kwotStX5MH8EIeocyGFpAdLkk5KZcobtyEt+M2f5IdpPp4+6cv4wbkjcQw1NuOXrACYmijFc/+tWA==
   dependencies:
     openapi3-ts "^2.0.1"
 

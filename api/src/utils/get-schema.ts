@@ -98,8 +98,8 @@ async function getDatabaseSchema(
 			note: collectionMeta?.note || null,
 			sortField: collectionMeta?.sort_field || null,
 			accountability: collectionMeta ? collectionMeta.accountability : 'all',
-			isSoftDelete: collectionMeta.is_soft_delete || false,
-			schema: collectionMeta.schema || '',
+			isSoftDelete: collectionMeta?.is_soft_delete || false,
+			schema: collectionMeta?.schema || '',
 			fields: mapValues(schemaOverview[collection].columns, (column) => {
 				return {
 					field: column.column_name,

@@ -121,7 +121,7 @@ router.post(
 			throw new InvalidPayloadException(`"refresh_token" is required in either the JSON payload or Cookie`);
 		}
 
-		await authenticationService.logout(currentRefreshToken);
+		await authenticationService.logout(currentRefreshToken, accountability);
 
 		if (req.cookies[env.REFRESH_TOKEN_COOKIE_NAME]) {
 			res.clearCookie(env.REFRESH_TOKEN_COOKIE_NAME, {

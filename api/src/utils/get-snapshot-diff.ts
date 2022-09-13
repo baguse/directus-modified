@@ -100,8 +100,15 @@ export function getSnapshotDiff(current: Snapshot, after: Snapshot): SnapshotDif
 	 * When you delete a collection, we don't have to individually drop all the fields/relations as well
 	 */
 
-	const deletedCollections = diffedSnapshot.collections
-		.filter((collection) => collection.diff?.[0].kind === 'D')
+	/**
+	 * TODO: fix deleted collection on snapshot diff
+	 */
+	// const deletedCollections = diffedSnapshot.collections
+	// 	.filter((collection) => collection.diff?.[0].kind === 'D')
+	// 	.map(({ collection }) => collection);
+
+	const deletedCollections = current.collections
+		.filter((collection) => !after.collections.find((c) => c.collection == collection.collection))
 		.map(({ collection }) => collection);
 
 	diffedSnapshot.fields = diffedSnapshot.fields.filter(

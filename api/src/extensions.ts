@@ -877,8 +877,8 @@ class ExtensionManager {
 			if (fse.pathExistsSync(websocketPath)) {
 				for (const websocketFileExtension of fse.readdirSync(websocketPath)) {
 					const websocketFileExtensionPath = path.resolve(path.join(websocketPath, websocketFileExtension));
-					const websocketInstance = require(websocketFileExtensionPath);
 					try {
+						const websocketInstance = require(websocketFileExtensionPath);
 						websocketInstance({
 							socketServer: this.socket,
 							socket,
@@ -892,7 +892,7 @@ class ExtensionManager {
 						});
 						logger.info(`Extension webSocket [${websocketFileExtension}] loaded`);
 					} catch (e: any) {
-						logger.error(e);
+						logger.error(`Extension webSocket [${websocketFileExtension}] failed to load`);
 					}
 				}
 			}

@@ -1,4 +1,4 @@
-import { Type } from '@directus/shared/types';
+import { SettingsModuleBarLink, SettingsModuleBarModule, Type } from '@directus/shared/types';
 
 export const VALIDATION_TYPES = ['FAILED_VALIDATION', 'RECORD_NOT_UNIQUE', 'RECORD_NOT_UNIQUE_COMBINATION'];
 
@@ -43,7 +43,7 @@ export const COLLECTIONS_DENY_LIST = [
 	'directus_settings',
 ];
 
-export const MODULE_BAR_DEFAULT = [
+export const MODULE_BAR_DEFAULT: (SettingsModuleBarLink | SettingsModuleBarModule)[] = [
 	{
 		type: 'module',
 		id: 'content',

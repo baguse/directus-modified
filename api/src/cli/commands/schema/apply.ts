@@ -38,7 +38,16 @@ export async function apply(snapshotPath: string, options?: { yes: boolean; dryR
 			snapshot = parseJSON(fileContents) as Snapshot;
 		}
 
-		const currentSnapshot = await getSnapshot({ database });
+		let currentSnapshot: Snapshot;
+
+		const patch = !!snapshot.patch;
+
+		if (patch) {
+			const collections = snapshot.collections.map((c) => c.collection);
+			currentSnapshot = await getSnapshot({ database, collections });
+		} else {
+			currentSnapshot = await getSnapshot({ database });
+		}
 		const snapshotDiff = getSnapshotDiff(currentSnapshot, snapshot);
 
 		if (
@@ -71,6 +80,10 @@ export async function apply(snapshotPath: string, options?: { yes: boolean; dryR
 						}
 					} else if (diff[0]?.kind === 'D') {
 						message += `\n  - ${chalk.red('Delete')} ${collection}`;
+
+						if (diff[0]?.path && diff[0]?.path.length) {
+							message += ` => ${diff[0]?.path.join('.')}`;
+						}
 					} else if (diff[0]?.kind === 'N') {
 						message += `\n  - ${chalk.green('Create')} ${collection}`;
 					} else if (diff[0]?.kind === 'A') {
@@ -155,7 +168,7 @@ export async function apply(snapshotPath: string, options?: { yes: boolean; dryR
 			}
 		}
 
-		await applySnapshot(snapshot, { current: currentSnapshot, diff: snapshotDiff, database });
+		await applySnapshot(snapshot, { current: currentSnapshot, diff: snapshotDiff, database, patch });
 
 		logger.info(`Snapshot applied successfully`);
 

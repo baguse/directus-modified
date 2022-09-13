@@ -371,7 +371,7 @@ export class AuthenticationService {
 		};
 	}
 
-	async logout(refreshToken: string): Promise<void> {
+	async logout(refreshToken: string, data?: { ip: string; userAgent?: string }): Promise<void> {
 		const record = await this.knex
 			.select<User & Session>(
 				'u.id',
@@ -392,6 +392,17 @@ export class AuthenticationService {
 
 		if (record) {
 			const user = record;
+
+			if (this.accountability) {
+				await this.activityService.createOne({
+					action: Action.LOGOUT,
+					user: user.id,
+					ip: data?.ip,
+					user_agent: data?.userAgent,
+					collection: 'directus_users',
+					item: user.id,
+				});
+			}
 
 			const provider = getAuthProvider(user.provider);
 			await provider.logout(clone(user));

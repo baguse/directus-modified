@@ -8,6 +8,7 @@ export type Snapshot = {
 	collections: Collection[];
 	fields: SnapshotField[];
 	relations: SnapshotRelation[];
+	patch: boolean;
 };
 
 export type SnapshotField = Field & { meta: Omit<FieldMeta, 'id'> };

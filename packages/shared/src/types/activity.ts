@@ -7,4 +7,5 @@ export enum Action {
 	UPLOAD = 'upload',
 	LOGIN = 'login',
 	RUN = 'run',
+	LOGOUT = 'logout',
 }

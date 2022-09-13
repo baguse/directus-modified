@@ -1,6 +1,6 @@
 {
 	"name": "@mv-data-core/specs",
-	"version": "9.12.0",
+	"version": "9.12.1",
 	"description": "OpenAPI Specification of the MV Datacore API",
 	"main": "index.js",
 	"exports": {

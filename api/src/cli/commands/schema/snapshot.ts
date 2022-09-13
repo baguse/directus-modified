@@ -9,8 +9,10 @@ import { flushCaches } from '../../../cache';
 
 export async function snapshot(
 	snapshotPath: string,
-	options?: { yes: boolean; format: 'json' | 'yaml' }
+	options?: { yes: boolean; format: 'json' | 'yaml'; collection?: string[] }
 ): Promise<void> {
+	const collections = options?.collection;
+
 	const filename = path.resolve(process.cwd(), snapshotPath);
 
 	let snapshotExists: boolean;
@@ -40,7 +42,12 @@ export async function snapshot(
 
 	const database = getDatabase();
 
-	const snapshot = await getSnapshot({ database });
+	const snapshot = await getSnapshot({ database, collections });
+
+	logger.info('====================== SNAPSHOTING ======================');
+	logger.info(`Collections : ${snapshot.collections.length}`);
+	logger.info(`Fields : ${snapshot.fields.length}`);
+	logger.info(`Relations : ${snapshot.relations.length}`);
 
 	try {
 		if (options?.format === 'yaml') {

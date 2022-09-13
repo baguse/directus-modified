@@ -76,7 +76,7 @@ export default defineComponent({
 		watch(
 			() => serverStore.info?.project?.project_name,
 			(projectName) => {
-				document.title = projectName || 'Directus';
+				document.title = projectName || 'MV Data Core';
 			},
 			{ immediate: true }
 		);

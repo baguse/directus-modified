@@ -13,7 +13,7 @@ post:
           properties:
             email:
               type: string
-              example: admin@example.com
+              example: admin@machinevision.global
               description: Email address of the user you're retrieving the access token for.
             password:
               type: string

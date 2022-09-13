@@ -55,7 +55,9 @@ export default defineComponent({
 			if (typeof settingsStore?.settings?.module_bar == 'string') {
 				settings = JSON.parse(settingsStore.settings.module_bar);
 			} else if (typeof settingsStore?.settings?.module_bar == 'object') {
-				settings = settingsStore?.settings?.module_bar || [];
+				if (settingsStore?.settings?.module_bar?.length) {
+					settings = settingsStore?.settings?.module_bar;
+				}
 			}
 
 			return settings
