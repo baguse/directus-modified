@@ -1,6 +1,6 @@
 {
 	"name": "@mv-data-core/app",
-	"version": "9.12.10",
+	"version": "9.12.11",
 	"private": false,
 	"description": "MV Data Core is an Open-Source Headless CMS & API for Managing Custom Databases",
 	"author": "Rijk van Zanten <rijkvanzanten@me.com>",
@@ -125,6 +125,6 @@
 		"markdown-it-container": "^3.0.0",
 		"markdown-it-table-of-contents": "^0.6.0",
 		"v-viewer": "^3.0.10",
-    "dotenv": "^10.0.0"
+		"dotenv": "^10.0.0"
 	}
 }

@@ -1996,14 +1996,15 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@directus/app@npm:@mv-data-core/app@9.12.10":
-  version "9.12.10"
-  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.12.10.tgz#a81dc6f50f5ef5c4ab1228653cfeceb0da148bd2"
-  integrity sha512-i/xsJLGfmxjlbpSCvZpzBVlFB0sC+h86uXbVAXp01CMsbGjFm1k+/SxN1ow/GpuLb5KBo6YO4EUSN9li/xNjUw==
+"@directus/app@npm:@mv-data-core/app@9.12.11":
+  version "9.12.11"
+  resolved "https://registry.yarnpkg.com/@mv-data-core/app/-/app-9.12.11.tgz#d9ba35a1584994e885cb5760452b8d2e3f1d0bc4"
+  integrity sha512-4zSK2/uZwS0LGMc15t2lwvm4tdkA5+X3v5mzsdt2CAXBCoCeuLrjPJ6m0jvE69O79ERsC4UzeQwY24WvLts8CQ==
   dependencies:
     bytes "^3.1.2"
     color "^4.2.3"
     diff "^5.0.0"
+    dotenv "^10.0.0"
     geojson "^0.5.0"
     highlight.js "^11.4.0"
     markdown-it-anchor "^8.4.1"
