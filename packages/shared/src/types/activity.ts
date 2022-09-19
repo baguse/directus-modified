@@ -8,4 +8,6 @@ export enum Action {
 	LOGIN = 'login',
 	RUN = 'run',
 	LOGOUT = 'logout',
+	SOFTDELETE = 'softdelete',
+	RESTORE = 'restore',
 }

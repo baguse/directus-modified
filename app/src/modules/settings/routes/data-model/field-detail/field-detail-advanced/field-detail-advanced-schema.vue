@@ -68,6 +68,11 @@
 					<div class="label type-label">{{ t('on_update') }}</div>
 					<v-select v-model="onUpdateValue" :items="onUpdateOptions" />
 				</div>
+
+				<div class="field full">
+					<div class="label type-label">{{ t('on_delete') }}</div>
+					<v-select v-model="onDeleteValue" :items="onDeleteOptions" />
+				</div>
 			</template>
 
 			<div v-if="!isAlias && !isPrimaryKey && !isGenerated" class="field full">
@@ -273,6 +278,7 @@ export default defineComponent({
 
 		const { onCreateOptions, onCreateValue } = useOnCreate();
 		const { onUpdateOptions, onUpdateValue } = useOnUpdate();
+		const { onDeleteOptions, onDeleteValue } = useOnDelete();
 
 		const hasCreateUpdateTriggers = computed(() => {
 			return ['uuid', 'date', 'time', 'dateTime', 'timestamp'].includes(type.value) && localType.value !== 'file';
@@ -301,6 +307,8 @@ export default defineComponent({
 			onCreateValue,
 			onUpdateOptions,
 			onUpdateValue,
+			onDeleteOptions,
+			onDeleteValue,
 			hasCreateUpdateTriggers,
 			field,
 			isAlias,
@@ -479,6 +487,79 @@ export default defineComponent({
 			});
 
 			return { onUpdateSpecials, onUpdateOptions, onUpdateValue };
+		}
+
+		function useOnDelete() {
+			const onDeleteSpecials = ['date-deleted', 'user-deleted'];
+
+			const onDeleteOptions = computed(() => {
+				if (type.value === 'uuid') {
+					const options = [
+						{
+							text: t('do_nothing'),
+							value: null,
+						},
+						{
+							text: t('save_current_user_id'),
+							value: 'user-deleted',
+						},
+					];
+
+					if (localType.value === 'm2o' && relations.value.m2o?.related_collection === 'directus_users') {
+						return options.filter(({ value }) => [null, 'user-deleted'].includes(value));
+					}
+
+					return options;
+				} else if (['date', 'time', 'dateTime', 'timestamp'].includes(type.value!)) {
+					return [
+						{
+							text: t('do_nothing'),
+							value: null,
+						},
+						{
+							text: t('save_current_datetime'),
+							value: 'date-deleted',
+						},
+					];
+				}
+
+				return [];
+			});
+
+			const onDeleteValue = computed({
+				get() {
+					const specials = special.value ?? [];
+
+					for (const special of onDeleteSpecials) {
+						if (specials.includes(special)) {
+							return special;
+						}
+					}
+
+					return null;
+				},
+				set(newOption: string | null) {
+					// In case of previously persisted empty string
+					if (typeof special.value === 'string') {
+						special.value = [];
+					}
+
+					special.value = (special.value ?? []).filter(
+						(special: string) => onDeleteSpecials.includes(special) === false
+					);
+
+					if (newOption) {
+						special.value = [...(special.value ?? []), newOption];
+					}
+
+					// Prevent empty array saved as empty string
+					if (special.value && special.value.length === 0) {
+						special.value = null;
+					}
+				},
+			});
+
+			return { onDeleteSpecials, onDeleteOptions, onDeleteValue };
 		}
 	},
 });

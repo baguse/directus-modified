@@ -14,7 +14,16 @@
 				<template #activator="{ toggle }">
 					<v-icon v-tooltip="t('select_existing')" name="list_alt" clickable :disabled="disabled" @click="toggle" />
 				</template>
-
+				<v-list class="monospace">
+					<v-list-item>
+						<v-input
+							:ref="searchRef"
+							v-model="searchCollectionName"
+							:autofocus="true"
+							placeholder="Search Collection"
+						/>
+					</v-list-item>
+				</v-list>
 				<v-list class="monospace">
 					<v-list-item
 						v-for="availableCollection in availableCollections"
@@ -55,7 +64,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
+import { defineComponent, computed, Ref, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useCollectionsStore } from '@/stores';
 import { orderBy } from 'lodash';
@@ -75,6 +84,9 @@ export default defineComponent({
 	emits: ['update:modelValue'],
 	setup(props) {
 		const { t } = useI18n();
+
+		const searchRef = ref(null);
+
 		const collectionsStore = useCollectionsStore();
 
 		const collectionExists = computed(() => {
@@ -82,6 +94,19 @@ export default defineComponent({
 		});
 
 		const availableCollections = computed(() => {
+			if (searchCollectionName.value) {
+				return orderBy(
+					collectionsStore.collections.filter((collection) => {
+						return (
+							collection.collection.startsWith('directus_') === false &&
+							collection.schema &&
+							collection.collection.toLowerCase().includes((searchCollectionName.value as string).toLowerCase())
+						);
+					}),
+					['sort', 'collection'],
+					['asc']
+				);
+			}
 			return orderBy(
 				collectionsStore.collections.filter((collection) => {
 					return collection.collection.startsWith('directus_') === false && collection.schema;
@@ -91,7 +116,21 @@ export default defineComponent({
 			);
 		});
 
+		const searchCollectionName: Ref<string | null> = ref(null);
+
 		const systemCollections = computed(() => {
+			if (searchCollectionName.value) {
+				return orderBy(
+					collectionsStore.crudSafeSystemCollections.filter((collection) => {
+						return (
+							collection.collection.startsWith('directus_') === true &&
+							collection.collection.toLowerCase().includes((searchCollectionName.value as string).toLowerCase())
+						);
+					}),
+					['collection'],
+					['asc']
+				);
+			}
 			return orderBy(
 				collectionsStore.crudSafeSystemCollections.filter((collection) => {
 					return collection.collection.startsWith('directus_') === true;
@@ -101,7 +140,15 @@ export default defineComponent({
 			);
 		});
 
-		return { t, collectionExists, availableCollections, systemCollections, urlReplacer };
+		return {
+			t,
+			collectionExists,
+			availableCollections,
+			systemCollections,
+			urlReplacer,
+			searchCollectionName,
+			searchRef,
+		};
 	},
 });
 </script>

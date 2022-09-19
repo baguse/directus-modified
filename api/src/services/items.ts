@@ -1,5 +1,4 @@
 import { Accountability, Action, PermissionsAction, Query, SchemaOverview } from '@directus/shared/types';
-import { count } from 'console';
 import Keyv from 'keyv';
 import { Knex } from 'knex';
 import { assign, clone, cloneDeep, pick, without } from 'lodash';
@@ -974,12 +973,14 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			}
 		}
 
-		let deletedAtField = 'deleted_at';
+		const deletedAtFields = ['deleted_at'];
+		let deletedByField: string | null = null;
 		for (const fieldName in fields) {
 			const { special } = fields[fieldName];
 			if (special.includes('date-deleted')) {
-				deletedAtField = fieldName;
-				break;
+				if (!deletedAtFields.includes(fieldName)) deletedAtFields.push(fieldName);
+			} else if (special.includes('user-deleted')) {
+				deletedByField = fieldName;
 			}
 		}
 
@@ -1014,14 +1015,21 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		}
 
 		await this.knex.transaction(async (trx) => {
+			let action: string = Action.DELETE;
 			if (isSoftDelete) {
 				if (opts?.forceDelete) {
 					await trx(this.collection).whereIn(primaryKeyField, keys).delete();
 				} else {
-					await trx(this.collection)
-						.whereIn(primaryKeyField, keys)
-						.andWhere(deletedAtField, null)
-						.update({ [deletedAtField]: new Date().toISOString() });
+					const payload = {
+						...(deletedByField ? { [deletedByField]: this.accountability?.user } : {}),
+					};
+					const query = trx(this.collection).whereIn(primaryKeyField, keys);
+					for (const deletedAtField of deletedAtFields) {
+						payload[deletedAtField] = new Date().toISOString();
+						query.andWhere(deletedAtField, null);
+					}
+					await query.update(payload);
+					action = Action.SOFTDELETE;
 				}
 			} else {
 				await trx(this.collection).whereIn(primaryKeyField, keys).delete();
@@ -1035,7 +1043,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 
 				await activityService.createMany(
 					keys.map((key) => ({
-						action: Action.DELETE,
+						action,
 						user: this.accountability!.user,
 						collection: this.collection,
 						ip: this.accountability!.ip,
@@ -1133,13 +1141,19 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	async restore(keys: PrimaryKey[], opts?: MutationOptions): Promise<PrimaryKey[]> {
 		const { isSoftDelete, fields, primary: primaryKeyField } = this.schema.collections[this.collection];
 
+		const payloadDeletedAt: { [fieldName: string]: null } = {};
 		if (isSoftDelete) {
-			let deletedAtField = 'deleted_at';
+			let deletedByField: string | null = null;
+			const deletedAtFields: string[] = [];
 			for (const fieldName in fields) {
 				const { special } = fields[fieldName];
 				if (special && special.includes('date-deleted')) {
-					deletedAtField = fieldName;
-					break;
+					if (!deletedAtFields.includes(fieldName)) {
+						deletedAtFields.push(fieldName);
+						payloadDeletedAt[fieldName] = null;
+					}
+				} else if (special && special.includes('user-deleted')) {
+					deletedByField = fieldName;
 				}
 			}
 			if (opts?.emitEvents !== false) {
@@ -1167,22 +1181,20 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				const fieldNames = Object.values(this.schema.collections[this.collection].fields)
 					.filter((field) => {
 						if (field.field == primaryKeyField) return false;
-						// else if (field.special.includes('o2m')) return false;
-						// else if (field.special.includes('m2o')) return false;
-						// else if (field.special.includes('m2m')) return false;
 						else if (field.special.includes('date-deleted')) return false;
 						else if (field.special.includes('date-updated')) return false;
 						else if (field.special.includes('date-created')) return false;
 						else if (field.special.includes('user-created')) return false;
 						else if (field.special.includes('user-updated')) return false;
+						else if (field.special.includes('user-deleted')) return false;
 						else {
-							if (field.field === deletedAtField) return false;
+							if (deletedAtFields.includes(field.field)) return false;
 							return true;
 						}
 					})
 					.map((field) => field.field);
 
-				const fieldMaybeUniques: { field: string; unique: boolean }[] = await this.knex
+				const fieldMaybeUniques: { field: string; unique: boolean }[] = await trx
 					.select('field', 'unique')
 					.from('directus_fields')
 					.whereIn('field', fieldNames)
@@ -1190,17 +1202,26 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 
 				const datas = await trx(this.collection).whereIn(primaryKeyField, keys).select('*');
 
+				const payload = {
+					...payloadDeletedAt,
+					...(deletedByField ? { [deletedByField]: null } : {}),
+				};
+
 				for (const data of datas) {
 					for (const field of fieldMaybeUniques) {
 						const { unique, field: fieldName } = field;
 						if (unique) {
 							let count: string | number = 0;
-							const [{ count: countData }] = (await this.knex
+							const query = trx
 								.count(fieldName, { as: 'count' })
 								.from(this.collection)
 								.where(fieldName, data[fieldName] || null)
-								.whereNot(primaryKeyField, data[primaryKeyField])
-								.andWhere(deletedAtField, null)) as { count: string | number }[];
+								.whereNot(primaryKeyField, data[primaryKeyField]);
+
+							for (const deletedAtField of deletedAtFields) {
+								query.andWhere(deletedAtField, null);
+							}
+							const [{ count: countData }] = (await query) as { count: string | number }[];
 							count = countData;
 							const counter = count ? Number(count) : 0;
 							if (counter) {
@@ -1211,11 +1232,29 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 								});
 							}
 						}
-						await trx(this.collection)
-							.whereIn(this.schema.collections[this.collection].primary, keys)
-							.update({ [deletedAtField]: null });
 					}
+
+					await trx(this.collection).whereIn(this.schema.collections[this.collection].primary, keys).update(payload);
 				}
+
+				if (this.accountability && this.schema.collections[this.collection].accountability !== null) {
+					const activityService = new ActivityService({
+						knex: trx,
+						schema: this.schema,
+					});
+
+					await activityService.createMany(
+						keys.map((key) => ({
+							action: Action.RESTORE,
+							user: this.accountability!.user,
+							collection: this.collection,
+							ip: this.accountability!.ip,
+							user_agent: this.accountability!.userAgent,
+							item: key,
+						}))
+					);
+				}
+
 				if (opts?.emitEvents !== false) {
 					emitter.emitAction(
 						this.eventScope === 'items'

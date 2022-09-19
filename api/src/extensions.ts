@@ -56,10 +56,11 @@ import { EventHandler } from './types';
 import { JobQueue } from './utils/job-queue';
 import { ServerResponse } from 'http';
 import { BaseException } from '@directus/shared/exceptions';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import isDirectusJWT from './utils/is-directus-jwt';
 import { verifyAccessJWT } from './utils/jwt';
 import { InvalidCredentialsException, TokenExpiredException } from './exceptions';
+import Busboy from 'busboy';
 
 let extensionManager: ExtensionManager | undefined;
 
@@ -512,6 +513,11 @@ class ExtensionManager {
 			const routePath = prefix || routeName;
 			router.use(`/${clearingSlash(routePath)}`, scopedRouter);
 			type IRequestMethod = 'get' | 'put' | 'post' | 'put' | 'patch' | 'delete';
+
+			interface _ExpressRequest extends ExpressRequest {
+				busboy?: Busboy.Busboy;
+			}
+
 			for (const route of routes) {
 				const {
 					requestMethod,
@@ -529,8 +535,24 @@ class ExtensionManager {
 				// this.apiDocs.paths[`/${routePath}${swaggerPath}`] = apiDoc.paths[swaggerPath];
 				scopedRouter[requestMethod](
 					path,
-					asyncHandler(async (req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
+					asyncHandler(async (req: _ExpressRequest, res: ExpressResponse, next: NextFunction) => {
 						try {
+							if (req.is('multipart/form-data')) {
+								let headers: Busboy.BusboyHeaders;
+
+								if (req.headers['content-type']) {
+									headers = req.headers as Busboy.BusboyHeaders;
+								} else {
+									headers = {
+										...req.headers,
+										'content-type': 'application/octet-stream',
+									};
+								}
+
+								const busboy = new Busboy({ headers });
+
+								req.busboy = busboy;
+							}
 							instance[route.methodName] = (...args: any) => {
 								// method decorator
 								for (const param of params) {

@@ -1,6 +1,6 @@
 {
 	"name": "@mv-data-core/shared",
-	"version": "9.12.3",
+	"version": "9.12.4",
 	"description": "Code shared between all MV Data Core packages.",
 	"exports": {
 		"./composables": {

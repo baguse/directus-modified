@@ -760,6 +760,7 @@ presets_only: Presets Only
 create: Create
 on_create: On Create
 on_update: On Update
+on_delete: On Delete
 read: Read
 update: Update
 delete: Delete

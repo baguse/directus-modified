@@ -229,7 +229,7 @@ fields:
 
   - field: tags
     interface: tags
-    special: 
+    special:
       - json
     width: half
 
@@ -245,4 +245,9 @@ fields:
     width: half
 
   - field: database_name
+    width: half
+
+  - field: is_submission_form
+    interface: boolean
+    special: boolean
     width: half

@@ -34,7 +34,7 @@
 		"@directus/docs": "npm:@mv-data-core/docs@9.12.0",
 		"@directus/extensions-sdk": "npm:@mv-data-core/extensions-sdk@9.12.0",
 		"@directus/format-title": "npm:@mv-data-core/format-title@9.12.0",
-		"@directus/shared": "npm:@mv-data-core/shared@9.12.3",
+		"@directus/shared": "npm:@mv-data-core/shared@9.12.4",
 		"@fortawesome/fontawesome-svg-core": "1.2.36",
 		"@fortawesome/free-brands-svg-icons": "5.15.4",
 		"@fullcalendar/core": "5.11.0",
@@ -124,6 +124,7 @@
 		"markdown-it-anchor": "^8.4.1",
 		"markdown-it-container": "^3.0.0",
 		"markdown-it-table-of-contents": "^0.6.0",
-		"v-viewer": "^3.0.10"
+		"v-viewer": "^3.0.10",
+    "dotenv": "^10.0.0"
 	}
 }

@@ -51,116 +51,117 @@ export default async function (backupPath: string, options?: { yes: boolean }): 
 	};
 
 	try {
-		const fileContents = await fs.readFile(filename, 'utf8');
-		let result: IResult[] = [];
+		await database.transaction(async (trx) => {
+			const fileContents = await fs.readFile(filename, 'utf8');
+			let result: IResult[] = [];
 
-		if (filename.endsWith('.yaml') || filename.endsWith('.yml')) {
-			result = (await loadYaml(fileContents)) as IResult[];
-		} else {
-			result = JSON.parse(fileContents) as IResult[];
-		}
-
-		const inspector = SchemaInspector(database);
-
-		const foreignKeyDatas: {
-			tableName: string;
-			foreignKeys: ForeignKey[];
-		}[] = [];
-
-		let errorColl = 0;
-		for (const backupData of result) {
-			const { tableName, datas, primaryKey, maxPrimaryKey } = backupData;
-			// if (tableName != 'activities') continue;
-			const foreignKeys = await inspector.foreignKeys(tableName);
-			foreignKeyDatas.push({
-				tableName,
-				foreignKeys,
-			});
-			// deleting foreign keys
-			const progressDropForeignKey = progressBar.create().step(`Dropping ${tableName} foreign keys...`);
-			progressDropForeignKey.setTotal(foreignKeys.length);
-			progressDropForeignKey.setTick(0);
-			for (const foreignKey of foreignKeys) {
-				const { column, constraint_name } = foreignKey;
-				await dropForeignKey(database, tableName, column, constraint_name as string);
-				progressDropForeignKey.addTick(1);
+			if (filename.endsWith('.yaml') || filename.endsWith('.yml')) {
+				result = (await loadYaml(fileContents)) as IResult[];
+			} else {
+				result = JSON.parse(fileContents) as IResult[];
 			}
-			progressDropForeignKey.finish();
-			let currentDatas: any[] = [];
-			// restoring datas
-			try {
-				const getMaxProcessedData = () => {
-					const [sampleData] = datas;
-					if (sampleData) {
-						const fieldCount = Object.keys(sampleData).length;
-						if (fieldCount) return Math.floor(2050 / fieldCount);
-					}
-					return 0;
-				};
 
-				if (dbClient == 'mssql') MAX_PROCESSED_DATA = getMaxProcessedData();
+			const inspector = SchemaInspector(trx);
 
-				const insertData = async (tableName: string, datas: any[]) => {
-					if (dbClient == 'mssql') {
-						if (primaryKey) {
-							const { sql, bindings } = database(tableName).insert(datas).toSQL();
-							const newQuery = `SET IDENTITY_INSERT [${tableName}] ON; ${sql} SET IDENTITY_INSERT [${tableName}] OFF;`;
-							return database.raw(newQuery, bindings);
+			const foreignKeyDatas: {
+				tableName: string;
+				foreignKeys: ForeignKey[];
+			}[] = [];
+
+			let errorColl = 0;
+			for (const backupData of result) {
+				const { tableName, datas, primaryKey, maxPrimaryKey } = backupData;
+				// if (tableName != 'activities') continue;
+				const foreignKeys = await inspector.foreignKeys(tableName);
+				foreignKeyDatas.push({
+					tableName,
+					foreignKeys,
+				});
+				// deleting foreign keys
+				const progressDropForeignKey = progressBar.create().step(`Dropping ${tableName} foreign keys...`);
+				progressDropForeignKey.setTotal(foreignKeys.length);
+				progressDropForeignKey.setTick(0);
+				for (const foreignKey of foreignKeys) {
+					const { column, constraint_name } = foreignKey;
+					await dropForeignKey(database, tableName, column, constraint_name as string);
+					progressDropForeignKey.addTick(1);
+				}
+				progressDropForeignKey.finish();
+				let currentDatas: any[] = [];
+				// restoring datas
+				try {
+					const getMaxProcessedData = () => {
+						const [sampleData] = datas;
+						if (sampleData) {
+							const fieldCount = Object.keys(sampleData).length;
+							if (fieldCount) return Math.floor(1000 / fieldCount);
 						}
-						return database(tableName).insert(datas);
-					} else {
-						return database(tableName).insert(datas);
+						return 0;
+					};
+
+					if (dbClient == 'mssql') MAX_PROCESSED_DATA = getMaxProcessedData();
+
+					const insertData = async (tableName: string, datas: any[]) => {
+						if (dbClient == 'mssql') {
+							if (primaryKey) {
+								const { sql, bindings } = trx(tableName).insert(datas).toSQL();
+								const newQuery = `SET IDENTITY_INSERT [${tableName}] ON; ${sql} SET IDENTITY_INSERT [${tableName}] OFF;`;
+								return trx.raw(newQuery, bindings);
+							}
+							return trx(tableName).insert(datas);
+						} else {
+							return trx(tableName).insert(datas);
+						}
+					};
+					const dataLength = datas.length;
+					const progress = progressBar.create().step(`Restoring ${tableName}...`);
+					progress.setTotal(dataLength);
+					let processed = 0;
+					while (datas.length > 0) {
+						currentDatas = datas.splice(0, MAX_PROCESSED_DATA);
+						await insertData(tableName, currentDatas);
+						processed += currentDatas.length;
+						progress.setTick(processed);
 					}
-				};
-				const dataLength = datas.length;
-				const progress = progressBar.create().step(`Restoring ${tableName}...`);
-				progress.setTotal(dataLength);
-				let processed = 0;
-				while (datas.length > 0) {
-					currentDatas = datas.splice(0, MAX_PROCESSED_DATA);
-					await insertData(tableName, currentDatas);
-					processed += currentDatas.length;
-					progress.setTick(processed);
+					progress.finish();
+					logger.info(`Restored ${tableName}: ${dataLength} rows`);
+				} catch (_e: any) {
+					errorColl++;
+					logger.error(`Failed to restore ${tableName}`);
+					logger.error(_e);
+				}
+				// restart auto increment to current value
+				if (primaryKey && maxPrimaryKey) {
+					if (dbClient === 'pg') {
+						await trx.raw(`ALTER SEQUENCE "${tableName}_${primaryKey}_seq" RESTART WITH ${maxPrimaryKey + 1}`);
+					}
+				}
+			}
+			if (errorColl > 0) logger.error(`There are ${errorColl} errors`);
+
+			// restoring foreign keys
+			for (const foreignKeyData of foreignKeyDatas) {
+				const { tableName, foreignKeys } = foreignKeyData;
+				const progress = progressBar.create().step(`Restoring Foreign keys of ${tableName}...`);
+				progress.setTotal(foreignKeys.length);
+				for (const foreignKey of foreignKeys) {
+					const { column, foreign_key_table, foreign_key_column, on_delete, on_update, constraint_name } = foreignKey;
+					const builder = trx.schema.alterTable(tableName, (table) => {
+						table
+							.foreign(column)
+							.references(foreign_key_column)
+							.inTable(foreign_key_table)
+							.onDelete(on_delete as string)
+							.onUpdate(on_update as string)
+							.withKeyName(constraint_name as string);
+					});
+					await builder;
+					progress.addTick(1);
 				}
 				progress.finish();
-				logger.info(`Restored ${tableName}: ${dataLength} rows`);
-			} catch (_e: any) {
-				errorColl++;
-				logger.error(`Failed to restore ${tableName}`);
-				logger.error(_e);
+				logger.info(`Restored Foreign keys of ${tableName}: ${foreignKeys.length} `);
 			}
-			// restart auto increment to current value
-			if (primaryKey && maxPrimaryKey) {
-				if (dbClient === 'pg') {
-					await database.raw(`ALTER SEQUENCE "${tableName}_${primaryKey}_seq" RESTART WITH ${maxPrimaryKey + 1}`);
-				}
-			}
-		}
-		if (errorColl > 0) logger.error(`There are ${errorColl} errors`);
-
-		// restoring foreign keys
-		for (const foreignKeyData of foreignKeyDatas) {
-			const { tableName, foreignKeys } = foreignKeyData;
-			const progress = progressBar.create().step(`Restoring Foreign keys of ${tableName}...`);
-			progress.setTotal(foreignKeys.length);
-			for (const foreignKey of foreignKeys) {
-				const { column, foreign_key_table, foreign_key_column, on_delete, on_update, constraint_name } = foreignKey;
-				const builder = database.schema.alterTable(tableName, (table) => {
-					table
-						.foreign(column)
-						.references(foreign_key_column)
-						.inTable(foreign_key_table)
-						.onDelete(on_delete as string)
-						.onUpdate(on_update as string)
-						.withKeyName(constraint_name as string);
-				});
-				await builder;
-				progress.addTick(1);
-			}
-			progress.finish();
-			logger.info(`Restored Foreign keys of ${tableName}: ${foreignKeys.length} `);
-		}
-
+		});
 		database.destroy();
 		process.exit(0);
 	} catch (err: any) {

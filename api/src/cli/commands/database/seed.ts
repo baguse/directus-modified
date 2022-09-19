@@ -37,6 +37,7 @@ export default class Seeder {
 		try {
 			logger.info('Running Seeder...');
 			let fileSeeded = 0;
+			let isErr = false;
 
 			if (await Seeder.checkPath()) {
 				const customSeedersPath = Seeder.getSeederPath();
@@ -58,14 +59,20 @@ export default class Seeder {
 							fileSeeded++;
 						} catch (e) {
 							logger.error(`Failed to seed [${seeder}]`);
+							isErr = true;
 							logger.error(`=> ${(e as any).toString()}`);
+							break;
 						}
 					}
 				}
 			}
 
 			if (fileSeeded === 0) {
-				logger.info('Database up to date');
+				if (isErr) {
+					logger.error('There are error on seeder file. Quitting...');
+				} else {
+					logger.info('Database up to date');
+				}
 			} else {
 				logger.info(`${fileSeeded} Seeder(s) successfully seeded`);
 			}
@@ -95,6 +102,19 @@ export default class Seeder {
 		const currentSeederDatas = (await database.select('*').from('seeder_metadatas')).map(
 			(seederData) => seederData.name
 		);
+
+		const customSeederFiles = (await fse.readdir(customSeedersPath)) || [];
+
+		let behindSeedCount = 0;
+		for (const seedFile of customSeederFiles) {
+			if (seedFile == name) break;
+			if (!currentSeederDatas.includes(seedFile)) behindSeedCount++;
+		}
+
+		if (behindSeedCount) {
+			logger.error(`Failed! There are ${behindSeedCount} seed${behindSeedCount != 1 ? 's' : ''} in behind`);
+			process.exit();
+		}
 
 		if (!currentSeederDatas.includes(fileName) && fileName.includes('.js')) {
 			try {

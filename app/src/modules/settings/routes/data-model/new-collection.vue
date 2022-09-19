@@ -136,7 +136,7 @@
 <script lang="ts">
 import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
-import { defineComponent, ref, reactive, watch, computed } from 'vue';
+import { defineComponent, ref, reactive, watch, computed, Ref } from 'vue';
 import api from '@/api';
 import { Field, Relation } from '@directus/shared/types';
 import { useFieldsStore, useCollectionsStore, useRelationsStore, useSettingsStore } from '@/stores/';
@@ -173,7 +173,18 @@ export default defineComponent({
 			);
 		}
 
-		const defaultSystemFields = {
+		const defaultSystemFields: Record<
+			string,
+			{
+				type: string;
+				enabled: boolean;
+				inputDisabled: boolean;
+				name: string;
+				label: string;
+				icon: string;
+				items?: { text: string; value: string }[];
+			}
+		> = {
 			status: {
 				type: 'input',
 				enabled: false,
@@ -219,7 +230,7 @@ export default defineComponent({
 				enabled: false,
 				inputDisabled: false,
 				name: 'updated_by',
-				label: 'updated By',
+				label: 'Updated By',
 				icon: 'account_circle',
 			},
 			deletedAt: {
@@ -229,6 +240,14 @@ export default defineComponent({
 				name: 'deleted_at',
 				label: 'Deleted At',
 				icon: 'access_time',
+			},
+			userDeleted: {
+				type: 'input',
+				enabled: false,
+				inputDisabled: false,
+				name: 'deleted_by',
+				label: 'Deleted By',
+				icon: 'account_circle',
 			},
 			schema: {
 				type: 'select',
@@ -251,7 +270,7 @@ export default defineComponent({
 		const isOpen = useDialogRoute();
 
 		const currentTab = ref(['collection_setup']);
-		const collectionName = ref(null);
+		const collectionName: Ref<string | null> = ref(null);
 		const singleton = ref(false);
 		const isSoftDelete = ref(false);
 		const primaryKeyFieldName = ref('id');
@@ -569,6 +588,24 @@ export default defineComponent({
 				});
 			}
 
+			if (systemFields.userDeleted.enabled === true) {
+				fields.push({
+					field: systemFields.userDeleted.name,
+					type: 'uuid',
+					meta: {
+						special: ['user-deleted'],
+						interface: 'select-dropdown-m2o',
+						options: {
+							template: '{{avatar.$thumbnail}} {{first_name}} {{last_name}}',
+						},
+						display: 'user',
+						readonly: true,
+						hidden: true,
+						width: 'half',
+					},
+					schema: {},
+				});
+			}
 			return fields;
 		}
 
@@ -580,7 +617,7 @@ export default defineComponent({
 					collection: collectionName.value!,
 					field: systemFields.userCreated.name,
 					related_collection: 'directus_users',
-					schema: {},
+					schema: null,
 				});
 			}
 
@@ -589,7 +626,16 @@ export default defineComponent({
 					collection: collectionName.value!,
 					field: systemFields.userUpdated.name,
 					related_collection: 'directus_users',
-					schema: {},
+					schema: null,
+				});
+			}
+
+			if (systemFields.userDeleted.enabled === true) {
+				relations.push({
+					collection: collectionName.value!,
+					field: systemFields.userDeleted.name,
+					related_collection: 'directus_users',
+					schema: null,
 				});
 			}
 
